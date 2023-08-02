@@ -1,4 +1,4 @@
-package com.orot.menuboss_tv
+package com.orot.menuboss_tv.ui.navigations
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -13,13 +13,12 @@ import com.orot.menuboss_tv.ui.screens.DetailsError
 import com.orot.menuboss_tv.ui.screens.auth.AuthScreen
 import com.orot.menuboss_tv.ui.screens.splash.SplashScreen
 
-
 val LocalNavController = compositionLocalOf<NavHostController> {
     error("No NavHostController provided")
 }
 
 @Composable
-fun App() {
+fun Navigation() {
     val navController = rememberNavController()
 
     CompositionLocalProvider(LocalNavController provides navController) {

@@ -1,9 +1,9 @@
 <component name="libraryTable">
   <library name="Gradle: com.google.android.gms:play-services-basement:18.1.0@aar">
     <CLASSES>
-      <root url="jar://$USER_HOME$/.gradle/caches/transforms-3/3130f02a07e6074258b6e75b7b133215/transformed/play-services-basement-18.1.0/jars/classes.jar!/" />
-      <root url="file://$USER_HOME$/.gradle/caches/transforms-3/3130f02a07e6074258b6e75b7b133215/transformed/play-services-basement-18.1.0/res" />
-      <root url="file://$USER_HOME$/.gradle/caches/transforms-3/3130f02a07e6074258b6e75b7b133215/transformed/play-services-basement-18.1.0/AndroidManifest.xml" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-3/149f1f4f79958ff7c825f24674a76161/transformed/play-services-basement-18.1.0/res" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-3/149f1f4f79958ff7c825f24674a76161/transformed/play-services-basement-18.1.0/jars/classes.jar!/" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-3/149f1f4f79958ff7c825f24674a76161/transformed/play-services-basement-18.1.0/AndroidManifest.xml" />
     </CLASSES>
     <JAVADOC>
       <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.google.android.gms/play-services-basement/18.1.0/dc468f5f14200309066c7c5f99374e625c9fa89a/play-services-basement-18.1.0-javadoc.jar!/" />

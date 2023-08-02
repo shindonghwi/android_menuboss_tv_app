@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission
+        android:name="android.permission.ACCESS_WIFI_STATE"
+        tools:ignore="LeanbackUsesWifi" />
+
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+
 
     <uses-feature
         android:name="android.software.leanback"
@@ -9,9 +18,10 @@
         android:required="false" />
 
     <application
+        android:name=".MenuBossTVApp"
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
         android:banner="@mipmap/ic_launcher"
+        android:icon="@mipmap/ic_launcher"
         android:label="${appLabel}"
         android:supportsRtl="true"
         android:theme="@style/Theme.MenuBossTV">
@@ -20,25 +30,32 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <receiver android:name=".MyA3LMessagingService"
-            android:exported="false"
-            android:enabled="true">
+        <receiver
+            android:name=".MyA3LMessagingService"
+            android:enabled="true"
+            android:exported="false">
             <intent-filter>
-                <action android:name="com.amazon.A3L.messaging.intent.REGISTRATION"/>
-                <action android:name="com.amazon.A3L.messaging.intent.MESSAGE"/>
+                <action android:name="com.amazon.A3L.messaging.intent.REGISTRATION" />
+                <action android:name="com.amazon.A3L.messaging.intent.MESSAGE" />
             </intent-filter>
         </receiver>
 
-        <meta-data android:name="com.a3l.clsName"
+        <meta-data
+            android:name="com.a3l.clsName"
             android:value="com.orot.menuboss_tv.MyA3LMessagingService" />
 
-        <meta-data android:name="ADM_SERVER_CONFIG_FILE_NAME" android:value="adm_server_configuration.json" />
-        <meta-data android:name="FCM_SERVER_CONFIG_FILE_NAME" android:value="fcm_server_configuration.json" />
+        <meta-data
+            android:name="ADM_SERVER_CONFIG_FILE_NAME"
+            android:value="adm_server_configuration.json" />
+        <meta-data
+            android:name="FCM_SERVER_CONFIG_FILE_NAME"
+            android:value="fcm_server_configuration.json" />
     </application>
 
 </manifest>

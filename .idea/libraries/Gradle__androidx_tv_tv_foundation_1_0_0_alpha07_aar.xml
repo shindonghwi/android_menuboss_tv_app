@@ -1,9 +1,9 @@
 <component name="libraryTable">
   <library name="Gradle: androidx.tv:tv-foundation:1.0.0-alpha07@aar">
     <CLASSES>
-      <root url="jar://$USER_HOME$/.gradle/caches/transforms-3/c63c664d6be246066d93ef3d987878ff/transformed/tv-foundation-1.0.0-alpha07/jars/classes.jar!/" />
-      <root url="file://$USER_HOME$/.gradle/caches/transforms-3/c63c664d6be246066d93ef3d987878ff/transformed/tv-foundation-1.0.0-alpha07/res" />
-      <root url="file://$USER_HOME$/.gradle/caches/transforms-3/c63c664d6be246066d93ef3d987878ff/transformed/tv-foundation-1.0.0-alpha07/AndroidManifest.xml" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-3/7a7d8eeb019363654dabbfdd3ee75f18/transformed/tv-foundation-1.0.0-alpha07/AndroidManifest.xml" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-3/7a7d8eeb019363654dabbfdd3ee75f18/transformed/tv-foundation-1.0.0-alpha07/res" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-3/7a7d8eeb019363654dabbfdd3ee75f18/transformed/tv-foundation-1.0.0-alpha07/jars/classes.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>

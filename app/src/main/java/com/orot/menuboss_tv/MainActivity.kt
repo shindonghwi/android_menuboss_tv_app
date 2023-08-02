@@ -1,8 +1,17 @@
 package com.orot.menuboss_tv
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
+import android.net.wifi.WifiInfo
+import android.net.wifi.WifiManager
+import android.os.Build
 import android.os.Bundle
 import android.os.StrictMode
 import android.os.StrictMode.ThreadPolicy
+import android.provider.Settings
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -14,10 +23,15 @@ import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.Surface
 import com.amazon.A3L.messaging.A3LMessaging
 import com.google.android.gms.tasks.Task
+import com.orot.menuboss_tv.ui.navigations.Navigation
 import com.orot.menuboss_tv.ui.theme.MenuBossTVTheme
+import com.orot.menuboss_tv.utils.DeviceInfo
+import java.util.Objects
+
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -40,6 +54,23 @@ class MainActivity : ComponentActivity() {
 
         val currentPlatform = A3LMessaging.getCurrentPlatform(applicationContext)
         Log.w("Asdadssdasda", "currentPlatform ${currentPlatform}")
+        Log.w("Asdadssdasda", "BUILD_TYPE ${com.amazon.A3L.messaging.BuildConfig.BUILD_TYPE}")
+
+        Log.w("Asdadssdasda", "serialNumber ${Build.MANUFACTURER}")
+        Log.w("zxcjkzhxck;lzxcjk",Build.MANUFACTURER + " " + Build.MODEL + " " + Build.DEVICE+ " " + Build.VERSION.INCREMENTAL + " " + Build.SERIAL);
+        Log.w("zxcjkzhxck;lzxcjk",Build.PRODUCT + " " + Build.BRAND + " " + Build.HARDWARE+ " " + Build.VERSION.RELEASE + " " + Build.VERSION.SDK_INT);
+        Log.w("zxcjkzhxck;lzxcjk",Build.FINGERPRINT);
+
+        val android_id: String = Settings.Secure.getString(
+            applicationContext.contentResolver,
+            Settings.Secure.ANDROID_ID
+        )
+        Log.w("zxcjkzhxck;lzxcjk", "android_id : ${android_id}")
+
+        val dd = Objects.hash(android_id, Build.FINGERPRINT)
+        Log.w("zxcjkzhxck;lzxcjk", "dd : ${dd}")
+
+
 
         setContent {
             MenuBossTVTheme {
@@ -47,7 +78,7 @@ class MainActivity : ComponentActivity() {
                     shape = RectangleShape,
                     modifier = Modifier.fillMaxSize(),
                 ) {
-                    App()
+                    Navigation()
                 }
             }
         }

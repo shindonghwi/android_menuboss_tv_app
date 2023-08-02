@@ -1,8 +1,8 @@
 <component name="libraryTable">
   <library name="Gradle: ./app/libs/A3LMessaging-1.1.0.aar">
     <CLASSES>
-      <root url="jar://$USER_HOME$/.gradle/caches/transforms-3/8836af4dd80720c6196c7c28dd42b69d/transformed/A3LMessaging-1.1.0/jars/classes.jar!/" />
-      <root url="file://$USER_HOME$/.gradle/caches/transforms-3/8836af4dd80720c6196c7c28dd42b69d/transformed/A3LMessaging-1.1.0/AndroidManifest.xml" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-3/4b0f49ee08e22db9cfbf27c93598a385/transformed/A3LMessaging-1.1.0/AndroidManifest.xml" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-3/4b0f49ee08e22db9cfbf27c93598a385/transformed/A3LMessaging-1.1.0/jars/classes.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
