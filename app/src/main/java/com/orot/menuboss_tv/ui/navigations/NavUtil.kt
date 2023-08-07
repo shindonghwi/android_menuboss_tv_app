@@ -31,7 +31,7 @@ fun NavHostController.navigateWithPopUp(route: String, popUpRoute: RouteScreen) 
 }
 
 private fun NavController.findExistRouteName(screen: RouteScreen): String? {
-    return backQueue.firstOrNull {
+    return currentBackStack.value.firstOrNull {
         it.destination.route?.contains(screen.route) == true
     }?.destination?.route
 }

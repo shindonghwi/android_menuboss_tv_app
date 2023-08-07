@@ -98,6 +98,9 @@ dependencies {
 
     implementation(files("libs/A3LMessaging-1.1.0.aar"))
 
+    implementation("app.rive:rive-android:5.0.0")
+    implementation("androidx.startup:startup-runtime:1.1.1")
+
     Libraries.apply {
 
         Libraries.KTX.run {
