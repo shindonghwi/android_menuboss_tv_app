@@ -4,24 +4,25 @@ object Versions {
 //        const val version = "7.2.0"
 //    }
 //
-    object Plugins{
+    object Plugins {
         const val gradle = "8.1.0"
         const val kotlin = "1.9.0"
         const val googleService = "4.3.15"
     }
 
-    object Kotlin{
+    object Kotlin {
         const val version = "1.9.0"
     }
-//
+
+    //
 //    object Coroutine{
 //        const val version = "1.6.4"
 //    }
 //
-//    object AndroidX{
-//        const val constraintLayout = "2.1.4"
-//    }
-//
+    object AndroidX {
+        const val startup = "1.1.1"
+    }
+
     object KTX {
         const val core = "1.10.1"
     }
@@ -36,10 +37,11 @@ object Versions {
         const val bom = "2023.01.00"
     }
 
-//    object Paging{
-//        const val version = "3.1.1"
-//    }
-//
+    object Rive {
+        const val android = "5.0.0"
+    }
+
+    //
 //    object Hilt{
 //        const val compose_hilt = "1.0.0"
 //        const val version = "2.44"
@@ -63,7 +65,7 @@ object Versions {
 //        const val messagingService = "23.1.1"
 //    }
 //
-    object Google{
+    object Google {
         const val guava = "28.0-android"
         const val zxing = "3.5.1"
         const val fcm = "23.2.0"
@@ -72,19 +74,18 @@ object Versions {
 
 object Libraries {
 
-    //    object AndroidX {
-//        const val constraintLayout = "androidx.constraintlayout:constraintlayout:${Versions.AndroidX.constraintLayout}"
-//    }
-//
+    object AndroidX {
+        const val startup = "androidx.startup:startup-runtime:${Versions.AndroidX.startup}"
+    }
+
     object KTX {
         const val core = "androidx.core:core-ktx:${Versions.KTX.core}"
     }
 
-    //
-//    object Coroutine {
-//        const val core = "org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.Coroutine.version}"
-//    }
-//
+    object Rive {
+        const val rive = "app.rive:rive-android:${Versions.Rive.android}"
+    }
+
     object Compose {
         const val uiTooling = "androidx.compose.ui:ui-tooling"
         const val activity = "androidx.activity:activity-compose:${Versions.Compose.activity}"
@@ -95,7 +96,8 @@ object Libraries {
         const val viewModel = "androidx.lifecycle:lifecycle-viewmodel-compose:${Versions.Compose.viewModel}"
         const val bom = "androidx.compose:compose-bom:${Versions.Compose.bom}"
     }
-//
+
+
     object Google {
         const val guava = "com.google.guava:guava:${Versions.Google.guava}"
         const val zxing = "com.google.zxing:core:${Versions.Google.zxing}"

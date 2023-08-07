@@ -8,7 +8,6 @@ object AppConfig {
     const val versionName = "0.0.1"
     val javaVersion = JavaVersion.VERSION_17
     val jvmTarget = "17"
-    val packageName = "com.orot.menuboss_tv"
 }
 
 object DebugConfig {

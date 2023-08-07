@@ -9,11 +9,11 @@ plugins {
 }
 
 android {
-    namespace = AppConfig.packageName
+    namespace = "com.orot.menuboss_tv"
     compileSdk = AppConfig.compileSdk
 
     defaultConfig {
-        applicationId = AppConfig.packageName
+        applicationId = "com.orot.menuboss_tv"
         minSdk = AppConfig.minSdk
         targetSdk = AppConfig.targetSdk
         versionCode = AppConfig.versionCode
@@ -29,7 +29,7 @@ android {
         }
     }
 
-    flavorDimensions("default")
+    flavorDimensions += "default"
     productFlavors {
         create("dev") {
             applicationIdSuffix = DebugConfig.suffixName
@@ -80,8 +80,6 @@ android {
         }
     }
 
-    buildFeatures.compose = true
-
     compileOptions {
         sourceCompatibility = AppConfig.javaVersion
         targetCompatibility = AppConfig.javaVersion
@@ -89,42 +87,12 @@ android {
     kotlinOptions {
         jvmTarget = AppConfig.jvmTarget
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = Versions.Compose.compiler
-    }
 }
 
 dependencies {
+    implementation(project(":presentation"))
 
-    implementation(files("libs/A3LMessaging-1.1.0.aar"))
-
-    implementation("app.rive:rive-android:5.0.0")
-    implementation("androidx.startup:startup-runtime:1.1.1")
-
-    Libraries.apply {
-
-        Libraries.KTX.run {
-            implementation(core)
-        }
-
-        Libraries.Compose.run {
-            implementation(uiTooling)
-            implementation(activity)
-            implementation(tvFoundation)
-            implementation(tvMaterial)
-            implementation(coil)
-            implementation(navigation)
-            implementation(viewModel)
-            implementation(bom)
-        }
-
-        Libraries.Google.run {
-            implementation(guava)
-            implementation(zxing)
-            implementation(fcm)
-        }
-
+    Libraries.AndroidX.run {
+        implementation(startup)
     }
-
-//    implementation("androidx.ads:ads-identifier:1.0.0-alpha05")
 }
