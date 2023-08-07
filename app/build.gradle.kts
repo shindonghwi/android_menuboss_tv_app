@@ -1,5 +1,5 @@
-import java.util.Properties
 import java.io.FileInputStream
+import java.util.Properties
 
 plugins {
     id("com.android.application")
@@ -9,11 +9,11 @@ plugins {
 }
 
 android {
-    namespace = "com.orot.menuboss_tv"
+    namespace = AppConfig.packageName
     compileSdk = AppConfig.compileSdk
 
     defaultConfig {
-        applicationId = "com.orot.menuboss_tv"
+        applicationId = AppConfig.packageName
         minSdk = AppConfig.minSdk
         targetSdk = AppConfig.targetSdk
         versionCode = AppConfig.versionCode
@@ -34,12 +34,12 @@ android {
         create("dev") {
             applicationIdSuffix = DebugConfig.suffixName
             versionNameSuffix = DebugConfig.versionName
-            manifestPlaceholders["appLabel"] =  DebugConfig.app_label
+            manifestPlaceholders["appLabel"] = DebugConfig.app_label
         }
         create("prod") {
             applicationIdSuffix = ReleaseConfig.suffixName
             versionNameSuffix = ReleaseConfig.versionName
-            manifestPlaceholders["appLabel"] =  ReleaseConfig.app_label
+            manifestPlaceholders["appLabel"] = ReleaseConfig.app_label
         }
     }
 
@@ -72,7 +72,10 @@ android {
         }
         getByName("release") {
             isDebuggable = true
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
             signingConfig = signingConfigs.getByName("release")
         }
     }
@@ -80,31 +83,45 @@ android {
     buildFeatures.compose = true
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = AppConfig.javaVersion
+        targetCompatibility = AppConfig.javaVersion
     }
     kotlinOptions {
-        jvmTarget = "17"
+        jvmTarget = AppConfig.jvmTarget
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.2"
+        kotlinCompilerExtensionVersion = Versions.Compose.compiler
     }
 }
 
 dependencies {
-    val tv_compose_version = "1.0.0-alpha07"
-    implementation("androidx.core:core-ktx:1.10.1")
-    implementation(platform("androidx.compose:compose-bom:2023.01.00"))
-    implementation("androidx.compose.ui:ui-tooling")
-    implementation("androidx.activity:activity-compose:1.7.2")
-    implementation("androidx.tv:tv-foundation:$tv_compose_version")
-    implementation("androidx.tv:tv-material:$tv_compose_version")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1")
-    implementation("androidx.navigation:navigation-compose:2.5.3")
-    implementation("io.coil-kt:coil-compose:2.2.2")
-    implementation("androidx.ads:ads-identifier:1.0.0-alpha05")
-    implementation("com.google.guava:guava:28.0-android")
-    implementation("com.google.zxing:core:3.5.1")
-    implementation("com.google.firebase:firebase-messaging:23.1.0")
+
     implementation(files("libs/A3LMessaging-1.1.0.aar"))
+
+    Libraries.apply {
+
+        Libraries.KTX.run {
+            implementation(core)
+        }
+
+        Libraries.Compose.run {
+            implementation(uiTooling)
+            implementation(activity)
+            implementation(tvFoundation)
+            implementation(tvMaterial)
+            implementation(coil)
+            implementation(navigation)
+            implementation(viewModel)
+            implementation(bom)
+        }
+
+        Libraries.Google.run {
+            implementation(guava)
+            implementation(zxing)
+            implementation(fcm)
+        }
+
+    }
+
+//    implementation("androidx.ads:ads-identifier:1.0.0-alpha05")
 }

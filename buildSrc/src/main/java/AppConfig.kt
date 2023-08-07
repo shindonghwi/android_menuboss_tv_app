@@ -6,8 +6,9 @@ object AppConfig {
     const val targetSdk = 33
     const val versionCode = 1
     const val versionName = "0.0.1"
-    val javaVersion = JavaVersion.VERSION_11
-    val jvmTarget = "11"
+    val javaVersion = JavaVersion.VERSION_17
+    val jvmTarget = "17"
+    val packageName = "com.orot.menuboss_tv"
 }
 
 object DebugConfig {
@@ -17,7 +18,7 @@ object DebugConfig {
 }
 
 object ReleaseConfig {
-    const val app_label = "Hertz"
+    const val app_label = "MenuBoss"
     const val suffixName = ""
     const val versionName = ""
 }
