@@ -35,7 +35,9 @@ import com.orot.menuboss_tv.utils.adjustedDp
 
 
 @Composable
-fun AuthScreen() {
+fun AuthScreen(
+    authScreenViewModel: AuthScreenViewModel
+) {
     val context = LocalContext.current
 
     Box(

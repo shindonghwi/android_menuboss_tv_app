@@ -1,9 +1,6 @@
 package com.orot.menuboss_tv
 
 
-import android.content.pm.ActivityInfo
-import android.content.res.Configuration
-import android.content.res.Resources
 import android.os.Build
 import android.os.Bundle
 import android.os.StrictMode
@@ -12,21 +9,19 @@ import android.provider.Settings
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.core.view.WindowCompat
-import androidx.tv.material3.ExperimentalTvMaterial3Api
-import androidx.tv.material3.Surface
 import com.amazon.A3L.messaging.A3LMessaging
 import com.google.android.gms.tasks.Task
 import com.orot.menuboss_tv.ui.navigations.Navigation
 import com.orot.menuboss_tv.ui.theme.MenuBossTVTheme
+import dagger.hilt.android.AndroidEntryPoint
 import java.util.Objects
 
 
-@OptIn(ExperimentalTvMaterial3Api::class)
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,9 +48,15 @@ class MainActivity : ComponentActivity() {
         Log.w("Asdadssdasda", "BUILD_TYPE ${com.amazon.A3L.messaging.BuildConfig.BUILD_TYPE}")
 
         Log.w("Asdadssdasda", "serialNumber ${Build.MANUFACTURER}")
-        Log.w("zxcjkzhxck;lzxcjk",Build.MANUFACTURER + " " + Build.MODEL + " " + Build.DEVICE+ " " + Build.VERSION.INCREMENTAL + " " + Build.SERIAL);
-        Log.w("zxcjkzhxck;lzxcjk",Build.PRODUCT + " " + Build.BRAND + " " + Build.HARDWARE+ " " + Build.VERSION.RELEASE + " " + Build.VERSION.SDK_INT);
-        Log.w("zxcjkzhxck;lzxcjk",Build.FINGERPRINT);
+        Log.w(
+            "zxcjkzhxck;lzxcjk",
+            Build.MANUFACTURER + " " + Build.MODEL + " " + Build.DEVICE + " " + Build.VERSION.INCREMENTAL + " " + Build.SERIAL
+        );
+        Log.w(
+            "zxcjkzhxck;lzxcjk",
+            Build.PRODUCT + " " + Build.BRAND + " " + Build.HARDWARE + " " + Build.VERSION.RELEASE + " " + Build.VERSION.SDK_INT
+        );
+        Log.w("zxcjkzhxck;lzxcjk", Build.FINGERPRINT);
 
         val android_id: String = Settings.Secure.getString(
             applicationContext.contentResolver,
@@ -70,10 +71,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MenuBossTVTheme {
-                Surface(
-                    shape = RectangleShape,
-                    modifier = Modifier.fillMaxSize(),
-                ) {
+                Box(modifier = Modifier.fillMaxSize()) {
                     Navigation()
                 }
             }
