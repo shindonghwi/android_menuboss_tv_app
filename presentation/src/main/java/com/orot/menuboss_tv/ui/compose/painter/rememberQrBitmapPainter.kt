@@ -1,4 +1,4 @@
-package com.orot.menuboss_tv.ui.painter
+package com.orot.menuboss_tv.ui.compose.painter
 
 import android.graphics.Bitmap
 import android.graphics.Color

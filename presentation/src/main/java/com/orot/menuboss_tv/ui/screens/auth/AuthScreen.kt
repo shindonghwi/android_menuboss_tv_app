@@ -23,8 +23,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
-import com.orot.menuboss_tv.ui.modifier.tvSafeArea
-import com.orot.menuboss_tv.ui.painter.rememberQrBitmapPainter
+import com.orot.menuboss_tv.ui.compose.modifier.tvSafeArea
+import com.orot.menuboss_tv.ui.compose.painter.rememberQrBitmapPainter
 import com.orot.menuboss_tv.ui.source_pack.IconPack
 import com.orot.menuboss_tv.ui.source_pack.iconpack.Logo
 import com.orot.menuboss_tv.ui.theme.AdjustedBoldText

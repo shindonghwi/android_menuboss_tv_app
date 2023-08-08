@@ -18,7 +18,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
 import com.orot.menuboss_tv.presentation.R
 import com.orot.menuboss_tv.ui.components.RiveAnimation
-import com.orot.menuboss_tv.ui.modifier.tvSafeArea
+import com.orot.menuboss_tv.ui.compose.modifier.tvSafeArea
 import com.orot.menuboss_tv.ui.source_pack.IconPack
 import com.orot.menuboss_tv.ui.source_pack.iconpack.Logo
 import com.orot.menuboss_tv.ui.theme.AdjustedBoldText

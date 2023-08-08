@@ -1,4 +1,4 @@
-package com.orot.menuboss_tv.ui.modifier
+package com.orot.menuboss_tv.ui.compose.modifier
 
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layout
