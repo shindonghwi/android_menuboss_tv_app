@@ -7,10 +7,6 @@ object Versions {
         const val hilt = "2.44"
     }
 
-    object Kotlin {
-        const val version = "1.9.0"
-    }
-
     object AndroidX {
         const val startup = "1.1.1"
     }
@@ -34,30 +30,28 @@ object Versions {
         const val android = "5.0.0"
     }
 
-    //
     object Hilt{
         const val compose_hilt = "1.0.0"
-        const val version = "2.44"
+        const val version = "2.47"
     }
-//
-//    object OkHttp{
-//        const val version = "4.9.3"
-//        const val logging = "3.9.1"
-//    }
-//
-//    object Retrofit{
-//        const val version = "2.6.0"
-//    }
-//
-//    object Gson{
-//        const val version = "2.10"
-//    }
-//
-//    object Firebase{
-//        const val bom = "31.1.0"
-//        const val messagingService = "23.1.1"
-//    }
-//
+
+    object OkHttp{
+        const val version = "4.9.3"
+        const val logging = "3.9.1"
+    }
+
+    object Retrofit{
+        const val version = "2.6.0"
+    }
+
+    object Gson{
+        const val version = "2.10"
+    }
+
+    object Coroutine{
+        const val version = "1.6.4"
+    }
+
     object Google {
         const val guava = "28.0-android"
         const val zxing = "3.5.1"
@@ -99,34 +93,40 @@ object Libraries {
     }
 
     object Hilt {
-        const val NavigationCompose = "androidx.hilt:hilt-navigation-compose:${Versions.Hilt.compose_hilt}"
-        const val dagger = "com.google.dagger:hilt-android:${Versions.Hilt.version}"
-        const val core = "com.google.dagger:hilt-core:${Versions.Hilt.version}"
+        const val navigationCompose = "androidx.hilt:hilt-navigation-compose:${Versions.Hilt.compose_hilt}"
+        const val daggerAndroid = "com.google.dagger:hilt-android:${Versions.Hilt.version}"
     }
 
-//    object OkHttp{
-//        const val okhttp = "com.squareup.okhttp3:okhttp:${Versions.OkHttp.version}"
-//        const val logging = "com.squareup.okhttp3:logging-interceptor:${Versions.OkHttp.version}"
-//    }
-//
-//    object Retrofit{
-//        const val retrofit = "com.squareup.retrofit2:retrofit:${Versions.Retrofit.version}"
-//        const val retrofit_gson = "com.squareup.retrofit2:converter-gson:${Versions.Retrofit.version}"
-//    }
-//
-//    object Gson{
-//        const val gson = "com.google.code.gson:gson:${Versions.Gson.version}"
-//    }
-//
-//    object Firebase{
-//        const val bom = "com.google.firebase:firebase-bom:${Versions.Firebase.bom}"
-//        const val analytics = "com.google.firebase:firebase-analytics"
-//        const val messaging = "com.google.firebase:firebase-messaging:${Versions.Firebase.messagingService}"
-//    }
+    object Coroutine {
+        const val core = "org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.Coroutine.version}"
+    }
+
+    object OkHttp{
+        const val okhttp = "com.squareup.okhttp3:okhttp:${Versions.OkHttp.version}"
+        const val logging = "com.squareup.okhttp3:logging-interceptor:${Versions.OkHttp.version}"
+    }
+
+    object Retrofit{
+        const val retrofit = "com.squareup.retrofit2:retrofit:${Versions.Retrofit.version}"
+        const val retrofit_gson = "com.squareup.retrofit2:converter-gson:${Versions.Retrofit.version}"
+    }
+
+    object Gson{
+        const val gson = "com.google.code.gson:gson:${Versions.Gson.version}"
+    }
+}
+
+object ClassPaths{
+    const val gradle = "com.android.tools.build:gradle:${Versions.Plugins.gradle}"
+    const val hilt = "com.google.dagger:hilt-android-gradle-plugin:${Versions.Hilt.version}"
+    const val kotlin = "org.jetbrains.kotlin:kotlin-gradle-plugin:${Versions.Plugins.kotlin}"
+    const val googleService = "com.google.gms:google-services:${Versions.Plugins.googleService}"
 }
 
 object Kapts {
-    object Hilt{
-        const val hiltCompiler = "com.google.dagger:hilt-android-compiler:${Versions.Hilt.version}"
+    object Hilt {
+        const val daggerHiltCompiler = "com.google.dagger:hilt-compiler:${Versions.Hilt.version}"
+        const val daggerHiltAndroid = "com.google.dagger:hilt-android:${Versions.Hilt.version}"
+        const val daggerHiltAndroidCompiler = "com.google.dagger:hilt-android-compiler:${Versions.Hilt.version}"
     }
 }

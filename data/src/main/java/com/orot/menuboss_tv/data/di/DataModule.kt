@@ -4,7 +4,6 @@ import com.orot.menuboss_tv.data.api.TvApi
 import com.orot.menuboss_tv.data.constants.BASE_URL
 import com.orot.menuboss_tv.data.repository.TvRepositoryImpl
 import com.orot.menuboss_tv.domain.repository.TvRepository
-import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,11 +18,13 @@ import java.io.IOException
 import java.util.Locale
 import java.util.TimeZone
 import java.util.concurrent.TimeUnit
+import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class DataModule {
+object DataModule {
 
+    @Singleton
     @Provides
     fun provideRetrofit(): Retrofit {
         return Retrofit.Builder()
@@ -67,10 +68,11 @@ abstract class DataModule {
         }
 
     /** @feature: TVApi api, repository*/
+    @Singleton
     @Provides
     fun provideTvApi(retrofit: Retrofit): TvApi = retrofit.create(TvApi::class.java)
 
+    @Singleton
     @Provides
     fun provideTvRepository(tvApi: TvApi): TvRepository = TvRepositoryImpl(tvApi)
-
 }

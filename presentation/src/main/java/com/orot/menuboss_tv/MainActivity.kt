@@ -13,8 +13,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
-import com.amazon.A3L.messaging.A3LMessaging
-import com.google.android.gms.tasks.Task
+//import com.amazon.A3L.messaging.A3LMessaging
+//import com.google.android.gms.tasks.Task
 import com.orot.menuboss_tv.ui.navigations.Navigation
 import com.orot.menuboss_tv.ui.theme.MenuBossTVTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -29,43 +29,43 @@ class MainActivity : ComponentActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         StrictMode.setThreadPolicy(ThreadPolicy.Builder().permitAll().build())
 
-        A3LMessaging.getToken()
-            .addOnCompleteListener { task: Task<String> ->
-                Log.w(TAG, "onComplete: ", task.exception)
-                if (!task.isSuccessful) {
-                    Log.w(TAG, "Fetching FCM/ADM registration token failed", task.exception)
-                    return@addOnCompleteListener
-                }
-
-                // Get new FCM registration token
-                val token = task.result
-                Log.w(TAG, "onComplete: token :$token")
-                Log.d(TAG, token)
-            }
-
-        val currentPlatform = A3LMessaging.getCurrentPlatform(applicationContext)
-        Log.w("Asdadssdasda", "currentPlatform ${currentPlatform}")
-        Log.w("Asdadssdasda", "BUILD_TYPE ${com.amazon.A3L.messaging.BuildConfig.BUILD_TYPE}")
-
-        Log.w("Asdadssdasda", "serialNumber ${Build.MANUFACTURER}")
-        Log.w(
-            "zxcjkzhxck;lzxcjk",
-            Build.MANUFACTURER + " " + Build.MODEL + " " + Build.DEVICE + " " + Build.VERSION.INCREMENTAL + " " + Build.SERIAL
-        );
-        Log.w(
-            "zxcjkzhxck;lzxcjk",
-            Build.PRODUCT + " " + Build.BRAND + " " + Build.HARDWARE + " " + Build.VERSION.RELEASE + " " + Build.VERSION.SDK_INT
-        );
-        Log.w("zxcjkzhxck;lzxcjk", Build.FINGERPRINT);
-
-        val android_id: String = Settings.Secure.getString(
-            applicationContext.contentResolver,
-            Settings.Secure.ANDROID_ID
-        )
-        Log.w("zxcjkzhxck;lzxcjk", "android_id : ${android_id}")
-
-        val dd = Objects.hash(android_id, Build.FINGERPRINT)
-        Log.w("zxcjkzhxck;lzxcjk", "dd : ${dd}")
+//        A3LMessaging.getToken()
+//            .addOnCompleteListener { task: Task<String> ->
+//                Log.w(TAG, "onComplete: ", task.exception)
+//                if (!task.isSuccessful) {
+//                    Log.w(TAG, "Fetching FCM/ADM registration token failed", task.exception)
+//                    return@addOnCompleteListener
+//                }
+//
+//                // Get new FCM registration token
+//                val token = task.result
+//                Log.w(TAG, "onComplete: token :$token")
+//                Log.d(TAG, token)
+//            }
+//
+//        val currentPlatform = A3LMessaging.getCurrentPlatform(applicationContext)
+//        Log.w("Asdadssdasda", "currentPlatform ${currentPlatform}")
+//        Log.w("Asdadssdasda", "BUILD_TYPE ${com.amazon.A3L.messaging.BuildConfig.BUILD_TYPE}")
+//
+//        Log.w("Asdadssdasda", "serialNumber ${Build.MANUFACTURER}")
+//        Log.w(
+//            "zxcjkzhxck;lzxcjk",
+//            Build.MANUFACTURER + " " + Build.MODEL + " " + Build.DEVICE + " " + Build.VERSION.INCREMENTAL + " " + Build.SERIAL
+//        );
+//        Log.w(
+//            "zxcjkzhxck;lzxcjk",
+//            Build.PRODUCT + " " + Build.BRAND + " " + Build.HARDWARE + " " + Build.VERSION.RELEASE + " " + Build.VERSION.SDK_INT
+//        );
+//        Log.w("zxcjkzhxck;lzxcjk", Build.FINGERPRINT);
+//
+//        val android_id: String = Settings.Secure.getString(
+//            applicationContext.contentResolver,
+//            Settings.Secure.ANDROID_ID
+//        )
+//        Log.w("zxcjkzhxck;lzxcjk", "android_id : ${android_id}")
+//
+//        val dd = Objects.hash(android_id, Build.FINGERPRINT)
+//        Log.w("zxcjkzhxck;lzxcjk", "dd : ${dd}")
 
 
 

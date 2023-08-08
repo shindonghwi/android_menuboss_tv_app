@@ -1,3 +1,17 @@
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath(ClassPaths.googleService)
+        classpath(ClassPaths.hilt)
+        classpath(ClassPaths.kotlin)
+        classpath(ClassPaths.gradle)
+    }
+}
+
 plugins {
     id("com.android.application") version Versions.Plugins.gradle apply false
     id("com.android.library") version Versions.Plugins.gradle apply false

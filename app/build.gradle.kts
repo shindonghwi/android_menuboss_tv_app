@@ -5,6 +5,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.gms.google-services")
+    id("com.google.dagger.hilt.android")
     kotlin("kapt")
 }
 
@@ -90,9 +91,26 @@ android {
 }
 
 dependencies {
-    implementation(project(":presentation"))
+    api(project(":presentation"))
+    implementation("androidx.multidex:multidex:2.0.1")
 
-    Libraries.AndroidX.run {
-        implementation(startup)
+    Libraries.apply {
+        Libraries.AndroidX.run {
+            implementation(startup)
+        }
+        Libraries.Hilt.run {
+            implementation(daggerAndroid)
+        }
     }
+
+    Kapts.Hilt.run {
+        kapt(daggerHiltCompiler)
+        kapt(daggerHiltAndroidCompiler)
+        kapt(daggerHiltAndroid)
+    }
+
+}
+
+kapt {
+    correctErrorTypes = true
 }
