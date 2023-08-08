@@ -1,5 +1,7 @@
 package com.orot.menuboss_tv.data.constants
 
+import com.orot.menuboss_tv.data.BuildConfig
+
 
 val BASE_URL = if (BuildConfig.DEBUG) {
     "https://dev-tv-api.menuboss.tv"
