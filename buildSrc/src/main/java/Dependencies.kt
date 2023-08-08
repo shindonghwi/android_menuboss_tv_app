@@ -1,24 +1,16 @@
 object Versions {
 
-    //    object Gradle{
-//        const val version = "7.2.0"
-//    }
-//
     object Plugins {
         const val gradle = "8.1.0"
         const val kotlin = "1.9.0"
         const val googleService = "4.3.15"
+        const val hilt = "2.44"
     }
 
     object Kotlin {
         const val version = "1.9.0"
     }
 
-    //
-//    object Coroutine{
-//        const val version = "1.6.4"
-//    }
-//
     object AndroidX {
         const val startup = "1.1.1"
     }
@@ -43,10 +35,10 @@ object Versions {
     }
 
     //
-//    object Hilt{
-//        const val compose_hilt = "1.0.0"
-//        const val version = "2.44"
-//    }
+    object Hilt{
+        const val compose_hilt = "1.0.0"
+        const val version = "2.44"
+    }
 //
 //    object OkHttp{
 //        const val version = "4.9.3"
@@ -105,13 +97,13 @@ object Libraries {
         const val zxing = "com.google.zxing:core:${Versions.Google.zxing}"
         const val fcm = "com.google.firebase:firebase-messaging:${Versions.Google.fcm}"
     }
-//
-//    object Hilt {
-//        const val NavigationCompose = "androidx.hilt:hilt-navigation-compose:${Versions.Hilt.compose_hilt}"
-//        const val dagger = "com.google.dagger:hilt-android:${Versions.Hilt.version}"
-//        const val core = "com.google.dagger:hilt-core:${Versions.Hilt.version}"
-//    }
-//
+
+    object Hilt {
+        const val NavigationCompose = "androidx.hilt:hilt-navigation-compose:${Versions.Hilt.compose_hilt}"
+        const val dagger = "com.google.dagger:hilt-android:${Versions.Hilt.version}"
+        const val core = "com.google.dagger:hilt-core:${Versions.Hilt.version}"
+    }
+
 //    object OkHttp{
 //        const val okhttp = "com.squareup.okhttp3:okhttp:${Versions.OkHttp.version}"
 //        const val logging = "com.squareup.okhttp3:logging-interceptor:${Versions.OkHttp.version}"
@@ -133,15 +125,8 @@ object Libraries {
 //    }
 }
 
-//object ClassPaths{
-//    const val googleService = "com.google.gms:google-services:${Versions.Google.servicesVersion}"
-//    const val hilt = "com.google.dagger:hilt-android-gradle-plugin:${Versions.Hilt.version}"
-//    const val kotlin = "org.jetbrains.kotlin:kotlin-gradle-plugin:${Versions.Kotlin.version}"
-//    const val gradle = "com.android.tools.build:gradle:${Versions.Gradle.version}"
-//}
-//
-//object Kapts {
-//    object Hilt{
-//        const val hiltCompiler = "com.google.dagger:hilt-compiler:${Versions.Hilt.version}"
-//    }
-//}
+object Kapts {
+    object Hilt{
+        const val hiltCompiler = "com.google.dagger:hilt-android-compiler:${Versions.Hilt.version}"
+    }
+}
