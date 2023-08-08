@@ -35,6 +35,7 @@ object Versions {
         const val navigation = "2.6.0"
         const val viewModel = "2.6.1"
         const val bom = "2023.01.00"
+        const val constraintLayout = "1.0.1"
     }
 
     object Rive {
@@ -95,6 +96,7 @@ object Libraries {
         const val coil = "io.coil-kt:coil-compose:${Versions.Compose.coil}"
         const val viewModel = "androidx.lifecycle:lifecycle-viewmodel-compose:${Versions.Compose.viewModel}"
         const val bom = "androidx.compose:compose-bom:${Versions.Compose.bom}"
+        const val contraintLayout = "androidx.constraintlayout:constraintlayout-compose:${Versions.Compose.constraintLayout}"
     }
 
 

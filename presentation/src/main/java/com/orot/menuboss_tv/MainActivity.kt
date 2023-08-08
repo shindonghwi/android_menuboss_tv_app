@@ -1,6 +1,9 @@
 package com.orot.menuboss_tv
 
 
+import android.content.pm.ActivityInfo
+import android.content.res.Configuration
+import android.content.res.Resources
 import android.os.Build
 import android.os.Bundle
 import android.os.StrictMode
@@ -29,7 +32,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
-
         StrictMode.setThreadPolicy(ThreadPolicy.Builder().permitAll().build())
 
         A3LMessaging.getToken()

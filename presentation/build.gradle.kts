@@ -44,6 +44,7 @@ dependencies {
             implementation(navigation)
             implementation(viewModel)
             implementation(bom)
+            implementation(contraintLayout)
         }
 
         Libraries.Google.run {
@@ -51,8 +52,6 @@ dependencies {
             implementation(zxing)
             implementation(fcm)
         }
-
-
 
         Libraries.Rive.run {
             implementation(rive)
