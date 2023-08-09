@@ -48,7 +48,6 @@ dependencies {
             implementation(viewModel)
             implementation(bom)
             implementation(contraintLayout)
-            implementation(accompanistPager)
         }
 
         Libraries.Google.run {
