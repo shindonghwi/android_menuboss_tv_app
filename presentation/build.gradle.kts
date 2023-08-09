@@ -48,6 +48,7 @@ dependencies {
             implementation(viewModel)
             implementation(bom)
             implementation(contraintLayout)
+            implementation(accompanistPager)
         }
 
         Libraries.Google.run {
@@ -58,6 +59,10 @@ dependencies {
 
         Libraries.Rive.run {
             implementation(rive)
+        }
+
+        Libraries.Gson.run {
+            implementation(gson)
         }
 
     }
