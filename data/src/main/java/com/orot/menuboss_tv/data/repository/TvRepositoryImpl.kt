@@ -8,14 +8,11 @@ import javax.inject.Inject
 
 class TvRepositoryImpl @Inject constructor(
     private val tvApi: TvApi
-) :
-    TvRepository, SafeApiRequest() {
+) : TvRepository, SafeApiRequest() {
     override suspend fun getDeviceInfo(uuid: String): ApiResponse<Any> {
         val response = safeApiRequest { tvApi.getDeviceInfo(uuid) }
         return ApiResponse(
-            status = response.status,
-            message = response.message,
-            data = response.data
+            status = response.status, message = response.message, data = response.data
         )
     }
 }

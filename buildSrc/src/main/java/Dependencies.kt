@@ -9,6 +9,7 @@ object Versions {
 
     object AndroidX {
         const val startup = "1.1.1"
+        const val multidex = "2.0.1"
     }
 
     object KTX {
@@ -63,6 +64,7 @@ object Libraries {
 
     object AndroidX {
         const val startup = "androidx.startup:startup-runtime:${Versions.AndroidX.startup}"
+        const val multidex = "androidx.multidex:multidex:${Versions.AndroidX.multidex}"
     }
 
     object KTX {

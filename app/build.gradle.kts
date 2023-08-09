@@ -91,12 +91,14 @@ android {
 }
 
 dependencies {
-    api(project(":presentation"))
-    implementation("androidx.multidex:multidex:2.0.1")
+    implementation(project(":presentation"))
+    implementation(project(":domain"))
+    implementation(project(":data"))
 
     Libraries.apply {
         Libraries.AndroidX.run {
             implementation(startup)
+            implementation(multidex)
         }
         Libraries.Hilt.run {
             implementation(daggerAndroid)
