@@ -52,6 +52,12 @@ dependencies {
         api(daggerAndroid)
     }
 
+    Libraries.Google.run {
+        api(platform(firebaseBom))
+        api(firebaseCrashlyticsKtx)
+        api(firebaseAnallyticsKtx)
+        api(playServiceMeasurement)
+    }
 
     Kapts.Hilt.run {
         kapt(daggerHiltCompiler)

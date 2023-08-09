@@ -5,14 +5,12 @@ object Versions {
         const val kotlin = "1.9.0"
         const val googleService = "4.3.15"
         const val hilt = "2.44"
+        const val crashlytics = "2.9.8"
     }
 
     object AndroidX {
         const val startup = "1.1.1"
         const val multidex = "2.0.1"
-    }
-
-    object KTX {
         const val core = "1.10.1"
     }
 
@@ -57,6 +55,8 @@ object Versions {
         const val guava = "28.0-android"
         const val zxing = "3.5.1"
         const val fcm = "23.2.0"
+        const val firebaseBom = "32.2.2"
+        const val playServiceMeasurement = "21.3.0"
     }
 }
 
@@ -65,10 +65,7 @@ object Libraries {
     object AndroidX {
         const val startup = "androidx.startup:startup-runtime:${Versions.AndroidX.startup}"
         const val multidex = "androidx.multidex:multidex:${Versions.AndroidX.multidex}"
-    }
-
-    object KTX {
-        const val core = "androidx.core:core-ktx:${Versions.KTX.core}"
+        const val core = "androidx.core:core-ktx:${Versions.AndroidX.core}"
     }
 
     object Rive {
@@ -85,13 +82,6 @@ object Libraries {
         const val viewModel = "androidx.lifecycle:lifecycle-viewmodel-compose:${Versions.Compose.viewModel}"
         const val bom = "androidx.compose:compose-bom:${Versions.Compose.bom}"
         const val contraintLayout = "androidx.constraintlayout:constraintlayout-compose:${Versions.Compose.constraintLayout}"
-    }
-
-
-    object Google {
-        const val guava = "com.google.guava:guava:${Versions.Google.guava}"
-        const val zxing = "com.google.zxing:core:${Versions.Google.zxing}"
-        const val fcm = "com.google.firebase:firebase-messaging:${Versions.Google.fcm}"
     }
 
     object Hilt {
@@ -115,6 +105,16 @@ object Libraries {
 
     object Gson{
         const val gson = "com.google.code.gson:gson:${Versions.Gson.version}"
+    }
+
+    object Google {
+        const val guava = "com.google.guava:guava:${Versions.Google.guava}"
+        const val zxing = "com.google.zxing:core:${Versions.Google.zxing}"
+        const val fcm = "com.google.firebase:firebase-messaging:${Versions.Google.fcm}"
+        const val firebaseBom = "com.google.firebase:firebase-bom:${Versions.Google.firebaseBom}"
+        const val firebaseCrashlyticsKtx = "com.google.firebase:firebase-crashlytics-ktx"
+        const val firebaseAnallyticsKtx = "com.google.firebase:firebase-analytics-ktx"
+        const val playServiceMeasurement = "com.google.android.gms:play-services-measurement-api:${Versions.Google.playServiceMeasurement}"
     }
 }
 

@@ -29,41 +29,36 @@ android {
 
 dependencies {
 
-    implementation(project(":domain"))
+    api(project(":domain"))
 
+    Libraries.AndroidX.run {
+        implementation(core)
+    }
 
-    Libraries.apply {
+    Libraries.Compose.run {
+        implementation(uiTooling)
+        implementation(activity)
+        implementation(tvFoundation)
+        implementation(tvMaterial)
+        implementation(coil)
+        implementation(navigation)
+        implementation(viewModel)
+        implementation(bom)
+        implementation(contraintLayout)
+    }
 
-        Libraries.KTX.run {
-            implementation(core)
-        }
+    Libraries.Google.run {
+        implementation(guava)
+        implementation(zxing)
+        implementation(fcm)
+    }
 
-        Libraries.Compose.run {
-            implementation(uiTooling)
-            implementation(activity)
-            implementation(tvFoundation)
-            implementation(tvMaterial)
-            implementation(coil)
-            implementation(navigation)
-            implementation(viewModel)
-            implementation(bom)
-            implementation(contraintLayout)
-        }
+    Libraries.Rive.run {
+        implementation(rive)
+    }
 
-        Libraries.Google.run {
-            implementation(guava)
-            implementation(zxing)
-            implementation(fcm)
-        }
-
-        Libraries.Rive.run {
-            implementation(rive)
-        }
-
-        Libraries.Gson.run {
-            implementation(gson)
-        }
-
+    Libraries.Gson.run {
+        implementation(gson)
     }
 
     Kapts.Hilt.run {

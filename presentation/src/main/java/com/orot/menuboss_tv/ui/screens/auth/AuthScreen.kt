@@ -51,7 +51,7 @@ fun AuthScreen(authScreenViewModel: AuthScreenViewModel) {
     val authData = authScreenViewModel.authState.collectAsState().value
 
     LaunchedEffect(key1 = Unit, block = {
-        DeviceInfoUtil.run {
+        authScreenViewModel.deviceInfoUtil.run {
             val uuid1 = generateUniqueUUID(
                 getMacAddress(),
                 "${Build.PRODUCT}${Build.BRAND}${Build.HARDWARE}"

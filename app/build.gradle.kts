@@ -6,6 +6,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.gms.google-services")
     id("com.google.dagger.hilt.android")
+    id("com.google.firebase.crashlytics")
     kotlin("kapt")
 }
 
@@ -23,10 +24,10 @@ android {
 
     sourceSets {
         create("prod") {
-            res.srcDir("src/prod/assets")
+            res.srcDir("src/prod")
         }
         create("dev") {
-            res.srcDir("src/dev/assets")
+            res.srcDir("src/dev")
         }
     }
 
@@ -95,14 +96,18 @@ dependencies {
     implementation(project(":domain"))
     implementation(project(":data"))
 
-    Libraries.apply {
-        Libraries.AndroidX.run {
-            implementation(startup)
-            implementation(multidex)
-        }
-        Libraries.Hilt.run {
-            implementation(daggerAndroid)
-        }
+    Libraries.AndroidX.run {
+        implementation(startup)
+        implementation(multidex)
+    }
+    Libraries.Hilt.run {
+        implementation(daggerAndroid)
+    }
+
+    Libraries.Google.run {
+        api(platform(firebaseBom))
+        api(firebaseCrashlyticsKtx)
+        api(firebaseAnallyticsKtx)
     }
 
     Kapts.Hilt.run {
