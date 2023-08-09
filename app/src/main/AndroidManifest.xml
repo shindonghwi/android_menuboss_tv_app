@@ -27,8 +27,8 @@
         android:theme="@style/Theme.MenuBossTV">
         <activity
             android:name=".MainActivity"
-            android:screenOrientation="sensor"
-            android:exported="true">
+            android:exported="true"
+            android:screenOrientation="sensor">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -37,33 +37,13 @@
             </intent-filter>
         </activity>
 
-        <receiver
-            android:name=".MyA3LMessagingService"
-            android:enabled="true"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.amazon.A3L.messaging.intent.REGISTRATION" />
-                <action android:name="com.amazon.A3L.messaging.intent.MESSAGE" />
-            </intent-filter>
-        </receiver>
-
-        <meta-data
-            android:name="com.a3l.clsName"
-            android:value="com.orot.menuboss_tv.MyA3LMessagingService" />
-
-        <meta-data
-            android:name="ADM_SERVER_CONFIG_FILE_NAME"
-            android:value="adm_server_configuration.json" />
-        <meta-data
-            android:name="FCM_SERVER_CONFIG_FILE_NAME"
-            android:value="fcm_server_configuration.json" />
-
         <provider
             android:name="androidx.startup.InitializationProvider"
             android:authorities="${applicationId}.androidx-startup"
             android:exported="false"
             tools:node="merge">
-            <meta-data android:name="app.rive.runtime.kotlin.RiveInitializer"
+            <meta-data
+                android:name="app.rive.runtime.kotlin.RiveInitializer"
                 android:value="androidx.startup" />
         </provider>
 

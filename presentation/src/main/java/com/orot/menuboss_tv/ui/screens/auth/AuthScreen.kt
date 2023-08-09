@@ -1,6 +1,10 @@
 package com.orot.menuboss_tv.ui.screens.auth
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.os.Build
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -16,14 +20,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
+import com.orot.menuboss_tv.domain.entities.DeviceInfo
 import com.orot.menuboss_tv.ui.compose.modifier.tvSafeArea
 import com.orot.menuboss_tv.ui.compose.painter.rememberQrBitmapPainter
 import com.orot.menuboss_tv.ui.source_pack.IconPack
@@ -32,15 +40,30 @@ import com.orot.menuboss_tv.ui.theme.AdjustedBoldText
 import com.orot.menuboss_tv.ui.theme.AdjustedMediumText
 import com.orot.menuboss_tv.ui.theme.colorBackground
 import com.orot.menuboss_tv.ui.theme.colorWhite
+import com.orot.menuboss_tv.utils.DeviceInfoUtil
 import com.orot.menuboss_tv.utils.adjustedDp
 
 
+@SuppressLint("HardwareIds")
 @Composable
 fun AuthScreen(authScreenViewModel: AuthScreenViewModel) {
     val context = LocalContext.current
+    val authData = authScreenViewModel.authState.collectAsState().value
 
     LaunchedEffect(key1 = Unit, block = {
-        authScreenViewModel.requestGetDeviceInfo("1234")
+        DeviceInfoUtil.run {
+            val uuid1 = generateUniqueUUID(
+                getMacAddress(),
+                "${Build.PRODUCT}${Build.BRAND}${Build.HARDWARE}"
+            )
+            val uuid2 = generateUniqueUUID(
+                getMacAddress(),
+                "${Build.MANUFACTURER}${Build.MODEL}${Build.DEVICE}"
+            )
+            val uuid3 = generateUniqueUUID(getMacAddress(), Build.FINGERPRINT)
+            val resultUUID = generateUniqueUUID(uuid1.toString(), "$uuid2$uuid3")
+            authScreenViewModel.requestGetDeviceInfo(resultUUID.toString())
+        }
     })
 
     Box(
@@ -58,7 +81,7 @@ fun AuthScreen(authScreenViewModel: AuthScreenViewModel) {
 
             HeaderContent(modifier = Modifier.layoutId("header"))
 
-            BodyContent(modifier = Modifier.layoutId("body"))
+            BodyContent(modifier = Modifier.layoutId("body"), authData = authData?.tv)
 
             FooterContent(modifier = Modifier.layoutId("footer"))
         }
@@ -131,15 +154,15 @@ private fun HeaderContent(modifier: Modifier) {
 }
 
 @Composable
-private fun BodyContent(modifier: Modifier) {
+private fun BodyContent(modifier: Modifier, authData: DeviceInfo.TV?) {
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        PinCode(modifier = Modifier.weight(1f))
+        PinCode(modifier = Modifier.weight(1f), code = authData?.code)
         OrDivider()
-        QRCode(modifier = Modifier.weight(1f))
+        QRCode(modifier = Modifier.weight(1f), qrUrl = authData?.qrUrl)
     }
 }
 
@@ -154,46 +177,52 @@ private fun FooterContent(modifier: Modifier) {
 }
 
 @Composable
-private fun PinCode(modifier: Modifier) {
+private fun PinCode(modifier: Modifier, code: String?) {
 
-    val pinCode = "1234"
+    val alpha: Float by animateFloatAsState(
+        targetValue = if (code != null) 1f else 0f,
+        animationSpec = tween(durationMillis = 700), label = ""
+    )
 
     Column(
-        modifier = modifier,
+        modifier = modifier.alpha(alpha),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
 
         AdjustedBoldText(text = "Enter Pin Code", fontSize = adjustedDp(24.dp))
 
-        Row(
-            modifier = Modifier
-                .padding(top = adjustedDp(70.dp))
-                .height(adjustedDp(48.dp)),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
-        ) {
-            pinCode.forEachIndexed { index, number ->
-                run {
-                    AdjustedBoldText(
-                        modifier = Modifier.size(adjustedDp(48.dp)),
-                        text = number.toString(),
-                        fontSize = adjustedDp(24.dp)
-                    )
-
-                    if (index != pinCode.lastIndex) Box(
-                        Modifier.fillMaxHeight(), contentAlignment = Alignment.Center
-                    ) {
-                        Spacer(
-                            Modifier
-                                .width(adjustedDp(12.dp))
-                                .height(adjustedDp(2.5.dp))
-                                .background(colorWhite)
+        code?.let {
+            Row(
+                modifier = Modifier
+                    .padding(top = adjustedDp(70.dp))
+                    .height(adjustedDp(48.dp)),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                it.forEachIndexed { index, number ->
+                    run {
+                        AdjustedBoldText(
+                            modifier = Modifier.size(adjustedDp(48.dp)),
+                            text = number.toString(),
+                            fontSize = adjustedDp(24.dp)
                         )
+
+                        if (index != code.lastIndex) Box(
+                            Modifier.fillMaxHeight(), contentAlignment = Alignment.Center
+                        ) {
+                            Spacer(
+                                Modifier
+                                    .width(adjustedDp(12.dp))
+                                    .height(adjustedDp(2.5.dp))
+                                    .background(colorWhite)
+                            )
+                        }
                     }
                 }
             }
         }
+
         AdjustedMediumText(
             modifier = Modifier.padding(top = adjustedDp(20.dp)),
             text = "Visit MenuBoss website\nAnd enter the code below",
@@ -232,12 +261,15 @@ private fun OrDivider() {
 }
 
 @Composable
-private fun QRCode(modifier: Modifier) {
+private fun QRCode(modifier: Modifier, qrUrl: String?) {
 
-    val pinCode = "1234"
+    val alpha: Float by animateFloatAsState(
+        targetValue = if (qrUrl != null) 1f else 0f,
+        animationSpec = tween(durationMillis = 700), label = ""
+    )
 
     Column(
-        modifier = modifier,
+        modifier = modifier.alpha(alpha),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -247,13 +279,16 @@ private fun QRCode(modifier: Modifier) {
             fontSize = adjustedDp(24.dp),
         )
 
-        Image(
-            modifier = Modifier
-                .padding(top = adjustedDp(40.dp))
-                .size(adjustedDp(180.dp)),
-            painter = rememberQrBitmapPainter("AUTH CODE: $pinCode"),
-            contentDescription = "QR Code",
-            contentScale = ContentScale.FillBounds,
-        )
+        qrUrl?.let {
+            Image(
+                modifier = Modifier
+                    .padding(top = adjustedDp(40.dp))
+                    .size(adjustedDp(180.dp)),
+                painter = rememberQrBitmapPainter(it),
+                contentDescription = "QR Code",
+                contentScale = ContentScale.FillBounds,
+            )
+        }
+
     }
 }

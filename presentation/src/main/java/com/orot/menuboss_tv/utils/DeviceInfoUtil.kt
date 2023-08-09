@@ -1,12 +1,13 @@
 package com.orot.menuboss_tv.utils
 
-import android.content.ContentResolver
-import android.provider.Settings
 import java.net.NetworkInterface
+import java.nio.ByteBuffer
+import java.security.MessageDigest
 import java.util.Collections
+import java.util.UUID
 
 
-object DeviceInfo {
+object DeviceInfoUtil {
 
     /** wlan0을 검색 대상으로 잡고 MAC Address 조회. */
     fun getMacAddress(): String {
@@ -33,9 +34,9 @@ object DeviceInfo {
             macAddress = getReSearchMacAddress()
         }
 
-        return if (isValidMacAddress(macAddress)){
+        return if (isValidMacAddress(macAddress)) {
             macAddress
-        }else{
+        } else {
             ""
         }
     }
@@ -68,5 +69,18 @@ object DeviceInfo {
         return pattern.matches(macAddress)
     }
 
+    /**
+     * @feature: MAC 주소에 기반한 고유한 UUID 생성하기
+     * @author: 2023/08/09 4:16 PM donghwishin
+    */
+    fun generateUniqueUUID(macAddress: String, data: String): UUID {
+        val combinedString = macAddress + data
+        val sha256 = MessageDigest.getInstance("SHA-256")
+        val hash = sha256.digest(combinedString.toByteArray())
 
+        val buffer = ByteBuffer.wrap(hash)
+        val high = buffer.long
+        val low = buffer.long
+        return UUID(high, low)
+    }
 }

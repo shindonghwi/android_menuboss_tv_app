@@ -1,4 +1,4 @@
-package com.orot.menuboss_tv.data.model
+package com.orot.menuboss_tv.domain.entities
 
 data class ApiResponse<T>(
     val status: Int,
