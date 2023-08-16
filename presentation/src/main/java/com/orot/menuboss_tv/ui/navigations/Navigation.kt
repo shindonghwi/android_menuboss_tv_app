@@ -30,15 +30,13 @@ fun Navigation() {
                 SplashScreen()
             }
             composable(RouteScreen.AuthScreen.route) {
-                val authScreenViewModel = hiltViewModel<AuthScreenViewModel>()
-                AuthScreen(authScreenViewModel)
+                AuthScreen()
             }
             composable(RouteScreen.ReloadScreen.route) {
                 ReloadScreen()
             }
             composable(RouteScreen.MenuBoardScreen.route) {
-                val menuBoardScreenViewModel = hiltViewModel<MenuBoardScreenViewModel>()
-                MenuBoardScreen(menuBoardScreenViewModel)
+                MenuBoardScreen()
             }
         }
     }

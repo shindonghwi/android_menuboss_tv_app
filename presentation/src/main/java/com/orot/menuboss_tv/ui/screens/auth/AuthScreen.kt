@@ -31,6 +31,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.orot.menuboss_tv.domain.entities.DeviceInfo
 import com.orot.menuboss_tv.ui.compose.modifier.tvSafeArea
 import com.orot.menuboss_tv.ui.compose.painter.rememberQrBitmapPainter
@@ -40,13 +41,14 @@ import com.orot.menuboss_tv.ui.theme.AdjustedBoldText
 import com.orot.menuboss_tv.ui.theme.AdjustedMediumText
 import com.orot.menuboss_tv.ui.theme.colorBackground
 import com.orot.menuboss_tv.ui.theme.colorWhite
-import com.orot.menuboss_tv.utils.DeviceInfoUtil
 import com.orot.menuboss_tv.utils.adjustedDp
 
 
 @SuppressLint("HardwareIds")
 @Composable
-fun AuthScreen(authScreenViewModel: AuthScreenViewModel) {
+fun AuthScreen(
+    authScreenViewModel: AuthScreenViewModel = hiltViewModel()
+) {
     val context = LocalContext.current
     val authData = authScreenViewModel.authState.collectAsState().value
 

@@ -1,5 +1,6 @@
 package com.orot.menuboss_tv.ui.screens.menu_board
 
+import android.util.Log
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -12,12 +13,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
+import com.orot.menuboss_tv.MainViewModel
 import kotlinx.coroutines.delay
 
 @Composable
-fun MenuBoardScreen(menuBoardScreenViewModel: MenuBoardScreenViewModel) {
-
+fun MenuBoardScreen(
+    menuBoardScreenViewModel: MenuBoardScreenViewModel = hiltViewModel(),
+    mainViewModel: MainViewModel = hiltViewModel()
+) {
     LaunchedEffect(key1 = Unit, block = {
         menuBoardScreenViewModel.connectToWebSocket()
     })

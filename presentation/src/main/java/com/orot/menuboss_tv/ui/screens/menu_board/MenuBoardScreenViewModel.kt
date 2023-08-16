@@ -9,6 +9,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
@@ -27,7 +28,6 @@ class MenuBoardScreenViewModel @Inject constructor(
     private val job = Job()
     private val client = OkHttpClient()
     private var webSocket: WebSocket? = null
-
 
     /**
      * @feature: WebSocket 연결하기

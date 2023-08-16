@@ -1,5 +1,6 @@
 package com.orot.menuboss_tv.ui.screens.auth
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.orot.menuboss_tv.domain.entities.DeviceInfo

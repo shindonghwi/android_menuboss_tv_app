@@ -8,7 +8,7 @@ data class DeviceInfo(
     val hasPlan: Boolean
 ){
     data class TV(
-        val name: String,
+        val name: String?,
 
         // TV 등록이 된 경우
         val accessToken: String?,
