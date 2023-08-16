@@ -21,6 +21,7 @@ import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
+import kotlin.math.pow
 
 @HiltViewModel
 class MenuBoardScreenViewModel @Inject constructor(
@@ -36,6 +37,7 @@ class MenuBoardScreenViewModel @Inject constructor(
     private val job = Job()
     private val client = OkHttpClient()
     private var webSocket: WebSocket? = null
+    private var connectionAttempt = 0
 
     val screenItems = MutableStateFlow<List<Pair<Long, String>>>(listOf())
 
@@ -64,12 +66,13 @@ class MenuBoardScreenViewModel @Inject constructor(
                     screenItems.value = msg.pages.map { Pair(it.conversionTime * 1000L, it.imageUrl) }
                 }
 
-                Log.w("MenuBossScreenViewModel", "onMessage: ${msg}")
+                Log.w(TAG, "onMessage: ${msg}")
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
                 super.onFailure(webSocket, t, response)
-                Log.w("Asdasdasd", "onFailure $t : $response ")
+                reconnectToWebSocket(accessToken)
+                Log.w(TAG, "onFailure $t : $response ")
             }
         })
     }
@@ -101,6 +104,39 @@ class MenuBoardScreenViewModel @Inject constructor(
     }
 
     /**
+     * @feature: 지수 백오프 알고리즘을 사용하여 재연결 시간 계산하기
+     *
+     * @author: 2023/08/16 2:47 PM donghwishin
+    */
+    private fun getBackoffTime(attempt: Int): Long {
+        val maxBackoff = 60 * 1000L // Maximum backoff time, in milliseconds
+        val baseBackoff = 1000L // Initial backoff time, in milliseconds
+        val backoffFactor = 2 // Backoff factor
+
+        val calculatedBackoff = baseBackoff * (backoffFactor.toDouble().pow(attempt.coerceAtMost(10))).toLong()
+
+        return calculatedBackoff.coerceAtMost(maxBackoff)
+    }
+
+    /**
+     * @feature: WebSocket 재연결하기
+     *
+     * @author: 2023/08/16 2:46 PM donghwishin
+    */
+    private fun reconnectToWebSocket(accessToken: String) {
+        webSocket?.cancel()
+        webSocket = null
+
+        viewModelScope.launch {
+            delay(getBackoffTime(connectionAttempt))
+            connectionAttempt++
+            connectToWebSocket(accessToken)
+        }
+    }
+
+
+
+    /**
      * @feature: ViewModel이 종료 시
      *
      * @author: 2023/08/09 4:54 PM donghwishin
@@ -110,7 +146,17 @@ class MenuBoardScreenViewModel @Inject constructor(
      */
     override fun onCleared() {
         super.onCleared()
-        webSocket?.close(1000, "ViewModel cleared")
+        closeWebSocket()
     }
 
+    private fun closeWebSocket() {
+        webSocket?.cancel()
+        webSocket?.close(1000, "ViewModel cleared")
+        webSocket = null
+        connectionAttempt = 0
+    }
+
+    companion object{
+        private const val TAG = "MenuBossScreenViewModel"
+    }
 }
