@@ -1,10 +1,7 @@
 package com.orot.menuboss_tv.data.di
 
-import com.orot.menuboss_tv.data.api.TvApi
+import com.orot.menuboss_tv.data.services.TvApi
 import com.orot.menuboss_tv.data.constants.BASE_URL
-import com.orot.menuboss_tv.data.repository.TvRepositoryImpl
-import com.orot.menuboss_tv.domain.repository.TvRepository
-import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

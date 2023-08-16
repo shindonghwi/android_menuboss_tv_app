@@ -1,4 +1,4 @@
-package com.orot.menuboss_tv.data.api
+package com.orot.menuboss_tv.data.services
 
 import com.orot.menuboss_tv.data.constants.API_VERSION
 import com.orot.menuboss_tv.data.models.DeviceInfoDTO
