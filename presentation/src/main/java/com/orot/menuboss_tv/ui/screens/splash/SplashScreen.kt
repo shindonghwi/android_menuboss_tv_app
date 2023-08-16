@@ -30,7 +30,7 @@ fun SplashScreen() {
             },
             onAnimEnd = {
                 coroutineScopeOnMain(initDelay = 2500) {
-                    navController.navigate(RouteScreen.AuthScreen.route)
+                    navController.navigate(RouteScreen.MenuBoardScreen.route)
                 }
             },
         )

@@ -8,10 +8,6 @@ sealed class RouteScreen(val route: String) {
     // 인증 화면
     data object AuthScreen : RouteScreen("/auth")
 
-
-    // 데이터 업데이트 화면
-    data object ReloadScreen : RouteScreen("/reload")
-
     // 메뉴보드 화면
     data object MenuBoardScreen : RouteScreen("/menu_board")
 

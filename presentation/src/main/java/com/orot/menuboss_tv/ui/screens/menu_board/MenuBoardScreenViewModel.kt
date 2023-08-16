@@ -4,6 +4,8 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
+import com.orot.menuboss_tv.domain.entities.SocketMsg
+import com.orot.menuboss_tv.presentation.BuildConfig
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -24,10 +26,18 @@ import kotlin.coroutines.CoroutineContext
 class MenuBoardScreenViewModel @Inject constructor(
 ) : ViewModel(), CoroutineScope {
 
+    private val socketUrl: String = if (BuildConfig.DEBUG) {
+        "wss://dev-screen.menuboss.tv/v1/stream"
+    } else {
+        "wss://screen.menuboss.tv/v1/stream"
+    }
+
     override val coroutineContext: CoroutineContext get() = job + Dispatchers.Main
     private val job = Job()
     private val client = OkHttpClient()
     private var webSocket: WebSocket? = null
+
+    val screenItems = MutableStateFlow<List<Pair<Long, String>>>(listOf())
 
     /**
      * @feature: WebSocket 연결하기
@@ -35,14 +45,12 @@ class MenuBoardScreenViewModel @Inject constructor(
      */
     fun connectToWebSocket(
         accessToken: String = "w8Fg6ggwOje",
-        socketUrl: String = "wss://dev-screen.menuboss.tv/v1/stream"
     ) {
         val request = Request.Builder()
             .url(socketUrl)
             .addHeader("Authorization", accessToken)
             .build()
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
-
             override fun onOpen(webSocket: WebSocket, response: Response) {
                 super.onOpen(webSocket, response)
                 startPing()
@@ -50,7 +58,13 @@ class MenuBoardScreenViewModel @Inject constructor(
 
             override fun onMessage(webSocket: WebSocket, text: String) {
                 super.onMessage(webSocket, text)
-                Log.w("Asdasdasd", "onMessage $text: ")
+                val msg = Gson().fromJson(text, SocketMsg::class.java)
+
+                if (msg.`object` == "screen") {
+                    screenItems.value = msg.pages.map { Pair(it.conversionTime * 1000L, it.imageUrl) }
+                }
+
+                Log.w("MenuBossScreenViewModel", "onMessage: ${msg}")
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
