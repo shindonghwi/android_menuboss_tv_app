@@ -1,24 +1,19 @@
-@file:OptIn(ExperimentalFoundationApi::class)
-
 package com.orot.menuboss_tv.ui.screens.menu_board
 
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.PageSize
-import androidx.compose.foundation.pager.PagerDefaults
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
-import kotlinx.coroutines.NonCancellable
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.rememberAsyncImagePainter
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 @Composable
 fun MenuBoardScreen(menuBoardScreenViewModel: MenuBoardScreenViewModel) {
@@ -36,68 +31,33 @@ fun MenuBoardScreen(menuBoardScreenViewModel: MenuBoardScreenViewModel) {
         "https://blog.kakaocdn.net/dn/daPJMD/btqCinzhh9J/akDK6BMiG3QKH3XWXwobx1/img.jpg",
     )
 
-    ImageSlideshow(
-        modifier = Modifier.fillMaxSize(),
-        itemsCount = imageUrls.size,
-        itemContent = { index ->
-            AsyncImage(
-                modifier = Modifier.fillMaxSize(),
-                model = ImageRequest.Builder(LocalContext.current).data(imageUrls[index])
-                    .crossfade(true).build(),
-                contentDescription = null,
-            )
-        }
+    ImageSwitcher(
+        images = imageUrls,
+        intervalMillis = 3000,
+        crossfadeDurationMillis = 1500
     )
-
 }
 
 @Composable
-fun ImageSlideshow(
-    modifier: Modifier = Modifier,
-    autoSlideDuration: Long = 10000,
-    itemsCount: Int,
-    itemContent: @Composable (index: Int) -> Unit,
-) {
-    val pagerState = rememberPagerState(initialPage = 0, initialPageOffsetFraction = 0f) {
-        Int.MAX_VALUE
-    }
-    // 지정한 시간마다 auto scroll.
-    LaunchedEffect(key1 = pagerState.currentPage) {
-        launch {
-            while (true) {
-                delay(autoSlideDuration)
-                // 페이지 바뀌었다고 애니메이션이 멈추면 어색하니 NonCancellable
-                withContext(NonCancellable) {
-                    try {
-                        // 일어날린 없지만 유저가 최대값 이상 스크롤 되었을때
-                        if (pagerState.currentPage + 1 in 0..Int.MAX_VALUE) {
-                            pagerState.animateScrollToPage(pagerState.currentPage + 1)
-                        } else {
-                            pagerState.animateScrollToPage(0)
-                        }
-                    } catch (e: Exception) {
-                        pagerState.animateScrollToPage(0)
-                    }
+private fun ImageSwitcher(images: List<String>, intervalMillis: Long, crossfadeDurationMillis: Int) {
+    var currentIndex by remember { mutableIntStateOf(0) }
 
-                }
-            }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(intervalMillis)
+            currentIndex = (currentIndex + 1) % images.size
         }
     }
 
-
-    HorizontalPager(
-        modifier = modifier,
-        state = pagerState,
-        userScrollEnabled = false,
-        pageSize = PageSize.Fill,
-        pageNestedScrollConnection = PagerDefaults.pageNestedScrollConnection(
-            Orientation.Horizontal
-        ),
-    ) { page ->
-        val index = page % itemsCount
-        itemContent(index)
+    Crossfade(
+        targetState = images[currentIndex],
+        animationSpec = tween(durationMillis = crossfadeDurationMillis), label = ""
+    ) { imageUrl ->
+        Image(
+            painter = rememberAsyncImagePainter(imageUrl),
+            contentDescription = null,
+            contentScale = ContentScale.FillBounds,
+            modifier = Modifier.fillMaxSize()
+        )
     }
-
 }
-
-
