@@ -8,33 +8,25 @@ class DeviceInfoMapper @Inject constructor() {
 
     fun mapFromDTO(dto: DeviceInfoDTO): DeviceInfo {
         return DeviceInfo(
+            `object` = dto.`object`,
             status = dto.status,
-            tv = mapTV(dto.tv),
-            business = dto.business?.let { mapBusiness(it) },
-            product = dto.product?.let { mapProduct(it) },
-            hasPlan = dto.hasPlan
+            linkProfile = dto.linkProfile?.let { mapLinkProfile(it) },
+            property = dto.property?.let { mapProperty(it) },
         )
     }
 
-    private fun mapTV(tvDTO: DeviceInfoDTO.TV): DeviceInfo.TV {
-        return DeviceInfo.TV(
+    private fun mapLinkProfile(tvDTO: DeviceInfoDTO.LinkProfile): DeviceInfo.LinkProfile {
+        return DeviceInfo.LinkProfile(
+            qrUrl = tvDTO.qrUrl,
+            pinCode = tvDTO.pinCode
+        )
+    }
+
+    private fun mapProperty(tvDTO: DeviceInfoDTO.Property): DeviceInfo.Property {
+        return DeviceInfo.Property(
             name = tvDTO.name,
             accessToken = tvDTO.accessToken,
             screenUrl = tvDTO.screenUrl,
-            code = tvDTO.code,
-            qrUrl = tvDTO.qrUrl
         )
     }
-    private fun mapBusiness(tvDTO: DeviceInfoDTO.Business): DeviceInfo.Business {
-        return DeviceInfo.Business(
-            name = tvDTO.name,
-        )
-    }
-    private fun mapProduct(tvDTO: DeviceInfoDTO.Product): DeviceInfo.Product {
-        return DeviceInfo.Product(
-            title = tvDTO.title,
-        )
-    }
-
-    // ... Similarly, map other nested DTOs if needed
 }

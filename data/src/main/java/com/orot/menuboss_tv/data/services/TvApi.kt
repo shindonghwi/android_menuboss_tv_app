@@ -18,7 +18,7 @@ interface TvApi {
      *
      * }
      */
-    @GET("$API_VERSION/devices/{uuid}")
+    @GET("$API_VERSION/screens/{uuid}")
     suspend fun getDeviceInfo(
         @Path(value = "uuid") uuid: String,
     ): Response<ApiResponse<DeviceInfoDTO>>

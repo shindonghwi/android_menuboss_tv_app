@@ -83,7 +83,7 @@ fun AuthScreen(
 
             HeaderContent(modifier = Modifier.layoutId("header"))
 
-            BodyContent(modifier = Modifier.layoutId("body"), authData = authData?.tv)
+            BodyContent(modifier = Modifier.layoutId("body"), authData = authData?.linkProfile)
 
             FooterContent(modifier = Modifier.layoutId("footer"))
         }
@@ -156,13 +156,13 @@ private fun HeaderContent(modifier: Modifier) {
 }
 
 @Composable
-private fun BodyContent(modifier: Modifier, authData: DeviceInfo.TV?) {
+private fun BodyContent(modifier: Modifier, authData: DeviceInfo.LinkProfile?) {
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        PinCode(modifier = Modifier.weight(1f), code = authData?.code)
+        PinCode(modifier = Modifier.weight(1f), code = authData?.pinCode)
         OrDivider()
         QRCode(modifier = Modifier.weight(1f), qrUrl = authData?.qrUrl)
     }

@@ -1,30 +1,20 @@
 package com.orot.menuboss_tv.data.models
 
 data class DeviceInfoDTO(
+    val `object`: String?,
     val status: String,
-    val tv: TV,
-    val business: Business?,
-    val product: Product?,
-    val hasPlan: Boolean
+    val property: Property?,
+    val linkProfile: LinkProfile?,
 ) {
-    data class TV(
-        val name: String,
-
-        // TV 등록이 된 경우
-        val accessToken: String?,
-        val screenUrl: String?,
-
-        // TV 등록이 안된 경우
-        val code: String?,
+    data class LinkProfile(
+        val pinCode: String?,
         val qrUrl: String?
     )
 
-    data class Business(
-        val name: String,
-    )
-
-    data class Product(
-        val title: String,
+    data class Property(
+        val name: String?,
+        val accessToken: String?,
+        val screenUrl: String?,
     )
 }
 
