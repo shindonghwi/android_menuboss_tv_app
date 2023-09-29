@@ -6,6 +6,7 @@ object Versions {
         const val googleService = "4.3.15"
         const val hilt = "2.44"
         const val crashlytics = "2.9.8"
+        const val protobuf = "0.9.4"
     }
 
     object AndroidX {
@@ -58,6 +59,13 @@ object Versions {
         const val firebaseBom = "32.2.2"
         const val playServiceMeasurement = "21.3.0"
     }
+
+    object Protobuf {
+        const val grpcVersion = "1.57.2"
+        const val grpcKotlinVersion = "1.4.0"
+        const val protobufVersion = "3.24.1"
+    }
+
 }
 
 object Libraries {
@@ -115,6 +123,13 @@ object Libraries {
         const val firebaseCrashlyticsKtx = "com.google.firebase:firebase-crashlytics-ktx"
         const val firebaseAnallyticsKtx = "com.google.firebase:firebase-analytics-ktx"
         const val playServiceMeasurement = "com.google.android.gms:play-services-measurement-api:${Versions.Google.playServiceMeasurement}"
+    }
+
+    object Protobuf{
+        const val grpcStub = "io.grpc:grpc-stub:${Versions.Protobuf.grpcVersion}"
+        const val grpcProtobufLite = "io.grpc:grpc-protobuf-lite:${Versions.Protobuf.grpcVersion}"
+        const val kotlinStub = "io.grpc:grpc-kotlin-stub:${Versions.Protobuf.grpcKotlinVersion}"
+        const val protobufKotlinLite = "com.google.protobuf:protobuf-kotlin-lite:${Versions.Protobuf.protobufVersion}"
     }
 }
 

@@ -19,4 +19,6 @@ plugins {
     id("com.google.gms.google-services") version Versions.Plugins.googleService apply false
     id("com.google.dagger.hilt.android") version Versions.Plugins.hilt apply false
     id("com.google.firebase.crashlytics") version Versions.Plugins.crashlytics apply false
+    id("com.google.protobuf") version Versions.Plugins.protobuf apply false
+
 }
