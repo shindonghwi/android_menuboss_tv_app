@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.orot.menuboss_tv.data"
-    compileSdk = 34
+    compileSdk = AppConfig.compileSdk
 
     defaultConfig {
         minSdk = AppConfig.minSdk

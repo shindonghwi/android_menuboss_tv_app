@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.orotcode.menuboss.grpc"
-    compileSdk = 34
+    compileSdk = AppConfig.compileSdk
 
     defaultConfig {
         minSdk = AppConfig.minSdk

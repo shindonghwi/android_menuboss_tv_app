@@ -9,8 +9,8 @@ interface TvRepository {
 
     suspend fun getDeviceInfo(uuid: String): ApiResponse<DeviceModel>
 
-    suspend fun getDevicePlaylist(uuid: String): ApiResponse<DevicePlaylistModel>
+    suspend fun getDevicePlaylist(uuid: String, accessToken: String): ApiResponse<DevicePlaylistModel>
 
-    suspend fun getDeviceSchedule(uuid: String): ApiResponse<DeviceScheduleModel>
+    suspend fun getDeviceSchedule(uuid: String, accessToken: String): ApiResponse<DeviceScheduleModel>
 
 }

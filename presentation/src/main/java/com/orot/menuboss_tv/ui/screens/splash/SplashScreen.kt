@@ -10,9 +10,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import app.rive.runtime.kotlin.core.Loop
-import com.orot.menuboss_tv.MainViewModel
 import com.orot.menuboss_tv.presentation.R
 import com.orot.menuboss_tv.ui.components.RiveAnimation
+import com.orot.menuboss_tv.ui.model.UiState
+import com.orot.menuboss_tv.ui.navigations.LocalMainViewModel
 import com.orot.menuboss_tv.ui.navigations.LocalNavController
 import com.orot.menuboss_tv.ui.navigations.RouteScreen
 import com.orot.menuboss_tv.ui.theme.colorBackground
@@ -24,11 +25,11 @@ import java.net.URLEncoder
 
 @Composable
 fun SplashScreen(
-    mainViewModel: MainViewModel = hiltViewModel(),
+    splashViewModel: SplashViewModel = hiltViewModel()
 ) {
     val navController = LocalNavController.current
-    val authData = mainViewModel.authState.collectAsState().value
-    val connectionStatus = mainViewModel.connectionStatus.collectAsState().value
+    val mainViewModel = LocalMainViewModel.current
+    val deviceState = splashViewModel.deviceState.collectAsState().value
 
     /**
      * @feature: 스플래시 화면에서 최초로 디바이스 정보를 가져옵니다.
@@ -41,11 +42,13 @@ fun SplashScreen(
     LaunchedEffect(key1 = Unit, block = {
         mainViewModel.run {
             subscribeConnectStream()
+        }
 
+        splashViewModel.run {
             // 로고 애니메이션이 완전히 띄워지기까지 기다립니다.
             coroutineScopeOnDefault {
                 delay(2000)
-                requestGetDeviceInfo()
+                requestGetDeviceInfo(mainViewModel.uuid)
             }
         }
     })
@@ -65,27 +68,28 @@ fun SplashScreen(
      *       * 조회한 디바이스 정보로 부터 accessToken 정보를 가지고 MenuBoardScreen 으로 이동.
      * }
      */
-    LaunchedEffect(key1 = authData?.status) {
-
-        if (authData?.status == "Unlinked") {
-            val code = authData.linkProfile?.pinCode ?: ""
-            val qrUrl = authData.linkProfile?.qrUrl ?: ""
-            val encodedQrUrl = withContext(Dispatchers.IO) {
-                URLEncoder.encode(qrUrl, "UTF-8")
-            }
-
-            navController.navigate("${RouteScreen.AuthScreen.route}/$code/$encodedQrUrl") {
-                popUpTo(navController.graph.startDestinationId) {
-                    inclusive = true
+    LaunchedEffect(deviceState) {
+        if (deviceState is UiState.Success) {
+            if (deviceState.data?.status == "Unlinked") {
+                val code = deviceState.data.linkProfile?.pinCode ?: ""
+                val qrUrl = deviceState.data.linkProfile?.qrUrl ?: ""
+                val encodedQrUrl = withContext(Dispatchers.IO) {
+                    URLEncoder.encode(qrUrl, "UTF-8")
                 }
-            }
-        } else if (authData?.status == "Linked") {
-            mainViewModel.run {
-                subscribeContentStream(authData.property?.accessToken.toString())
-            }
-            navController.navigate(RouteScreen.MenuBoardScreen.route) {
-                popUpTo(navController.graph.startDestinationId) {
-                    inclusive = true
+
+                navController.navigate("${RouteScreen.AuthScreen.route}/$code/$encodedQrUrl") {
+                    popUpTo(navController.graph.startDestinationId) {
+                        inclusive = true
+                    }
+                }
+            } else if (deviceState.data?.status == "Linked") {
+                mainViewModel.run {
+                    subscribeContentStream(deviceState.data.property?.accessToken.toString())
+                }
+                navController.navigate(RouteScreen.MenuBoardScreen.route) {
+                    popUpTo(navController.graph.startDestinationId) {
+                        inclusive = true
+                    }
                 }
             }
         }

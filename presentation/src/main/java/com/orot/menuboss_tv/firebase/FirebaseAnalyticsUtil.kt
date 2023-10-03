@@ -8,6 +8,8 @@ class FirebaseAnalyticsUtil @Inject constructor(private val analytics: FirebaseA
 
     enum class Event(val value: String) {
         GET_DEVICE_INFO("getDeviceInfo"), // 디바이스 정보 조회 API
+        GET_DEVICE_PLAYLIST_INFO("getDevicePlaylist"), // 플레이리스트 정보 조회 API
+        GET_DEVICE_SCHEDULE_INFO("getDeviceSchedule"), // 스케줄 정보 조회 API
         CREATE_FAIL_UUID("createFailUUID"), // UUID 생성 실패
         NOT_FOUND_MAC_ADDRESS("notFoundMacAddress"), // MAC Address 조회 실패
         ERROR("error") // 에러

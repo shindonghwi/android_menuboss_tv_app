@@ -13,6 +13,7 @@ object Versions {
         const val startup = "1.1.1"
         const val multidex = "2.0.1"
         const val core = "1.10.1"
+        const val exoplayer = "1.1.1"
     }
 
     object Compose {
@@ -123,6 +124,7 @@ object Libraries {
         const val firebaseCrashlyticsKtx = "com.google.firebase:firebase-crashlytics-ktx"
         const val firebaseAnallyticsKtx = "com.google.firebase:firebase-analytics-ktx"
         const val playServiceMeasurement = "com.google.android.gms:play-services-measurement-api:${Versions.Google.playServiceMeasurement}"
+
     }
 
     object Protobuf{

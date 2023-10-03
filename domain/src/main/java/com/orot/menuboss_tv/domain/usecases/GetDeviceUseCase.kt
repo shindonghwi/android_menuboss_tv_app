@@ -14,13 +14,12 @@ class GetDeviceUseCase @Inject constructor(private val tvRepository: TvRepositor
             try {
                 val response = tvRepository.getDeviceInfo(uuid)
                 when (response.status) {
-                    200 -> emit(
+                    in 200..299 -> emit(
                         Resource.Success(
                             response.message,
                             response.data
                         )
                     )
-
                     else -> emit(Resource.Error(response.message))
                 }
             } catch (e: Exception) {

@@ -5,6 +5,7 @@ data class DeviceModel(
     val status: String,
     val property: Property?,
     val linkProfile: LinkProfile?,
+    val playing: Playing?,
 ) {
     data class LinkProfile(
         val pinCode: String?,
@@ -21,6 +22,10 @@ data class DeviceModel(
     data class Grpc(
         val host: String,
         val port: String,
+    )
+
+    data class Playing(
+        val contentType: String?,
     )
 }
 

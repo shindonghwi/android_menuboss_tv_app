@@ -18,21 +18,35 @@ val LocalNavController = compositionLocalOf<NavHostController> {
     error("No NavHostController provided")
 }
 
-@Composable
-fun Navigation(
-    mainViewModel: MainViewModel = hiltViewModel<MainViewModel>()
-) {
-    val navController = rememberNavController()
+val LocalMainViewModel = compositionLocalOf<MainViewModel> {
+    error("No MainViewModel provided")
+}
 
-    CompositionLocalProvider(LocalNavController provides navController) {
-        NavHost(navController = navController, startDestination = RouteScreen.SplashScreen.route) {
+@Composable
+fun Navigation(uuidValue: String) {
+    val navController = rememberNavController()
+    val mainViewModel = hiltViewModel<MainViewModel>().apply {
+        uuid = uuidValue
+    }
+
+    CompositionLocalProvider(
+        LocalNavController provides navController,
+        LocalMainViewModel provides mainViewModel
+    ) {
+        NavHost(
+            navController = navController,
+            startDestination = RouteScreen.SplashScreen.route
+        ) {
             composable(RouteScreen.SplashScreen.route) {
-                SplashScreen(mainViewModel = mainViewModel)
+                SplashScreen()
             }
             composable("${RouteScreen.AuthScreen.route}/{code}/{qrUrl}") {
                 val code = it.arguments?.getString("code")
                 val qrUrl = it.arguments?.getString("qrUrl")
-                AuthScreen(mainViewModel = mainViewModel, code = code, qrUrl = qrUrl)
+                AuthScreen(
+                    code = code,
+                    qrUrl = qrUrl
+                )
             }
             composable(RouteScreen.MenuBoardScreen.route) {
                 MenuBoardScreen()
@@ -40,4 +54,6 @@ fun Navigation(
         }
     }
 }
+
+
 

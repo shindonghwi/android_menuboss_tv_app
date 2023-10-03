@@ -7,6 +7,7 @@ import com.orot.menuboss_tv.domain.entities.DevicePlaylistModel
 import com.orot.menuboss_tv.domain.entities.DeviceScheduleModel
 import retrofit2.Response
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.Path
 
 interface TvApi {
@@ -29,6 +30,7 @@ interface TvApi {
     @GET("$API_VERSION/screens/{uuid}/playlist")
     suspend fun getDevicePlaylist(
         @Path(value = "uuid") uuid: String,
+        @Header("Authorization") authorization: String? = null
     ): Response<ApiResponse<DevicePlaylistModel>>
 
     /**
@@ -39,6 +41,7 @@ interface TvApi {
     @GET("$API_VERSION/screens/{uuid}/schedule")
     suspend fun getDeviceSchedule(
         @Path(value = "uuid") uuid: String,
+        @Header("Authorization") authorization: String? = null
     ): Response<ApiResponse<DeviceScheduleModel>>
 
 }

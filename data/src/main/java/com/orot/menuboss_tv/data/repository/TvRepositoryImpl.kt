@@ -21,8 +21,8 @@ class TvRepositoryImpl @Inject constructor(
         )
     }
 
-    override suspend fun getDevicePlaylist(uuid: String): ApiResponse<DevicePlaylistModel> {
-        val response = safeApiRequest { tvApi.getDevicePlaylist(uuid) }
+    override suspend fun getDevicePlaylist(uuid: String, accessToken: String): ApiResponse<DevicePlaylistModel> {
+        val response = safeApiRequest { tvApi.getDevicePlaylist(uuid, "Bearer $accessToken") }
         return ApiResponse(
             status = response.status,
             message = response.message,
@@ -30,8 +30,8 @@ class TvRepositoryImpl @Inject constructor(
         )
     }
 
-    override suspend fun getDeviceSchedule(uuid: String): ApiResponse<DeviceScheduleModel> {
-        val response = safeApiRequest { tvApi.getDeviceSchedule(uuid) }
+    override suspend fun getDeviceSchedule(uuid: String, accessToken: String): ApiResponse<DeviceScheduleModel> {
+        val response = safeApiRequest { tvApi.getDeviceSchedule(uuid, "Bearer $accessToken") }
         return ApiResponse(
             status = response.status,
             message = response.message,

@@ -31,10 +31,11 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.orot.menuboss_tv.MainViewModel
 import com.orot.menuboss_tv.domain.entities.Resource
 import com.orot.menuboss_tv.ui.compose.modifier.tvSafeArea
 import com.orot.menuboss_tv.ui.compose.painter.rememberQrBitmapPainter
+import com.orot.menuboss_tv.ui.model.UiState
+import com.orot.menuboss_tv.ui.navigations.LocalMainViewModel
 import com.orot.menuboss_tv.ui.navigations.LocalNavController
 import com.orot.menuboss_tv.ui.navigations.RouteScreen
 import com.orot.menuboss_tv.ui.source_pack.IconPack
@@ -52,11 +53,12 @@ import com.orotcode.menuboss.grpc.lib.ConnectEventResponse
 fun AuthScreen(
     code: String?,
     qrUrl: String?,
-    mainViewModel: MainViewModel = hiltViewModel(),
+    authViewModel: AuthViewModel = hiltViewModel()
 ) {
     val navController = LocalNavController.current
+    val mainViewModel = LocalMainViewModel.current
     val context = LocalContext.current
-    val authData = mainViewModel.authState.collectAsState().value
+    val deviceState = authViewModel.deviceState.collectAsState().value
     val connectionStatus = mainViewModel.connectionStatus.collectAsState().value
 
     /**
@@ -71,7 +73,7 @@ fun AuthScreen(
      */
     LaunchedEffect(key1 = connectionStatus, block = {
         if (connectionStatus is Resource.Success && connectionStatus.data == ConnectEventResponse.ConnectEvent.ENTRY) {
-            mainViewModel.run { requestGetDeviceInfo() }
+            authViewModel.run { requestGetDeviceInfo(mainViewModel.uuid) }
         }
     })
 
@@ -80,24 +82,21 @@ fun AuthScreen(
      *              상태에 따라서 다음 화면으로 이동합니다.
      *
      * @author: 2023/10/03 11:13 AM donghwishin
-     *
-     * @description{
-     *
-     * }
      */
-    LaunchedEffect(key1 = authData?.status) {
-        if (authData?.status == "Linked") {
-            mainViewModel.run {
-                subscribeContentStream(authData.property?.accessToken.toString())
-            }
-            navController.navigate(RouteScreen.MenuBoardScreen.route) {
-                popUpTo(navController.graph.startDestinationId) {
-                    inclusive = true
+    LaunchedEffect(deviceState) {
+        if (deviceState is UiState.Success) {
+            if (deviceState.data?.status == "Linked") {
+                mainViewModel.run {
+                    subscribeContentStream(deviceState.data.property?.accessToken.toString())
+                }
+                navController.navigate(RouteScreen.MenuBoardScreen.route) {
+                    popUpTo(navController.graph.startDestinationId) {
+                        inclusive = true
+                    }
                 }
             }
         }
     }
-
 
     Box(
         modifier = Modifier

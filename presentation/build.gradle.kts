@@ -33,6 +33,7 @@ dependencies {
 
     Libraries.AndroidX.run {
         implementation(core)
+        implementation("com.google.android.exoplayer:exoplayer:2.16.1")
     }
 
     Libraries.Compose.run {

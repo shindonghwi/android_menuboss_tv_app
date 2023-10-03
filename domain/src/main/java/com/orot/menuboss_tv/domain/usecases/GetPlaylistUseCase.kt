@@ -8,19 +8,18 @@ import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 class GetPlaylistUseCase @Inject constructor(private val tvRepository: TvRepository) {
-    suspend operator fun invoke(uuid: String): Flow<Resource<DevicePlaylistModel>> =
+    suspend operator fun invoke(uuid: String, accessToken: String): Flow<Resource<DevicePlaylistModel>> =
         flow {
             emit(Resource.Loading())
             try {
-                val response = tvRepository.getDevicePlaylist(uuid)
+                val response = tvRepository.getDevicePlaylist(uuid, accessToken)
                 when (response.status) {
-                    200 -> emit(
+                    in 200..299 -> emit(
                         Resource.Success(
                             response.message,
                             response.data
                         )
                     )
-
                     else -> emit(Resource.Error(response.message))
                 }
             } catch (e: Exception) {
