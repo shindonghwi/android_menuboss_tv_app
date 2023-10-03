@@ -126,7 +126,8 @@ object Libraries {
     }
 
     object Protobuf{
-        const val grpcStub = "io.grpc:grpc-stub:${Versions.Protobuf.grpcVersion}"
+        const val grpcCore = "io.grpc:grpc-core:${Versions.Protobuf.grpcVersion}"
+        const val grpcOkhttp = "io.grpc:grpc-okhttp:${Versions.Protobuf.grpcVersion}"
         const val grpcProtobufLite = "io.grpc:grpc-protobuf-lite:${Versions.Protobuf.grpcVersion}"
         const val kotlinStub = "io.grpc:grpc-kotlin-stub:${Versions.Protobuf.grpcKotlinVersion}"
         const val protobufKotlinLite = "com.google.protobuf:protobuf-kotlin-lite:${Versions.Protobuf.protobufVersion}"

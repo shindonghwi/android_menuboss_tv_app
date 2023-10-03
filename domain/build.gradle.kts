@@ -33,6 +33,8 @@ android {
 }
 
 dependencies {
+    api(project(":grpc"))
+
     Libraries.Coroutine.apply {
         implementation(core)
     }

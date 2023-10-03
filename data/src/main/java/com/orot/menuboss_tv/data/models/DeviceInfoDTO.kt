@@ -15,6 +15,12 @@ data class DeviceInfoDTO(
         val name: String?,
         val accessToken: String?,
         val screenUrl: String?,
+        val grpc: Grpc?,
+    )
+
+    data class Grpc(
+        val host: String,
+        val port: String,
     )
 }
 

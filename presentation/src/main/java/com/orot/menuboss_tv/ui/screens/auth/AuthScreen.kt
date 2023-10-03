@@ -2,7 +2,6 @@ package com.orot.menuboss_tv.ui.screens.auth
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.os.Build
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -32,9 +31,12 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.orot.menuboss_tv.domain.entities.DeviceInfo
+import com.orot.menuboss_tv.MainViewModel
+import com.orot.menuboss_tv.domain.entities.Resource
 import com.orot.menuboss_tv.ui.compose.modifier.tvSafeArea
 import com.orot.menuboss_tv.ui.compose.painter.rememberQrBitmapPainter
+import com.orot.menuboss_tv.ui.navigations.LocalNavController
+import com.orot.menuboss_tv.ui.navigations.RouteScreen
 import com.orot.menuboss_tv.ui.source_pack.IconPack
 import com.orot.menuboss_tv.ui.source_pack.iconpack.Logo
 import com.orot.menuboss_tv.ui.theme.AdjustedBoldText
@@ -42,31 +44,60 @@ import com.orot.menuboss_tv.ui.theme.AdjustedMediumText
 import com.orot.menuboss_tv.ui.theme.colorBackground
 import com.orot.menuboss_tv.ui.theme.colorWhite
 import com.orot.menuboss_tv.utils.adjustedDp
+import com.orotcode.menuboss.grpc.lib.ConnectEventResponse
 
 
 @SuppressLint("HardwareIds")
 @Composable
 fun AuthScreen(
-    authScreenViewModel: AuthScreenViewModel = hiltViewModel()
+    code: String?,
+    qrUrl: String?,
+    mainViewModel: MainViewModel = hiltViewModel(),
 ) {
+    val navController = LocalNavController.current
     val context = LocalContext.current
-    val authData = authScreenViewModel.authState.collectAsState().value
+    val authData = mainViewModel.authState.collectAsState().value
+    val connectionStatus = mainViewModel.connectionStatus.collectAsState().value
 
-    LaunchedEffect(key1 = Unit, block = {
-        authScreenViewModel.deviceInfoUtil.run {
-            val uuid1 = generateUniqueUUID(
-                getMacAddress(),
-                "${Build.PRODUCT}${Build.BRAND}${Build.HARDWARE}"
-            )
-            val uuid2 = generateUniqueUUID(
-                getMacAddress(),
-                "${Build.MANUFACTURER}${Build.MODEL}${Build.DEVICE}"
-            )
-            val uuid3 = generateUniqueUUID(getMacAddress(), Build.FINGERPRINT)
-            val resultUUID = generateUniqueUUID(uuid1.toString(), "$uuid2$uuid3")
-            authScreenViewModel.requestGetDeviceInfo(resultUUID.toString())
+    /**
+     * @feature: ConnectEventResponse.ConnectEvent.ENTRY 상태가 되면,
+     * MenuBoardScreen 으로 이동합니다.
+     *
+     * @author: 2023/10/02 6:19 PM donghwishin
+     *
+     * @description{
+     *   ConnectEvent.ENTRY: 스크린 등록 이벤트
+     * }
+     */
+    LaunchedEffect(key1 = connectionStatus, block = {
+        if (connectionStatus is Resource.Success && connectionStatus.data == ConnectEventResponse.ConnectEvent.ENTRY) {
+            mainViewModel.run { requestGetDeviceInfo() }
         }
     })
+
+    /**
+     * @feature: 스크린 등록에 성공을 하고, 디바이스 정보를 가져온 후,
+     *              상태에 따라서 다음 화면으로 이동합니다.
+     *
+     * @author: 2023/10/03 11:13 AM donghwishin
+     *
+     * @description{
+     *
+     * }
+     */
+    LaunchedEffect(key1 = authData?.status) {
+        if (authData?.status == "Linked") {
+            mainViewModel.run {
+                subscribeContentStream(authData.property?.accessToken.toString())
+            }
+            navController.navigate(RouteScreen.MenuBoardScreen.route) {
+                popUpTo(navController.graph.startDestinationId) {
+                    inclusive = true
+                }
+            }
+        }
+    }
+
 
     Box(
         modifier = Modifier
@@ -83,7 +114,9 @@ fun AuthScreen(
 
             HeaderContent(modifier = Modifier.layoutId("header"))
 
-            BodyContent(modifier = Modifier.layoutId("body"), authData = authData?.linkProfile)
+            BodyContent(
+                modifier = Modifier.layoutId("body"), code = code, qrUrl = qrUrl
+            )
 
             FooterContent(modifier = Modifier.layoutId("footer"))
         }
@@ -128,12 +161,10 @@ private fun createConstraintSet(context: Context) = ConstraintSet {
 @Composable
 private fun LogoImage(modifier: Modifier) {
     Image(
-        modifier = modifier
-            .size(
-                width = adjustedDp(88.dp),
-                height = adjustedDp(44.dp),
-            ),
-        imageVector = IconPack.Logo, contentDescription = ""
+        modifier = modifier.size(
+            width = adjustedDp(88.dp),
+            height = adjustedDp(44.dp),
+        ), imageVector = IconPack.Logo, contentDescription = ""
     )
 }
 
@@ -145,7 +176,8 @@ private fun HeaderContent(modifier: Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         AdjustedBoldText(
-            text = "Welcome to the MenuBoss Smart TV APP", fontSize = adjustedDp(32.dp)
+            text = "Welcome to the MenuBoss Smart TV APP",
+            fontSize = adjustedDp(32.dp)
         )
         AdjustedMediumText(
             modifier = Modifier.padding(top = adjustedDp(8.dp)),
@@ -156,15 +188,15 @@ private fun HeaderContent(modifier: Modifier) {
 }
 
 @Composable
-private fun BodyContent(modifier: Modifier, authData: DeviceInfo.LinkProfile?) {
+private fun BodyContent(modifier: Modifier, code: String?, qrUrl: String?) {
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        PinCode(modifier = Modifier.weight(1f), code = authData?.pinCode)
+        PinCode(modifier = Modifier.weight(1f), code = code)
         OrDivider()
-        QRCode(modifier = Modifier.weight(1f), qrUrl = authData?.qrUrl)
+        QRCode(modifier = Modifier.weight(1f), qrUrl = qrUrl)
     }
 }
 
@@ -183,7 +215,8 @@ private fun PinCode(modifier: Modifier, code: String?) {
 
     val alpha: Float by animateFloatAsState(
         targetValue = if (code != null) 1f else 0f,
-        animationSpec = tween(durationMillis = 700), label = ""
+        animationSpec = tween(durationMillis = 700),
+        label = ""
     )
 
     Column(
@@ -211,7 +244,8 @@ private fun PinCode(modifier: Modifier, code: String?) {
                         )
 
                         if (index != code.lastIndex) Box(
-                            Modifier.fillMaxHeight(), contentAlignment = Alignment.Center
+                            Modifier.fillMaxHeight(),
+                            contentAlignment = Alignment.Center
                         ) {
                             Spacer(
                                 Modifier
@@ -267,7 +301,8 @@ private fun QRCode(modifier: Modifier, qrUrl: String?) {
 
     val alpha: Float by animateFloatAsState(
         targetValue = if (qrUrl != null) 1f else 0f,
-        animationSpec = tween(durationMillis = 700), label = ""
+        animationSpec = tween(durationMillis = 700),
+        label = ""
     )
 
     Column(

@@ -18,20 +18,16 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
 import com.orot.menuboss_tv.ui.screens.reload.ReloadScreen
 import kotlinx.coroutines.delay
+import com.orotcode.menuboss.grpc.lib.ConnectEventResponse as ConnectEventResponse1
 
 @Composable
 fun MenuBoardScreen(
-    menuBoardScreenViewModel: MenuBoardScreenViewModel = hiltViewModel(),
 ) {
-    LaunchedEffect(key1 = Unit, block = {
-        menuBoardScreenViewModel.connectToWebSocket()
-    })
 
-    val items = menuBoardScreenViewModel.screenItems.collectAsState().value
-    val isEmpty = items.isEmpty()
+    val items = listOf<Pair<Long,String>>()
 
     Crossfade(
-        targetState = isEmpty,
+        targetState = items.isEmpty(),
         animationSpec = tween(durationMillis = 1000, delayMillis = 2000),
         label = "mainScreen"
     ) { targetIsEmpty ->

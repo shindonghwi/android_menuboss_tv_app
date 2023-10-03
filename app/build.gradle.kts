@@ -115,7 +115,6 @@ dependencies {
         kapt(daggerHiltAndroidCompiler)
         kapt(daggerHiltAndroid)
     }
-
 }
 
 kapt {

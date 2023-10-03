@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package com.orotcode.menuboss.grpc;
+
+option java_multiple_files = true;
+option java_package = "com.orotcode.menuboss.grpc.lib";
+option java_outer_classname = "ScreenEventProto";
+
+import "google/protobuf/empty.proto";
+
+// The screen connect event service definition.
+message ConnectEventResponse {
+  enum ConnectEvent {
+    ENTRY = 0;    // The screen is connected.
+    REFRESH = 2;  // The screen is refreshed.
+  }
+  ConnectEvent event = 1;
+}
+
+// The screen content event service definition.
+message ContentEventResponse {
+  enum ContentEvent {
+    SCREEN_PASSED = 0;          // The screen is passed.
+    SCREEN_DELETED = 1;         // The screen is deleted.
+    SCREEN_EXPIRED = 2;         // The screen is expired.
+
+    CONTENT_EMPTY = 11;         // The screen has no content.
+    CONTENT_CHANGED = 12;       // The screen content is changed.
+  }
+  ContentEvent event = 1;
+}
+
+service ScreenEventService {
+  rpc connectStream(google.protobuf.Empty) returns (stream ConnectEventResponse);
+  rpc contentStream(google.protobuf.Empty) returns (stream ContentEventResponse);
+}

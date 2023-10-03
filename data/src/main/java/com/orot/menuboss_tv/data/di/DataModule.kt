@@ -2,6 +2,9 @@ package com.orot.menuboss_tv.data.di
 
 import com.orot.menuboss_tv.data.services.TvApi
 import com.orot.menuboss_tv.data.constants.BASE_URL
+import com.orot.menuboss_tv.data.repository.ScreenEventsRepositoryImpl
+import com.orot.menuboss_tv.data.services.GrpcScreenEventClient
+import com.orot.menuboss_tv.domain.repository.ScreenEventsRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -67,4 +70,14 @@ object DataModule {
 
     @Provides
     fun provideTvApi(retrofit: Retrofit): TvApi = retrofit.create(TvApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideGrpcScreenEventClient(): GrpcScreenEventClient {
+        return GrpcScreenEventClient()
+    }
+
+    @Provides
+    fun provideScreenEventsRepository(grpcClient: GrpcScreenEventClient): ScreenEventsRepository =
+        ScreenEventsRepositoryImpl(grpcClient)
 }

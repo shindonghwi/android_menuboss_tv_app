@@ -1,9 +1,9 @@
 package com.orot.menuboss_tv.domain.entities
 
 data class DeviceInfo(
+    val `object`: String?,
     val status: String,
     val property: Property?,
-    val `object`: String?,
     val linkProfile: LinkProfile?,
 ) {
     data class LinkProfile(
@@ -15,6 +15,12 @@ data class DeviceInfo(
         val name: String?,
         val accessToken: String?,
         val screenUrl: String?,
+        val grpc: Grpc?,
+    )
+
+    data class Grpc(
+        val host: String,
+        val port: String,
     )
 }
 
