@@ -16,7 +16,9 @@ import com.orot.menuboss_tv.ui.components.RiveAnimation
 import com.orot.menuboss_tv.ui.navigations.LocalNavController
 import com.orot.menuboss_tv.ui.navigations.RouteScreen
 import com.orot.menuboss_tv.ui.theme.colorBackground
+import com.orot.menuboss_tv.utils.coroutineScopeOnDefault
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import java.net.URLEncoder
 
@@ -37,7 +39,15 @@ fun SplashScreen(
      * }
      */
     LaunchedEffect(key1 = Unit, block = {
-        mainViewModel.requestGetDeviceInfo()
+        mainViewModel.run {
+            subscribeConnectStream()
+
+            // 로고 애니메이션이 완전히 띄워지기까지 기다립니다.
+            coroutineScopeOnDefault {
+                delay(2000)
+                requestGetDeviceInfo()
+            }
+        }
     })
 
     /**
@@ -58,10 +68,6 @@ fun SplashScreen(
     LaunchedEffect(key1 = authData?.status) {
 
         if (authData?.status == "Unlinked") {
-            mainViewModel.run {
-                subscribeConnectStream()
-            }
-
             val code = authData.linkProfile?.pinCode ?: ""
             val qrUrl = authData.linkProfile?.qrUrl ?: ""
             val encodedQrUrl = withContext(Dispatchers.IO) {
@@ -75,7 +81,6 @@ fun SplashScreen(
             }
         } else if (authData?.status == "Linked") {
             mainViewModel.run {
-                subscribeConnectStream()
                 subscribeContentStream(authData.property?.accessToken.toString())
             }
             navController.navigate(RouteScreen.MenuBoardScreen.route) {

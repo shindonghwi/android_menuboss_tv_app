@@ -30,6 +30,10 @@ class MainViewModel @Inject constructor(
     private val getTvDeviceUseCase: GetTvDeviceUseCase,
 ) : ViewModel() {
 
+    companion object {
+        private const val TAG = "MainViewModel"
+    }
+
     private var uuid: String = ""
 
     private val _contentStatus =
@@ -56,7 +60,7 @@ class MainViewModel @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Log.e("ViewModel", "Error in subscribeConnectStream: ${e.message}")
+            Log.e(TAG, "Error in subscribeConnectStream: ${e.message}")
         }
     }
 
@@ -68,7 +72,7 @@ class MainViewModel @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Log.e("ViewModel", "Error in subscribeContentStream: ${e.message}")
+            Log.e(TAG, "Error in subscribeContentStream: ${e.message}")
         }
     }
 
@@ -102,6 +106,7 @@ class MainViewModel @Inject constructor(
             uuid =
                 generateUniqueUUID(uuid1.toString(), "$uuid2$uuid3").toString()
         }
+        Log.w(TAG, "getXUniqueId: $uuid", )
         return uuid
     }
 }
