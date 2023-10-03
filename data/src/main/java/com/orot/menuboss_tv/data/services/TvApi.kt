@@ -1,8 +1,10 @@
 package com.orot.menuboss_tv.data.services
 
 import com.orot.menuboss_tv.data.constants.API_VERSION
-import com.orot.menuboss_tv.data.models.DeviceInfoDTO
 import com.orot.menuboss_tv.domain.entities.ApiResponse
+import com.orot.menuboss_tv.domain.entities.DeviceModel
+import com.orot.menuboss_tv.domain.entities.DevicePlaylistModel
+import com.orot.menuboss_tv.domain.entities.DeviceScheduleModel
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Path
@@ -13,14 +15,30 @@ interface TvApi {
      * @feature: 디바이스 정보 조회
      *
      * @author: 2023/08/08 4:18 PM donghwishin
-     *
-     * @description{
-     *
-     * }
      */
     @GET("$API_VERSION/screens/{uuid}")
     suspend fun getDeviceInfo(
         @Path(value = "uuid") uuid: String,
-    ): Response<ApiResponse<DeviceInfoDTO>>
+    ): Response<ApiResponse<DeviceModel>>
+
+    /**
+     * @feature: 플레이리스트 정보 조회
+     *
+     * @author: 2023/10/03 11:56 AM donghwishin
+     */
+    @GET("$API_VERSION/screens/{uuid}/playlist")
+    suspend fun getDevicePlaylist(
+        @Path(value = "uuid") uuid: String,
+    ): Response<ApiResponse<DevicePlaylistModel>>
+
+    /**
+     * @feature: 스케줄 정보 조회
+     *
+     * @author: 2023/10/03 11:56 AM donghwishin
+     */
+    @GET("$API_VERSION/screens/{uuid}/schedule")
+    suspend fun getDeviceSchedule(
+        @Path(value = "uuid") uuid: String,
+    ): Response<ApiResponse<DeviceScheduleModel>>
 
 }

@@ -1,7 +1,7 @@
 package com.orot.menuboss_tv.domain.di
 
 import com.orot.menuboss_tv.domain.repository.TvRepository
-import com.orot.menuboss_tv.domain.usecases.GetTvDeviceUseCase
+import com.orot.menuboss_tv.domain.usecases.GetDeviceUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -14,7 +14,7 @@ object TvModule {
 
     @Singleton
     @Provides
-    fun provideGetTvDeviceUseCase(tvRepository: TvRepository): GetTvDeviceUseCase {
-        return GetTvDeviceUseCase(tvRepository)
+    fun provideGetTvDeviceUseCase(tvRepository: TvRepository): GetDeviceUseCase {
+        return GetDeviceUseCase(tvRepository)
     }
 }

@@ -1,23 +1,41 @@
 package com.orot.menuboss_tv.data.repository
 
 import com.orot.menuboss_tv.data.services.TvApi
-import com.orot.menuboss_tv.data.mapper.DeviceInfoMapper
 import com.orot.menuboss_tv.data.utils.SafeApiRequest
 import com.orot.menuboss_tv.domain.entities.ApiResponse
-import com.orot.menuboss_tv.domain.entities.DeviceInfo
+import com.orot.menuboss_tv.domain.entities.DeviceModel
+import com.orot.menuboss_tv.domain.entities.DevicePlaylistModel
+import com.orot.menuboss_tv.domain.entities.DeviceScheduleModel
 import com.orot.menuboss_tv.domain.repository.TvRepository
 import javax.inject.Inject
 
 class TvRepositoryImpl @Inject constructor(
     private val tvApi: TvApi,
-    private val mapper: DeviceInfoMapper
 ) : TvRepository, SafeApiRequest() {
-    override suspend fun getDeviceInfo(uuid: String): ApiResponse<DeviceInfo> {
+    override suspend fun getDeviceInfo(uuid: String): ApiResponse<DeviceModel> {
         val response = safeApiRequest { tvApi.getDeviceInfo(uuid) }
         return ApiResponse(
             status = response.status,
             message = response.message,
-            data = response.data?.let { mapper.mapFromDTO(it) }
+            data = response.data
+        )
+    }
+
+    override suspend fun getDevicePlaylist(uuid: String): ApiResponse<DevicePlaylistModel> {
+        val response = safeApiRequest { tvApi.getDevicePlaylist(uuid) }
+        return ApiResponse(
+            status = response.status,
+            message = response.message,
+            data = response.data
+        )
+    }
+
+    override suspend fun getDeviceSchedule(uuid: String): ApiResponse<DeviceScheduleModel> {
+        val response = safeApiRequest { tvApi.getDeviceSchedule(uuid) }
+        return ApiResponse(
+            status = response.status,
+            message = response.message,
+            data = response.data
         )
     }
 }

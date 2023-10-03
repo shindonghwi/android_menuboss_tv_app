@@ -1,6 +1,6 @@
 package com.orot.menuboss_tv.domain.entities
 
-data class DeviceInfo(
+data class DeviceModel(
     val `object`: String?,
     val status: String,
     val property: Property?,

@@ -4,9 +4,9 @@ import android.os.Build
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.orot.menuboss_tv.domain.entities.DeviceInfo
+import com.orot.menuboss_tv.domain.entities.DeviceModel
 import com.orot.menuboss_tv.domain.entities.Resource
-import com.orot.menuboss_tv.domain.usecases.GetTvDeviceUseCase
+import com.orot.menuboss_tv.domain.usecases.GetDeviceUseCase
 import com.orot.menuboss_tv.domain.usecases.SubscribeConnectStreamUseCase
 import com.orot.menuboss_tv.domain.usecases.SubscribeContentStreamUseCase
 import com.orot.menuboss_tv.firebase.FirebaseAnalyticsUtil
@@ -27,31 +27,51 @@ class MainViewModel @Inject constructor(
     private val subscribeContentStreamUseCase: SubscribeContentStreamUseCase,
     private val deviceInfoUtil: DeviceInfoUtil,
     private val firebaseAnalyticsUtil: FirebaseAnalyticsUtil,
-    private val getTvDeviceUseCase: GetTvDeviceUseCase,
+    private val getDeviceUseCase: GetDeviceUseCase,
 ) : ViewModel() {
 
     companion object {
         private const val TAG = "MainViewModel"
     }
 
+    /**
+     * @feature: 디바이스의 고유한 식별자입니다.
+     * @author: 2023/10/03 11:37 AM donghwishin
+    */
     private var uuid: String = ""
 
+    /**
+     * @feature: 컨텐츠 스트림의 상태를 관리합니다.
+     * @author: 2023/10/03 11:38 AM donghwishin
+    */
     private val _contentStatus =
         MutableStateFlow<Resource<ContentEventResponse.ContentEvent>?>(null)
     val contentStatus: MutableStateFlow<Resource<ContentEventResponse.ContentEvent>?> get() = _contentStatus
 
+    /**
+     * @feature: 연결 스트림의 상태를 관리합니다.
+     * @author: 2023/10/03 11:38 AM donghwishin
+    */
     private val _connectionStatus =
         MutableStateFlow<Resource<ConnectEventResponse.ConnectEvent>?>(null)
     val connectionStatus: StateFlow<Resource<ConnectEventResponse.ConnectEvent>?> get() = _connectionStatus
 
+    /**
+     * @feature: 디바이스 정보를 관리합니다.
+     * @author: 2023/10/03 11:38 AM donghwishin
+    */
     private val _authState =
-        MutableStateFlow<DeviceInfo?>(null)
-    val authState: StateFlow<DeviceInfo?> get() = _authState
+        MutableStateFlow<DeviceModel?>(null)
+    val authState: StateFlow<DeviceModel?> get() = _authState
 
     init {
         uuid = getXUniqueId()
     }
 
+    /**
+     * @feature: GRPC 연결 스트림을 구독합니다.
+     * @author: 2023/10/03 11:38 AM donghwishin
+    */
     fun subscribeConnectStream() {
         try {
             coroutineScopeOnDefault {
@@ -64,6 +84,10 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    /**
+     * @feature: GRPC 컨텐츠 스트림을 구독합니다.
+     * @author: 2023/10/03 11:39 AM donghwishin
+    */
     fun subscribeContentStream(accessToken: String) {
         try {
             coroutineScopeOnDefault {
@@ -77,13 +101,17 @@ class MainViewModel @Inject constructor(
     }
 
 
+    /**
+     * @feature: 디바이스 정보를 조회합니다.
+     * @author: 2023/10/03 11:39 AM donghwishin
+    */
     suspend fun requestGetDeviceInfo() {
         firebaseAnalyticsUtil.recordEvent(
             FirebaseAnalyticsUtil.Event.GET_DEVICE_INFO,
             hashMapOf("uuid" to uuid)
         )
 
-        getTvDeviceUseCase(uuid).onEach {
+        getDeviceUseCase(uuid).onEach {
             if (it is Resource.Success) {
                 _authState.value = it.data
             } else {
@@ -92,6 +120,10 @@ class MainViewModel @Inject constructor(
         }.launchIn(viewModelScope)
     }
 
+    /**
+     * @feature: 디바이스의 고유한 식별자를 생성합니다.
+     * @author: 2023/10/03 11:39 AM donghwishin
+    */
     private fun getXUniqueId(): String {
         deviceInfoUtil.run {
             val uuid1 = generateUniqueUUID(
