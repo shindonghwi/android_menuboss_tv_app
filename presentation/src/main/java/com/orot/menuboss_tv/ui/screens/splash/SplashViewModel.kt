@@ -9,9 +9,11 @@ import com.orot.menuboss_tv.domain.usecases.GetDeviceUseCase
 import com.orot.menuboss_tv.firebase.FirebaseAnalyticsUtil
 import com.orot.menuboss_tv.ui.model.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -35,18 +37,21 @@ class SplashViewModel @Inject constructor(
      * @author: 2023/10/03 11:39 AM donghwishin
      */
     suspend fun requestGetDeviceInfo(uuid: String) {
-        Log.w(TAG, "Splash requestGetDeviceInfo: $uuid", )
-        firebaseAnalyticsUtil.recordEvent(
-            FirebaseAnalyticsUtil.Event.GET_DEVICE_INFO,
-            hashMapOf("uuid" to uuid)
-        )
+        viewModelScope.launch {
+            delay(2000)
+            Log.w(TAG, "Splash requestGetDeviceInfo: $uuid", )
+            firebaseAnalyticsUtil.recordEvent(
+                FirebaseAnalyticsUtil.Event.GET_DEVICE_INFO,
+                hashMapOf("uuid" to uuid)
+            )
 
-        getDeviceUseCase(uuid).onEach {
-            when (it) {
-                is Resource.Loading -> deviceState.emit(UiState.Loading)
-                is Resource.Error -> deviceState.emit(UiState.Error(it.message.toString()))
-                is Resource.Success -> deviceState.emit(UiState.Success(data = it.data))
-            }
-        }.launchIn(viewModelScope)
+            getDeviceUseCase(uuid).onEach {
+                when (it) {
+                    is Resource.Loading -> deviceState.emit(UiState.Loading)
+                    is Resource.Error -> deviceState.emit(UiState.Error(it.message.toString()))
+                    is Resource.Success -> deviceState.emit(UiState.Success(data = it.data))
+                }
+            }.launchIn(this)
+        }
     }
 }

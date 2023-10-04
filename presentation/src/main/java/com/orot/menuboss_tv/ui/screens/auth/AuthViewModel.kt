@@ -42,6 +42,7 @@ class AuthViewModel @Inject constructor(
         )
 
         getDeviceUseCase(uuid).onEach {
+            Log.w(TAG, "requestGetDeviceInfo status : $it", )
             when (it) {
                 is Resource.Loading -> deviceState.emit(UiState.Loading)
                 is Resource.Error -> deviceState.emit(UiState.Error(it.message.toString()))

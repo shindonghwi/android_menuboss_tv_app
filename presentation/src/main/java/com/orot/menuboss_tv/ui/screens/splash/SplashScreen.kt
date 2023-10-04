@@ -45,11 +45,7 @@ fun SplashScreen(
         }
 
         splashViewModel.run {
-            // 로고 애니메이션이 완전히 띄워지기까지 기다립니다.
-            coroutineScopeOnDefault {
-                delay(2000)
-                requestGetDeviceInfo(mainViewModel.uuid)
-            }
+            requestGetDeviceInfo(mainViewModel.uuid)
         }
     })
 
@@ -91,6 +87,10 @@ fun SplashScreen(
                         inclusive = true
                     }
                 }
+            }
+        } else if (deviceState is UiState.Error) {
+            splashViewModel.run {
+                requestGetDeviceInfo(mainViewModel.uuid)
             }
         }
     }
