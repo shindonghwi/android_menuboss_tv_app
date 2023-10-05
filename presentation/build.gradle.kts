@@ -36,6 +36,9 @@ dependencies {
         implementation("com.google.android.exoplayer:exoplayer:2.16.1")
     }
 
+    implementation("io.coil-kt:coil-compose:2.4.0")
+
+
     Libraries.Compose.run {
         implementation(uiTooling)
         implementation(activity)

@@ -10,7 +10,6 @@ data class DeviceScheduleModel(
     data class Timeline(
         val time: TimeInfo?,
         val playlist: Playlist?,
-        val property: DeviceProperty?,
     ) {
         data class TimeInfo(
             val start: String,
@@ -24,7 +23,7 @@ data class DeviceScheduleModel(
             val contents: List<ContentInfo>?,
         )
         override fun toString(): String {
-            return "Timeline(time=$time, playlist=$playlist, property=$property)"
+            return "Timeline(time=$time, playlist=$playlist)"
         }
     }
 }

@@ -11,6 +11,7 @@ import com.orot.menuboss_tv.domain.usecases.GetPlaylistUseCase
 import com.orot.menuboss_tv.domain.usecases.GetScheduleUseCase
 import com.orot.menuboss_tv.domain.usecases.SubscribeConnectStreamUseCase
 import com.orot.menuboss_tv.domain.usecases.SubscribeContentStreamUseCase
+import com.orot.menuboss_tv.domain.usecases.UnSubscribeConnectStreamUseCase
 import com.orot.menuboss_tv.firebase.FirebaseAnalyticsUtil
 import com.orot.menuboss_tv.ui.model.SimpleScreenModel
 import com.orot.menuboss_tv.ui.model.UiState
@@ -29,6 +30,7 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor(
     private val subscribeConnectStreamUseCase: SubscribeConnectStreamUseCase,
     private val subscribeContentStreamUseCase: SubscribeContentStreamUseCase,
+    private val unSubscribeConnectStreamUseCase: UnSubscribeConnectStreamUseCase,
     private val getPlaylistUseCase: GetPlaylistUseCase,
     private val getScheduleUseCase: GetScheduleUseCase,
     private val firebaseAnalyticsUtil: FirebaseAnalyticsUtil,
@@ -90,14 +92,51 @@ class MainViewModel @Inject constructor(
                             requestGetDeviceInfo()
                         }
 
+                        ContentEventResponse.ContentEvent.CONTENT_EMPTY -> {
+                            screenState.emit(
+                                UiState.Success(
+                                    data = SimpleScreenModel(
+                                        isPlaylist = null
+                                    )
+                                )
+                            )
+                        }
+                        ContentEventResponse.ContentEvent.SCREEN_DELETED -> {
+                            screenState.emit(
+                                UiState.Success(
+                                    data = SimpleScreenModel(
+                                        isDeleted = true
+                                    )
+                                )
+                            )
+                        }
+                        ContentEventResponse.ContentEvent.SCREEN_EXPIRED -> {
+                            screenState.emit(
+                                UiState.Success(
+                                    data = SimpleScreenModel(
+                                        isExpired = true
+                                    )
+                                )
+                            )
+                        }
                         else -> {
-
+                            UiState.Error(response.message.toString())
                         }
                     }
                 }
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error in subscribeContentStream: ${e.message}")
+        }
+    }
+
+    fun unSubscribeConnectStream() {
+        try {
+            coroutineScopeOnDefault {
+                unSubscribeConnectStreamUseCase.invoke()
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in unSubscribeConnectStream: ${e.message}")
         }
     }
 
@@ -126,7 +165,8 @@ class MainViewModel @Inject constructor(
                 is Resource.Success -> {
                     coroutineScopeOnDefault {
                         delay(1000)
-                        val accessToken = it.data?.property?.accessToken.toString()
+                        val accessToken =
+                            it.data?.property?.accessToken.toString()
                         if (it.data?.playing?.contentType == "Playlist") {
                             requestGetDevicePlaylist(accessToken)
                         } else if (it.data?.playing?.contentType == "Schedule") {
@@ -154,6 +194,7 @@ class MainViewModel @Inject constructor(
                 is Resource.Error -> {
                     screenState.emit(UiState.Error(it.message.toString()))
                 }
+
                 is Resource.Success -> {
                     screenState.emit(
                         UiState.Success(
@@ -180,12 +221,13 @@ class MainViewModel @Inject constructor(
         )
 
         getPlaylistUseCase(uuid, accessToken).onEach {
-            Log.w(TAG, "asdsadsad requestGetDevicePlaylist: ${it}", )
+            Log.w(TAG, "asdsadsad requestGetDevicePlaylist: ${it}")
             when (it) {
                 is Resource.Loading -> {}
                 is Resource.Error -> {
                     screenState.emit(UiState.Error(it.message.toString()))
                 }
+
                 is Resource.Success -> {
                     screenState.emit(
                         UiState.Success(

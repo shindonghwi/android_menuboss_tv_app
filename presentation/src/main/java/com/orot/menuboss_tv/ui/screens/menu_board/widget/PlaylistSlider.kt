@@ -1,65 +1,43 @@
 package com.orot.menuboss_tv.ui.screens.menu_board.widget
 
 import android.graphics.Bitmap
-import android.util.Log
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.tv.material3.Text
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import coil.size.Size
 import coil.transform.Transformation
-import com.orot.menuboss_tv.domain.entities.DeviceScheduleModel
+import com.orot.menuboss_tv.domain.entities.DevicePlaylistModel
 import com.orot.menuboss_tv.ui.theme.colorBackground
 import kotlinx.coroutines.delay
-import java.time.LocalTime
-import java.util.Calendar
-import java.util.Locale
-import java.util.TimeZone
-import kotlin.time.Duration.Companion.hours
-import kotlin.time.Duration.Companion.minutes
 
 @Composable
-fun ScheduleSlider(model: DeviceScheduleModel) {
-
-    var currentTimeline by remember { mutableStateOf(getCurrentTimeline(model.timeline)) }
-    val currentContent = currentTimeline?.playlist?.contents
-    val isDirectionHorizontal = currentTimeline?.playlist?.property?.direction?.code == "Horizontal"
-    val isScaleFit = currentTimeline?.playlist?.property?.fill?.code == "Fit"
+fun PlaylistSlider(model: DevicePlaylistModel) {
+    val contents = model.contents
+    val isDirectionHorizontal = model.property?.direction?.code == "Horizontal"
+    val isScaleFit = model.property?.fill?.code == "Fit"
     val contentScale = if (isScaleFit) ContentScale.Fit else ContentScale.Crop
 
-    LaunchedEffect(Unit) {
-        while (true) {
-            delay(1000L) // 매 초마다 체크
-            currentTimeline = getCurrentTimeline(model.timeline)
-
-            // log current time
-            Log.w("Sdsaddsadsa", "ScheduleSlider: ${getCurrentTime()}", )
-        }
-    }
-
-    currentContent?.let {
+    contents?.let {
         var currentIndex by remember { mutableIntStateOf(0) }
 
-        LaunchedEffect(currentContent, currentIndex) {
+        LaunchedEffect(currentIndex) {
             while (true) {
                 delay((it.getOrNull(currentIndex)?.duration?.times(1000L)) ?: 0L)
 
@@ -96,8 +74,7 @@ fun ScheduleSlider(model: DeviceScheduleModel) {
                                     model = ImageRequest.Builder(LocalContext.current)
                                         .data(imageUrl)
                                         .size(Size.ORIGINAL)
-                                        .transformations(object :
-                                            Transformation {
+                                        .transformations(object : Transformation {
                                             override val cacheKey: String get() = "$imageUrl$isDirectionHorizontal"
 
                                             override suspend fun transform(
@@ -152,50 +129,8 @@ fun ScheduleSlider(model: DeviceScheduleModel) {
                     }
 
                     else -> Text("Not Supported")
-                    }
                 }
             }
         }
-}
-
-
-private fun getCurrentTimeline(timelines: List<DeviceScheduleModel.Timeline>?): DeviceScheduleModel.Timeline? {
-    val currentTime = getCurrentTime() // 현재 시간을 얻어옴
-    val currentTimeMinutes = currentTime.toMinutes()
-
-    if (timelines.isNullOrEmpty()) return null
-
-    // timeline이 하나만 있는 경우
-    if (timelines.size == 1) return timelines[0]
-
-    // 두 번째 timeline부터 확인
-    val matchedTimeline = timelines.drop(1).firstOrNull {
-        val startTime = it.time?.start?.toHourMinute()?.toMinutes() ?: 0
-        val endTime = it.time?.end?.toHourMinute()?.toMinutes() ?: 0
-
-        currentTimeMinutes in startTime until endTime
     }
-
-    // 못찾았다면 0번째 timeline 반환
-    return matchedTimeline ?: timelines[0]
-}
-
-private fun Pair<Int, Int>.toMinutes(): Int = this.first * 60 + this.second
-
-private fun getCurrentTime(): Pair<Int, Int> {
-    val currentLocale = Locale.getDefault()
-    val currentTimeZone = TimeZone.getDefault()
-
-    val calendar = Calendar.getInstance(currentTimeZone, currentLocale)
-    val hour = calendar.get(Calendar.HOUR_OF_DAY)
-    val minute = calendar.get(Calendar.MINUTE)
-
-    return Pair(hour, minute)
-}
-
-private fun String.toHourMinute(): Pair<Int, Int> {
-    val parts = this.split(":")
-    if (parts.size != 2) return Pair(0, 0)
-
-    return Pair(parts[0].toInt(), parts[1].toInt())
 }

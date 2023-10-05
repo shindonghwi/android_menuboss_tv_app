@@ -40,10 +40,6 @@ fun SplashScreen(
      * }
      */
     LaunchedEffect(key1 = Unit, block = {
-        mainViewModel.run {
-            subscribeConnectStream()
-        }
-
         splashViewModel.run {
             requestGetDeviceInfo(mainViewModel.uuid)
         }
@@ -67,6 +63,8 @@ fun SplashScreen(
     LaunchedEffect(deviceState) {
         if (deviceState is UiState.Success) {
             if (deviceState.data?.status == "Unlinked") {
+                mainViewModel.run { subscribeConnectStream() }
+
                 val code = deviceState.data.linkProfile?.pinCode ?: ""
                 val qrUrl = deviceState.data.linkProfile?.qrUrl ?: ""
                 val encodedQrUrl = withContext(Dispatchers.IO) {

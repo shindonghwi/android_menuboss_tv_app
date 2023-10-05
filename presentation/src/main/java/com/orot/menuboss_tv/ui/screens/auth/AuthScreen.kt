@@ -74,6 +74,7 @@ fun AuthScreen(
     LaunchedEffect(key1 = connectionStatus, block = {
         if (connectionStatus is Resource.Success && connectionStatus.data == ConnectEventResponse.ConnectEvent.ENTRY) {
             authViewModel.run { requestGetDeviceInfo(mainViewModel.uuid) }
+            mainViewModel.run { unSubscribeConnectStream() }
         }
     })
 

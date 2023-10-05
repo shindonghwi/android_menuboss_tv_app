@@ -20,11 +20,14 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
     private lateinit var contentChannel: ManagedChannel
     private lateinit var stub: ScreenEventServiceGrpcKt.ScreenEventServiceCoroutineStub
 
+    private val TAG = "GrpcScreenEvent"
+
     private fun initConnectChannel(uuid: String) {
         if (::connectChannel.isInitialized.not() || connectChannel.isTerminated || connectChannel.isShutdown){
             metadata = Metadata()
             val uuidKey = Metadata.Key.of("x-unique-id", Metadata.ASCII_STRING_MARSHALLER)
             metadata.put(uuidKey, uuid)
+            Log.w(TAG, "initConnectChannel: $metadata", )
             connectChannel = ManagedChannelBuilder.forAddress("dev-screen-grpc.themenuboss.com", 443)
                 .useTransportSecurity()
                 .intercept(MetadataUtils.newAttachHeadersInterceptor(metadata))
@@ -38,6 +41,7 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
             metadata = Metadata()
             val uuidKey = Metadata.Key.of("Authorization", Metadata.ASCII_STRING_MARSHALLER)
             metadata.put(uuidKey, accessToken)
+            Log.w(TAG, "initContentChannel: $metadata", )
             contentChannel = ManagedChannelBuilder.forAddress("dev-screen-grpc.themenuboss.com", 443)
                 .useTransportSecurity()
                 .intercept(MetadataUtils.newAttachHeadersInterceptor(metadata))
@@ -66,5 +70,15 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
                 emit(response.event)
             }
         }
+    }
+
+    suspend fun cancelConnectChannel(): Boolean {
+        if (::connectChannel.isInitialized && connectChannel.isTerminated.not() && connectChannel.isShutdown.not()){
+            Log.w("GrpcScreenEvent", "cancelConnectChannel shutDown")
+            connectChannel.shutdown()
+            return true
+        }
+        Log.w("GrpcScreenEvent", "cancelConnectChannel shutDown Fail")
+        return false
     }
 }

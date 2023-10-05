@@ -8,4 +8,5 @@ import kotlinx.coroutines.flow.Flow
 interface ScreenEventsRepository {
     suspend fun openConnectStream(uuid: String): Flow<ApiResponse<ConnectEventResponse.ConnectEvent>>
     suspend fun openContentStream(accessToken: String): Flow<ApiResponse<ContentEventResponse.ContentEvent>>
+    suspend fun cancelConnectStream()
 }
