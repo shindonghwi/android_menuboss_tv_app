@@ -14,16 +14,17 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
 class GrpcScreenEventClient : SafeGrpcRequest() {
-
     private lateinit var metadata: Metadata
     private lateinit var connectChannel: ManagedChannel
     private lateinit var contentChannel: ManagedChannel
-    private lateinit var stub: ScreenEventServiceGrpcKt.ScreenEventServiceCoroutineStub
+    private lateinit var connectStub: ScreenEventServiceGrpcKt.ScreenEventServiceCoroutineStub
+    private lateinit var contentStub: ScreenEventServiceGrpcKt.ScreenEventServiceCoroutineStub
+
 
     private val TAG = "GrpcScreenEvent"
 
     private fun initConnectChannel(uuid: String) {
-        if (::connectChannel.isInitialized.not() || connectChannel.isTerminated || connectChannel.isShutdown){
+        if (::connectChannel.isInitialized.not()){
             metadata = Metadata()
             val uuidKey = Metadata.Key.of("x-unique-id", Metadata.ASCII_STRING_MARSHALLER)
             metadata.put(uuidKey, uuid)
@@ -33,11 +34,11 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
                 .intercept(MetadataUtils.newAttachHeadersInterceptor(metadata))
                 .build()
 
-            stub = ScreenEventServiceGrpcKt.ScreenEventServiceCoroutineStub(connectChannel)
+            connectStub = ScreenEventServiceGrpcKt.ScreenEventServiceCoroutineStub(connectChannel)
         }
     }
     private fun initContentChannel(accessToken: String) {
-        if (::contentChannel.isInitialized.not() || contentChannel.isTerminated || contentChannel.isShutdown){
+        if (::contentChannel.isInitialized.not()){
             metadata = Metadata()
             val uuidKey = Metadata.Key.of("Authorization", Metadata.ASCII_STRING_MARSHALLER)
             metadata.put(uuidKey, accessToken)
@@ -47,7 +48,7 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
                 .intercept(MetadataUtils.newAttachHeadersInterceptor(metadata))
                 .build()
 
-            stub = ScreenEventServiceGrpcKt.ScreenEventServiceCoroutineStub(contentChannel)
+            contentStub = ScreenEventServiceGrpcKt.ScreenEventServiceCoroutineStub(contentChannel)
         }
     }
 
@@ -55,7 +56,7 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
         initConnectChannel(uuid)
         Log.w("GrpcScreenEvent", "openConnectStream Starting connect")
         flow {
-            stub.connectStream(Empty.getDefaultInstance()).collect { response ->
+            connectStub.connectStream(Empty.getDefaultInstance()).collect { response ->
                 Log.w("GrpcScreenEvent", "Connected: ${response.event}")
                 emit(response.event)
             }
@@ -65,20 +66,10 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
         initContentChannel(accessToken)
         Log.w("GrpcScreenEvent", "openContentStream Starting connect")
         flow {
-            stub.contentStream(Empty.getDefaultInstance()).collect { response ->
+            contentStub.contentStream(Empty.getDefaultInstance()).collect { response ->
                 Log.w("GrpcScreenEvent", "Connected: ${response.event}")
                 emit(response.event)
             }
         }
-    }
-
-    suspend fun cancelConnectChannel(): Boolean {
-        if (::connectChannel.isInitialized && connectChannel.isTerminated.not() && connectChannel.isShutdown.not()){
-            Log.w("GrpcScreenEvent", "cancelConnectChannel shutDown")
-            connectChannel.shutdown()
-            return true
-        }
-        Log.w("GrpcScreenEvent", "cancelConnectChannel shutDown Fail")
-        return false
     }
 }

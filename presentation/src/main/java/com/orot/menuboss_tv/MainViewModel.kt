@@ -3,15 +3,13 @@ package com.orot.menuboss_tv
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.orot.menuboss_tv.domain.entities.DevicePlaylistModel
-import com.orot.menuboss_tv.domain.entities.DeviceScheduleModel
+import com.orot.menuboss_tv.domain.entities.DeviceModel
 import com.orot.menuboss_tv.domain.entities.Resource
 import com.orot.menuboss_tv.domain.usecases.GetDeviceUseCase
 import com.orot.menuboss_tv.domain.usecases.GetPlaylistUseCase
 import com.orot.menuboss_tv.domain.usecases.GetScheduleUseCase
 import com.orot.menuboss_tv.domain.usecases.SubscribeConnectStreamUseCase
 import com.orot.menuboss_tv.domain.usecases.SubscribeContentStreamUseCase
-import com.orot.menuboss_tv.domain.usecases.UnSubscribeConnectStreamUseCase
 import com.orot.menuboss_tv.firebase.FirebaseAnalyticsUtil
 import com.orot.menuboss_tv.ui.model.SimpleScreenModel
 import com.orot.menuboss_tv.ui.model.UiState
@@ -30,7 +28,6 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor(
     private val subscribeConnectStreamUseCase: SubscribeConnectStreamUseCase,
     private val subscribeContentStreamUseCase: SubscribeContentStreamUseCase,
-    private val unSubscribeConnectStreamUseCase: UnSubscribeConnectStreamUseCase,
     private val getPlaylistUseCase: GetPlaylistUseCase,
     private val getScheduleUseCase: GetScheduleUseCase,
     private val firebaseAnalyticsUtil: FirebaseAnalyticsUtil,
@@ -47,24 +44,31 @@ class MainViewModel @Inject constructor(
      */
     var uuid: String = ""
 
+    val deviceState = MutableStateFlow<UiState<DeviceModel>>(UiState.Idle)
     val screenState = MutableStateFlow<UiState<SimpleScreenModel>>(UiState.Idle)
 
     /**
      * @feature: 연결 스트림의 상태를 관리합니다.
      * @author: 2023/10/03 11:38 AM donghwishin
      */
-    private val _connectionStatus =
-        MutableStateFlow<Resource<ConnectEventResponse.ConnectEvent>?>(null)
+    private val _connectionStatus = MutableStateFlow<Resource<ConnectEventResponse.ConnectEvent>?>(null)
     val connectionStatus: StateFlow<Resource<ConnectEventResponse.ConnectEvent>?> get() = _connectionStatus
 
     /**
      * @feature: GRPC 연결 스트림을 구독합니다.
      * @author: 2023/10/03 11:38 AM donghwishin
      */
+    private var openedConnectedStream = false
     fun subscribeConnectStream() {
         try {
+            if (openedConnectedStream) return
             coroutineScopeOnDefault {
                 subscribeConnectStreamUseCase(uuid).collect { response ->
+                    if (response is Resource.Success){
+                        openedConnectedStream = true
+                    }else if (response is Resource.Error){
+                        openedConnectedStream = false
+                    }
                     _connectionStatus.value = response
                 }
             }
@@ -83,10 +87,19 @@ class MainViewModel @Inject constructor(
      *
      * }
      */
+    var openedContentStream = false
     fun subscribeContentStream(accessToken: String) {
         try {
+            if (openedContentStream) return
             coroutineScopeOnDefault {
                 subscribeContentStreamUseCase(accessToken).collect { response ->
+
+                    if (response is Resource.Success){
+                        openedContentStream = true
+                    }else if (response is Resource.Error){
+                        openedConnectedStream = false
+                    }
+
                     when (response.data) {
                         ContentEventResponse.ContentEvent.CONTENT_CHANGED -> {
                             requestGetDeviceInfo()
@@ -130,22 +143,11 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun unSubscribeConnectStream() {
-        try {
-            coroutineScopeOnDefault {
-                unSubscribeConnectStreamUseCase.invoke()
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error in unSubscribeConnectStream: ${e.message}")
-        }
-    }
-
-
     /**
      * @feature: 디바이스 정보를 조회합니다.
      * @author: 2023/10/03 11:39 AM donghwishin
      */
-    private suspend fun requestGetDeviceInfo() {
+    suspend fun requestGetDeviceInfo() {
         firebaseAnalyticsUtil.recordEvent(
             FirebaseAnalyticsUtil.Event.GET_DEVICE_INFO,
             hashMapOf("uuid" to uuid)
@@ -155,14 +157,17 @@ class MainViewModel @Inject constructor(
             Log.w(TAG, "requestGetDeviceInfo: $it")
             when (it) {
                 is Resource.Loading -> {
+                    deviceState.emit(UiState.Loading)
                     screenState.emit(UiState.Loading)
                 }
 
                 is Resource.Error -> {
+                    deviceState.emit(UiState.Error(it.message.toString()))
                     screenState.emit(UiState.Error(it.message.toString()))
                 }
 
                 is Resource.Success -> {
+                    deviceState.emit(UiState.Success(data = it.data))
                     coroutineScopeOnDefault {
                         delay(1000)
                         val accessToken =

@@ -39,7 +39,7 @@ class SplashViewModel @Inject constructor(
     suspend fun requestGetDeviceInfo(uuid: String) {
         viewModelScope.launch {
             delay(2000)
-            Log.w(TAG, "Splash requestGetDeviceInfo: $uuid", )
+            Log.w(TAG, "Splash requestGetDeviceInfo: $uuid")
             firebaseAnalyticsUtil.recordEvent(
                 FirebaseAnalyticsUtil.Event.GET_DEVICE_INFO,
                 hashMapOf("uuid" to uuid)

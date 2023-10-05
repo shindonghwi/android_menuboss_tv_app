@@ -2,6 +2,7 @@ package com.orot.menuboss_tv.ui.screens.auth
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.util.Log
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -74,7 +76,6 @@ fun AuthScreen(
     LaunchedEffect(key1 = connectionStatus, block = {
         if (connectionStatus is Resource.Success && connectionStatus.data == ConnectEventResponse.ConnectEvent.ENTRY) {
             authViewModel.run { requestGetDeviceInfo(mainViewModel.uuid) }
-            mainViewModel.run { unSubscribeConnectStream() }
         }
     })
 
@@ -84,12 +85,15 @@ fun AuthScreen(
      *
      * @author: 2023/10/03 11:13 AM donghwishin
      */
-    LaunchedEffect(deviceState) {
+    DisposableEffect(key1 = deviceState, effect = {
+        Log.w("Asdasdasdasd", "AuthScreen: 1 ${deviceState}", )
         if (deviceState is UiState.Success) {
             if (deviceState.data?.status == "Linked") {
+                Log.w("Asdasdasdasd", "AuthScreen: 2", )
                 mainViewModel.run {
                     subscribeContentStream(deviceState.data.property?.accessToken.toString())
                 }
+                Log.w("Asdasdasdasd", "AuthScreen: 3", )
                 navController.navigate(RouteScreen.MenuBoardScreen.route) {
                     popUpTo(navController.graph.startDestinationId) {
                         inclusive = true
@@ -97,7 +101,10 @@ fun AuthScreen(
                 }
             }
         }
-    }
+
+        onDispose {
+        }
+    })
 
     Box(
         modifier = Modifier

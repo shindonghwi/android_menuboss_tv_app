@@ -15,13 +15,12 @@ class ScreenEventsRepositoryImpl @Inject constructor(private val grpcClient: Grp
     ScreenEventsRepository {
 
     private val logTag = "ScreenEventsRepo"
-    private var isConnectStreamShotDowned = false
 
     override suspend fun openConnectStream(uuid: String): Flow<ApiResponse<ConnectEventResponse.ConnectEvent>> = flow {
         val delayTimeMillis = 3000L  // 재시도 전 대기 시간
         var keepTrying = true
 
-        while (keepTrying || isConnectStreamShotDowned) {
+        while (keepTrying) {
             try {
                 grpcClient.openConnectStream(uuid).collect { response ->
                     Log.w(logTag, "openConnectStreamImpl with response: ${response}")
@@ -52,10 +51,4 @@ class ScreenEventsRepositoryImpl @Inject constructor(private val grpcClient: Grp
             }
         }
     }
-
-    override suspend fun cancelConnectStream() {
-        isConnectStreamShotDowned = grpcClient.cancelConnectChannel()
-    }
-
-
 }
