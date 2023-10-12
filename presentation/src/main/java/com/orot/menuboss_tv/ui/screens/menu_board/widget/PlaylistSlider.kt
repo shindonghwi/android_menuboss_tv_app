@@ -4,7 +4,6 @@ import android.graphics.Bitmap
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -16,7 +15,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.tv.material3.Text
 import coil.compose.rememberAsyncImagePainter
@@ -24,7 +22,6 @@ import coil.request.ImageRequest
 import coil.size.Size
 import coil.transform.Transformation
 import com.orot.menuboss_tv.domain.entities.DevicePlaylistModel
-import com.orot.menuboss_tv.ui.theme.colorBackground
 import kotlinx.coroutines.delay
 
 @Composable
@@ -39,7 +36,9 @@ fun PlaylistSlider(model: DevicePlaylistModel) {
 
         LaunchedEffect(currentIndex) {
             while (true) {
-                delay((it.getOrNull(currentIndex)?.duration?.times(1000L)) ?: 0L)
+                delay(
+                    (it.getOrNull(currentIndex)?.duration?.times(1000L)) ?: 0L
+                )
 
                 // delay 이후에 currentIndex의 유효성 확인
                 currentIndex = if (currentIndex >= it.size) {
@@ -52,8 +51,7 @@ fun PlaylistSlider(model: DevicePlaylistModel) {
 
         BoxWithConstraints(
             modifier = Modifier
-                .fillMaxSize()
-                .background(colorBackground),
+                .fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
             it.forEachIndexed { index, content ->
@@ -74,7 +72,8 @@ fun PlaylistSlider(model: DevicePlaylistModel) {
                                     model = ImageRequest.Builder(LocalContext.current)
                                         .data(imageUrl)
                                         .size(Size.ORIGINAL)
-                                        .transformations(object : Transformation {
+                                        .transformations(object :
+                                            Transformation {
                                             override val cacheKey: String get() = "$imageUrl$isDirectionHorizontal"
 
                                             override suspend fun transform(

@@ -5,10 +5,7 @@ import android.util.Log
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -19,7 +16,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.tv.material3.Text
@@ -28,21 +24,18 @@ import coil.request.ImageRequest
 import coil.size.Size
 import coil.transform.Transformation
 import com.orot.menuboss_tv.domain.entities.DeviceScheduleModel
-import com.orot.menuboss_tv.ui.theme.colorBackground
 import kotlinx.coroutines.delay
-import java.time.LocalTime
 import java.util.Calendar
 import java.util.Locale
 import java.util.TimeZone
-import kotlin.time.Duration.Companion.hours
-import kotlin.time.Duration.Companion.minutes
 
 @Composable
 fun ScheduleSlider(model: DeviceScheduleModel) {
 
     var currentTimeline by remember { mutableStateOf(getCurrentTimeline(model.timeline)) }
     val currentContent = currentTimeline?.playlist?.contents
-    val isDirectionHorizontal = currentTimeline?.playlist?.property?.direction?.code == "Horizontal"
+    val isDirectionHorizontal =
+        currentTimeline?.playlist?.property?.direction?.code == "Horizontal"
     val isScaleFit = currentTimeline?.playlist?.property?.fill?.code == "Fit"
     val contentScale = if (isScaleFit) ContentScale.Fit else ContentScale.Crop
 
@@ -52,7 +45,7 @@ fun ScheduleSlider(model: DeviceScheduleModel) {
             currentTimeline = getCurrentTimeline(model.timeline)
 
             // log current time
-            Log.w("Sdsaddsadsa", "ScheduleSlider: ${getCurrentTime()}", )
+            Log.w("Sdsaddsadsa", "ScheduleSlider: ${getCurrentTime()}")
         }
     }
 
@@ -61,7 +54,9 @@ fun ScheduleSlider(model: DeviceScheduleModel) {
 
         LaunchedEffect(currentContent, currentIndex) {
             while (true) {
-                delay((it.getOrNull(currentIndex)?.duration?.times(1000L)) ?: 0L)
+                delay(
+                    (it.getOrNull(currentIndex)?.duration?.times(1000L)) ?: 0L
+                )
 
                 // delay 이후에 currentIndex의 유효성 확인
                 currentIndex = if (currentIndex >= it.size) {
@@ -74,8 +69,7 @@ fun ScheduleSlider(model: DeviceScheduleModel) {
 
         BoxWithConstraints(
             modifier = Modifier
-                .fillMaxSize()
-                .background(colorBackground),
+                .fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
             it.forEachIndexed { index, content ->
@@ -152,10 +146,10 @@ fun ScheduleSlider(model: DeviceScheduleModel) {
                     }
 
                     else -> Text("Not Supported")
-                    }
                 }
             }
         }
+    }
 }
 
 
