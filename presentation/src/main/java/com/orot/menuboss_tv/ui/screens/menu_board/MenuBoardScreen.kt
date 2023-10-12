@@ -3,23 +3,26 @@ package com.orot.menuboss_tv.ui.screens.menu_board
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.tv.material3.Text
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.orot.menuboss_tv.ui.model.UiState
 import com.orot.menuboss_tv.ui.navigations.LocalMainViewModel
 import com.orot.menuboss_tv.ui.navigations.LocalNavController
 import com.orot.menuboss_tv.ui.navigations.RouteScreen
+import com.orot.menuboss_tv.ui.screens.auth.AuthScreen
+import com.orot.menuboss_tv.ui.screens.auth.AuthViewModel
 import com.orot.menuboss_tv.ui.screens.menu_board.widget.PlaylistSlider
 import com.orot.menuboss_tv.ui.screens.menu_board.widget.ScheduleSlider
 import com.orot.menuboss_tv.ui.screens.reload.ReloadScreen
@@ -27,53 +30,87 @@ import com.orot.menuboss_tv.ui.source_pack.IconPack
 import com.orot.menuboss_tv.ui.source_pack.iconpack.Logo
 import com.orot.menuboss_tv.ui.theme.AdjustedBoldText
 import com.orot.menuboss_tv.ui.theme.AdjustedMediumText
+import com.orot.menuboss_tv.ui.theme.colorBackground
 import com.orot.menuboss_tv.utils.adjustedDp
+import com.orotcode.menuboss.grpc.lib.ContentEventResponse
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.net.URLEncoder
 
 @Composable
-fun MenuBoardScreen() {
+fun MenuBoardScreen(
+) {
 
     val navController = LocalNavController.current
     val mainViewModel = LocalMainViewModel.current
     val screenState = mainViewModel.screenState.collectAsState().value
+    val grpcStatusCode = mainViewModel.grpcStatusCode.collectAsState().value
     val deviceState = mainViewModel.deviceState.collectAsState().value
+    val shouldNavigateToAuth = mainViewModel.navigateToAuthScreen.collectAsState().value
 
-    LaunchedEffect(key1 = screenState) {
-        when (screenState) {
-            is UiState.Success -> {
-                val screenData = screenState.data
-                if (screenData?.isDeleted == true) {
-                    mainViewModel.requestGetDeviceInfo()
+    LaunchedEffect(key1 = Unit, block = {
+        mainViewModel.run {
+            triggerDeviceStatus(UiState.Idle)
+            triggerAuthState(false)
+            triggerEntryStatus(null)
+        }
+    })
+
+    /**
+     * @feature: 인증화면으로 이동하는 기능
+     * @author: 2023/10/12 1:06 PM donghwishin
+     */
+    LaunchedEffect(shouldNavigateToAuth) {
+        if (shouldNavigateToAuth) {
+            navController.navigate(RouteScreen.AuthScreen.route) {
+                popUpTo(navController.graph.startDestinationId) {
+                    inclusive = true
                 }
             }
-
-            else -> {}
         }
     }
 
-    LaunchedEffect(deviceState) {
-        if (deviceState is UiState.Success) {
-            if (deviceState.data?.status == "Unlinked") {
-                mainViewModel.run { subscribeConnectStream() }
-
-                val code = deviceState.data.linkProfile?.pinCode ?: ""
-                val qrUrl = deviceState.data.linkProfile?.qrUrl ?: ""
-                val encodedQrUrl = withContext(Dispatchers.IO) {
-                    URLEncoder.encode(qrUrl, "UTF-8")
+    DisposableEffect(key1 = grpcStatusCode, effect = {
+        CoroutineScope(Dispatchers.Main).launch {
+            when (grpcStatusCode) {
+                ContentEventResponse.ContentEvent.CONTENT_CHANGED.number -> {
+                    mainViewModel.requestGetDeviceInfo(executePostApiGetContent = true)
                 }
 
-                navController.navigate("${RouteScreen.AuthScreen.route}/$code/$encodedQrUrl") {
-                    popUpTo(navController.graph.startDestinationId) {
-                        inclusive = true
+                ContentEventResponse.ContentEvent.SCREEN_DELETED.number -> {
+                    mainViewModel.run {
+                        requestGetDeviceInfo()
+                        triggerAuthState(true)
                     }
                 }
             }
         }
-    }
+        onDispose {
+            mainViewModel.triggerDeviceStatus(UiState.Idle)
+        }
+    })
+
+    DisposableEffect(key1 = deviceState, effect = {
+        if (deviceState is UiState.Success) {
+            if (deviceState.data?.status == "Unlinked") {
+                mainViewModel.run {
+                    subscribeConnectStream()
+                    triggerAuthState(true)
+                }
+            }
+        }
+        onDispose {
+            mainViewModel.triggerAuthState(false)
+        }
+    })
 
     Crossfade(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(colorBackground),
         targetState = screenState,
         animationSpec = tween(durationMillis = 1000), label = ""
     ) { item ->
@@ -91,7 +128,7 @@ fun MenuBoardScreen() {
                 val screenData = item.data
 
                 if (screenData?.isDeleted == true) {
-                    ReloadScreen()
+                    AuthScreen()
                 } else if (screenData?.isExpired == false) {
                     ExpiredScreen(modifier = Modifier.fillMaxSize())
                 } else {
@@ -120,7 +157,7 @@ private fun EmptyContentScreen(modifier: Modifier) {
         verticalArrangement = Arrangement.Center
     ) {
         Image(
-            modifier = modifier.size(
+            modifier = Modifier.size(
                 width = adjustedDp(150.dp),
                 height = adjustedDp(75.dp),
             ), imageVector = IconPack.Logo, contentDescription = ""
@@ -147,7 +184,7 @@ private fun ExpiredScreen(modifier: Modifier) {
         verticalArrangement = Arrangement.Center
     ) {
         Image(
-            modifier = modifier.size(
+            modifier = Modifier.size(
                 width = adjustedDp(150.dp),
                 height = adjustedDp(75.dp),
             ), imageVector = IconPack.Logo, contentDescription = ""

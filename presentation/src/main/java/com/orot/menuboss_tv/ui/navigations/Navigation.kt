@@ -1,6 +1,5 @@
 package com.orot.menuboss_tv.ui.navigations
 
-//import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
@@ -40,13 +39,8 @@ fun Navigation(uuidValue: String) {
             composable(RouteScreen.SplashScreen.route) {
                 SplashScreen()
             }
-            composable("${RouteScreen.AuthScreen.route}/{code}/{qrUrl}") {
-                val code = it.arguments?.getString("code")
-                val qrUrl = it.arguments?.getString("qrUrl")
-                AuthScreen(
-                    code = code,
-                    qrUrl = qrUrl
-                )
+            composable(RouteScreen.AuthScreen.route) {
+                AuthScreen()
             }
             composable(RouteScreen.MenuBoardScreen.route) {
                 MenuBoardScreen()

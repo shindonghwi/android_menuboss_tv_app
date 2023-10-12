@@ -62,7 +62,7 @@ object Versions {
     }
 
     object Protobuf {
-        const val grpcVersion = "1.57.2"
+        const val grpcVersion = "1.58.0"
         const val grpcKotlinVersion = "1.4.0"
         const val protobufVersion = "3.24.1"
     }

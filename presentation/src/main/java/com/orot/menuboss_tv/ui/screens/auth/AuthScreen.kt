@@ -32,8 +32,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
-import androidx.hilt.navigation.compose.hiltViewModel
-import com.orot.menuboss_tv.domain.entities.Resource
 import com.orot.menuboss_tv.ui.compose.modifier.tvSafeArea
 import com.orot.menuboss_tv.ui.compose.painter.rememberQrBitmapPainter
 import com.orot.menuboss_tv.ui.model.UiState
@@ -48,20 +46,21 @@ import com.orot.menuboss_tv.ui.theme.colorBackground
 import com.orot.menuboss_tv.ui.theme.colorWhite
 import com.orot.menuboss_tv.utils.adjustedDp
 import com.orotcode.menuboss.grpc.lib.ConnectEventResponse
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.net.URLEncoder
 
 
 @SuppressLint("HardwareIds")
 @Composable
-fun AuthScreen(
-    code: String?,
-    qrUrl: String?,
-    authViewModel: AuthViewModel = hiltViewModel()
-) {
+fun AuthScreen() {
     val navController = LocalNavController.current
     val mainViewModel = LocalMainViewModel.current
     val context = LocalContext.current
-    val deviceState = authViewModel.deviceState.collectAsState().value
-    val connectionStatus = mainViewModel.connectionStatus.collectAsState().value
+    val deviceState = mainViewModel.deviceState.collectAsState().value
+
+    val shouldNavigateToMenuBoard = mainViewModel.navigateToMenuBoardScreen.collectAsState().value
 
     /**
      * @feature: ConnectEventResponse.ConnectEvent.ENTRY 상태가 되면,
@@ -73,11 +72,40 @@ fun AuthScreen(
      *   ConnectEvent.ENTRY: 스크린 등록 이벤트
      * }
      */
-    LaunchedEffect(key1 = connectionStatus, block = {
-        if (connectionStatus is Resource.Success && connectionStatus.data == ConnectEventResponse.ConnectEvent.ENTRY) {
-            authViewModel.run { requestGetDeviceInfo(mainViewModel.uuid) }
+    val grpcCode = mainViewModel.grpcStatusCode.collectAsState().value
+    DisposableEffect(key1 = grpcCode, effect = {
+        CoroutineScope(Dispatchers.Main).launch {
+            Log.w("asddsadsasad", "AuthScreen: $grpcCode", )
+            when (grpcCode) {
+                ConnectEventResponse.ConnectEvent.ENTRY.number -> {
+                    mainViewModel.requestGetDeviceInfo()
+                }
+            }
+        }
+
+        onDispose {
+            mainViewModel.triggerEntryStatus(null)
         }
     })
+
+
+    /**
+     * @feature: 메뉴판 화면으로 이동하는 기능
+     * @author: 2023/10/12 1:06 PM donghwishin
+     */
+    DisposableEffect(key1 = shouldNavigateToMenuBoard, effect = {
+        if (shouldNavigateToMenuBoard) {
+            navController.navigate(RouteScreen.MenuBoardScreen.route) {
+                popUpTo(navController.graph.startDestinationId) {
+                    inclusive = true
+                }
+            }
+        }
+        onDispose {
+            mainViewModel.triggerMenuBoardState(false)
+        }
+    })
+
 
     /**
      * @feature: 스크린 등록에 성공을 하고, 디바이스 정보를 가져온 후,
@@ -86,23 +114,16 @@ fun AuthScreen(
      * @author: 2023/10/03 11:13 AM donghwishin
      */
     DisposableEffect(key1 = deviceState, effect = {
-        Log.w("Asdasdasdasd", "AuthScreen: 1 ${deviceState}", )
         if (deviceState is UiState.Success) {
             if (deviceState.data?.status == "Linked") {
-                Log.w("Asdasdasdasd", "AuthScreen: 2", )
                 mainViewModel.run {
                     subscribeContentStream(deviceState.data.property?.accessToken.toString())
-                }
-                Log.w("Asdasdasdasd", "AuthScreen: 3", )
-                navController.navigate(RouteScreen.MenuBoardScreen.route) {
-                    popUpTo(navController.graph.startDestinationId) {
-                        inclusive = true
-                    }
+                    triggerMenuBoardState(true)
                 }
             }
         }
-
         onDispose {
+            mainViewModel.triggerDeviceStatus(UiState.Idle)
         }
     })
 
@@ -121,9 +142,7 @@ fun AuthScreen(
 
             HeaderContent(modifier = Modifier.layoutId("header"))
 
-            BodyContent(
-                modifier = Modifier.layoutId("body"), code = code, qrUrl = qrUrl
-            )
+            BodyContent(modifier = Modifier.layoutId("body"))
 
             FooterContent(modifier = Modifier.layoutId("footer"))
         }
@@ -183,8 +202,7 @@ private fun HeaderContent(modifier: Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         AdjustedBoldText(
-            text = "Welcome to the MenuBoss Smart TV APP",
-            fontSize = adjustedDp(32.dp)
+            text = "Welcome to the MenuBoss Smart TV APP", fontSize = adjustedDp(32.dp)
         )
         AdjustedMediumText(
             modifier = Modifier.padding(top = adjustedDp(8.dp)),
@@ -195,7 +213,12 @@ private fun HeaderContent(modifier: Modifier) {
 }
 
 @Composable
-private fun BodyContent(modifier: Modifier, code: String?, qrUrl: String?) {
+private fun BodyContent(modifier: Modifier) {
+    val mainViewModel = LocalMainViewModel.current
+
+    val code = mainViewModel.code.collectAsState().value
+    val qrUrl = mainViewModel.qrUrl.collectAsState().value
+
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -251,8 +274,7 @@ private fun PinCode(modifier: Modifier, code: String?) {
                         )
 
                         if (index != code.lastIndex) Box(
-                            Modifier.fillMaxHeight(),
-                            contentAlignment = Alignment.Center
+                            Modifier.fillMaxHeight(), contentAlignment = Alignment.Center
                         ) {
                             Spacer(
                                 Modifier

@@ -13,7 +13,7 @@ class SubscribeContentStreamUseCase @Inject constructor(private val screenEvents
     operator fun invoke(uuid: String): Flow<Resource<ContentEventResponse.ContentEvent>> = flow {
         emit(Resource.Loading())
         screenEventsRepository.openContentStream(uuid).collect { response ->
-            Log.w("SubscribeContentStream", "response ContentStream $response: ", )
+            Log.w("SubscribeContentStream", "response ContentStream ${response.status }: ", )
             when (response.status) {
                 200 -> emit(Resource.Success(response.message, response.data))
                 else -> emit(Resource.Error(response.message))

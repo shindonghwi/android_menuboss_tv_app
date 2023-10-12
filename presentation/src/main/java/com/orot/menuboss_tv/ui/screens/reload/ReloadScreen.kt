@@ -33,9 +33,7 @@ fun ReloadScreen() {
     val context = LocalContext.current
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(colorBackground)
+        modifier = Modifier.fillMaxSize()
     ) {
         ConstraintLayout(
             modifier = Modifier
