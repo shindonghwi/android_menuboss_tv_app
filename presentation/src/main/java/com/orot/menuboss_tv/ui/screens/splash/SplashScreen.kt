@@ -17,9 +17,7 @@ import com.orot.menuboss_tv.ui.navigations.LocalMainViewModel
 import com.orot.menuboss_tv.ui.navigations.LocalNavController
 import com.orot.menuboss_tv.ui.navigations.RouteScreen
 import com.orot.menuboss_tv.ui.theme.colorBackground
-import com.orot.menuboss_tv.utils.coroutineScopeOnDefault
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import java.net.URLEncoder
 
@@ -30,20 +28,54 @@ fun SplashScreen(
     val navController = LocalNavController.current
     val mainViewModel = LocalMainViewModel.current
     val deviceState = splashViewModel.deviceState.collectAsState().value
+    val shouldNavigateToAuth =
+        splashViewModel.navigateToAuthScreen.collectAsState().value
+    val shouldNavigateToMenuBoard =
+        splashViewModel.navigateToMenuBoardScreen.collectAsState().value
 
     /**
-     * @feature: 스플래시 화면에서 최초로 디바이스 정보를 가져옵니다.
+     * @feature: 스플래시 화면에서 상태를 초기화하고, 최초로 디바이스 정보를 가져옵니다.
      * @author: 2023/10/02 6:07 PM donghwishin
      * @description{
      *   여기서 디바이스 정보를 가져오는 이유는,
      *   디바이스의 상태가 연결되었는지를 판단한다.
      * }
      */
+
     LaunchedEffect(key1 = Unit, block = {
         splashViewModel.run {
+            resetStates()
             requestGetDeviceInfo(mainViewModel.uuid)
         }
     })
+
+    /**
+     * @feature: 인증화면으로 이동하는 기능
+     * @author: 2023/10/12 1:06 PM donghwishin
+     */
+    LaunchedEffect(shouldNavigateToAuth) {
+        if (shouldNavigateToAuth) {
+            navController.navigate(RouteScreen.AuthScreen.route) {
+                popUpTo(navController.graph.startDestinationId) {
+                    inclusive = true
+                }
+            }
+        }
+    }
+
+    /**
+     * @feature: 메뉴판 화면으로 이동하는 기능
+     * @author: 2023/10/12 1:06 PM donghwishin
+     */
+    LaunchedEffect(shouldNavigateToMenuBoard) {
+        if (shouldNavigateToMenuBoard) {
+            navController.navigate(RouteScreen.MenuBoardScreen.route) {
+                popUpTo(navController.graph.startDestinationId) {
+                    inclusive = true
+                }
+            }
+        }
+    }
 
     /**
      * @feature: 스플래시 화면에서 디바이스 정보를 가져온 후, 상태에 따라서 다음 화면으로 이동합니다.
@@ -52,39 +84,40 @@ fun SplashScreen(
      *
      * @description{
      *   1. 디바이스가 연결이 안되어있는 경우
-     *       * Grpc Connect Stream을 구독합니다.
+     *       * Connect Stream을 구독합니다.
      *       * 조회한 디바이스 정보로 부터 code, qrUrl 정보를 가지고 AuthScreen 으로 이동.
+     *       * AuthScreen 에서 디바이스 등록이 된 후에 Connect Stream 을 구독하고, MenuBoardScreen 으로 이동.
      *
      *   2. 디바이스가 연결 되어있는 경우
-     *       * Grpc Content Stream을 구독합니다.
+     *       * Content Stream을 구독합니다.
      *       * 조회한 디바이스 정보로 부터 accessToken 정보를 가지고 MenuBoardScreen 으로 이동.
      * }
      */
     LaunchedEffect(deviceState) {
         if (deviceState is UiState.Success) {
             if (deviceState.data?.status == "Unlinked") {
-                mainViewModel.run { subscribeConnectStream() }
-
-                val code = deviceState.data.linkProfile?.pinCode ?: ""
-                val qrUrl = deviceState.data.linkProfile?.qrUrl ?: ""
-                val encodedQrUrl = withContext(Dispatchers.IO) {
-                    URLEncoder.encode(qrUrl, "UTF-8")
+                mainViewModel.apply {
+                    updateCodeAndQrUrl(
+                        code = deviceState.data.linkProfile?.pinCode,
+                        qrUrl = withContext(Dispatchers.IO) {
+                            URLEncoder.encode(
+                                deviceState.data.linkProfile?.qrUrl,
+                                "UTF-8"
+                            )
+                        }
+                    )
+                }.run {
+                    subscribeConnectStream()
                 }
+                splashViewModel.triggerNavigateToAuthScreen()
 
-                navController.navigate("${RouteScreen.AuthScreen.route}/$code/$encodedQrUrl") {
-                    popUpTo(navController.graph.startDestinationId) {
-                        inclusive = true
-                    }
-                }
             } else if (deviceState.data?.status == "Linked") {
                 mainViewModel.run {
-                    subscribeContentStream(deviceState.data.property?.accessToken.toString())
+                    subscribeContentStream(
+                        deviceState.data.property?.accessToken.toString()
+                    )
                 }
-                navController.navigate(RouteScreen.MenuBoardScreen.route) {
-                    popUpTo(navController.graph.startDestinationId) {
-                        inclusive = true
-                    }
-                }
+                splashViewModel.triggerNavigateToMenuBoardScreen()
             }
         } else if (deviceState is UiState.Error) {
             splashViewModel.run {

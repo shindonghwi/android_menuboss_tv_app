@@ -8,9 +8,11 @@ import com.orot.menuboss_tv.domain.entities.Resource
 import com.orot.menuboss_tv.domain.usecases.GetDeviceUseCase
 import com.orot.menuboss_tv.firebase.FirebaseAnalyticsUtil
 import com.orot.menuboss_tv.ui.model.UiState
+import com.orot.menuboss_tv.ui.screens.auth.AuthViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -26,6 +28,20 @@ class SplashViewModel @Inject constructor(
         private const val TAG = "SplashViewModel"
     }
 
+    private val _navigateToAuthScreen = MutableStateFlow(false)
+    val navigateToAuthScreen: StateFlow<Boolean> = _navigateToAuthScreen
+
+    fun triggerNavigateToAuthScreen() {
+        _navigateToAuthScreen.value = true
+    }
+
+    private val _navigateToMenuBoardScreen = MutableStateFlow(false)
+    val navigateToMenuBoardScreen: StateFlow<Boolean> = _navigateToMenuBoardScreen
+
+    fun triggerNavigateToMenuBoardScreen() {
+        _navigateToMenuBoardScreen.value = true
+    }
+
     /**
      * @feature: 디바이스 정보를 관리합니다.
      * @author: 2023/10/03 11:38 AM donghwishin
@@ -37,8 +53,9 @@ class SplashViewModel @Inject constructor(
      * @author: 2023/10/03 11:39 AM donghwishin
      */
     suspend fun requestGetDeviceInfo(uuid: String) {
+        Log.w(TAG, "SplashViewModel requestGetDeviceInfo: $uuid", )
         viewModelScope.launch {
-            delay(2000)
+            delay(3000)
             Log.w(TAG, "Splash requestGetDeviceInfo: $uuid")
             firebaseAnalyticsUtil.recordEvent(
                 FirebaseAnalyticsUtil.Event.GET_DEVICE_INFO,
@@ -53,5 +70,11 @@ class SplashViewModel @Inject constructor(
                 }
             }.launchIn(this)
         }
+    }
+
+    fun resetStates() {
+        _navigateToAuthScreen.value = false
+        _navigateToMenuBoardScreen.value = false
+        deviceState.value = UiState.Idle
     }
 }
