@@ -3,6 +3,7 @@ package com.orot.menuboss_tv.ui.screens.menu_board.widget
 import android.graphics.Bitmap
 import android.util.Log
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -43,9 +44,6 @@ fun ScheduleSlider(model: DeviceScheduleModel) {
         while (true) {
             delay(1000L) // 매 초마다 체크
             currentTimeline = getCurrentTimeline(model.timeline)
-
-            // log current time
-            Log.w("Sdsaddsadsa", "ScheduleSlider: ${getCurrentTime()}")
         }
     }
 
@@ -54,9 +52,7 @@ fun ScheduleSlider(model: DeviceScheduleModel) {
 
         LaunchedEffect(currentContent, currentIndex) {
             while (true) {
-                delay(
-                    (it.getOrNull(currentIndex)?.duration?.times(1000L)) ?: 0L
-                )
+                delay((it.getOrNull(currentIndex)?.duration?.times(1000L)) ?: 0L)
 
                 // delay 이후에 currentIndex의 유효성 확인
                 currentIndex = if (currentIndex >= it.size) {
@@ -72,80 +68,91 @@ fun ScheduleSlider(model: DeviceScheduleModel) {
                 .fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            it.forEachIndexed { index, content ->
-                when (content.type?.code) {
-                    "Image" -> {
-                        Crossfade(
-                            targetState = currentIndex == index,
-                            animationSpec = tween(
-                                durationMillis = 500,
-                                delayMillis = 500
-                            ),
-                            label = ""
-                        ) { isCurrent ->
-                            if (isCurrent) {
-                                val imageUrl = content.property?.imageUrl
+            Crossfade(
+                targetState = Pair(it, currentIndex),
+                animationSpec = tween(
+                    durationMillis = 2000,
+                    delayMillis = 500,
+                    easing = FastOutSlowInEasing
+                ), label = ""
+            ) {
+                it.first.forEachIndexed { index, content ->
+                    when (content.type?.code) {
+                        "Image" -> {
+                            Crossfade(
+                                targetState = currentIndex == index,
+                                animationSpec = tween(
+                                    durationMillis = 2000,
+                                    delayMillis = 500,
+                                    easing = FastOutSlowInEasing
+                                ),
+                                label = ""
+                            ) { isCurrent ->
+                                if (isCurrent) {
+                                    val imageUrl = content.property?.imageUrl
 
-                                val painter = rememberAsyncImagePainter(
-                                    model = ImageRequest.Builder(LocalContext.current)
-                                        .data(imageUrl)
-                                        .size(Size.ORIGINAL)
-                                        .transformations(object :
-                                            Transformation {
-                                            override val cacheKey: String get() = "$imageUrl$isDirectionHorizontal"
+                                    val painter = rememberAsyncImagePainter(
+                                        model = ImageRequest.Builder(LocalContext.current)
+                                            .data(imageUrl)
+                                            .size(Size.ORIGINAL)
+                                            .transformations(object :
+                                                Transformation {
+                                                override val cacheKey: String get() = "$imageUrl$isDirectionHorizontal"
 
-                                            override suspend fun transform(
-                                                input: Bitmap,
-                                                size: Size
-                                            ): Bitmap {
-                                                val matrix =
-                                                    android.graphics.Matrix()
-                                                matrix.postRotate(if (isDirectionHorizontal) 0f else -90f)
-                                                return Bitmap.createBitmap(
-                                                    input,
-                                                    0,
-                                                    0,
-                                                    input.width,
-                                                    input.height,
-                                                    matrix,
-                                                    true
-                                                )
-                                            }
-                                        })
-                                        .build(),
-                                )
+                                                override suspend fun transform(
+                                                    input: Bitmap,
+                                                    size: Size
+                                                ): Bitmap {
+                                                    val matrix =
+                                                        android.graphics.Matrix()
+                                                    matrix.postRotate(if (isDirectionHorizontal) 0f else -90f)
+                                                    return Bitmap.createBitmap(
+                                                        input,
+                                                        0,
+                                                        0,
+                                                        input.width,
+                                                        input.height,
+                                                        matrix,
+                                                        true
+                                                    )
+                                                }
+                                            })
+                                            .build(),
+                                    )
 
-                                Image(
-                                    modifier = Modifier.fillMaxSize(),
-                                    painter = painter,
-                                    contentDescription = null,
-                                    contentScale = contentScale
-                                )
+                                    Image(
+                                        modifier = Modifier.fillMaxSize(),
+                                        painter = painter,
+                                        contentDescription = null,
+                                        contentScale = contentScale
+                                    )
+                                }
                             }
                         }
-                    }
 
-                    "Video" -> {
-                        Crossfade(
-                            targetState = currentIndex == index,
-                            animationSpec = tween(
-                                durationMillis = 500,
-                                delayMillis = 500
-                            ),
-                            label = ""
-                        ) { isCurrent ->
-                            if (isCurrent) {
-                                ExoPlayerView(
-                                    modifier = Modifier.fillMaxSize(),
-                                    videoUrl = content.property?.videoUrl.toString(),
-                                    isScaleFit = isScaleFit,
-                                    rotationDegrees = if (isDirectionHorizontal) 0f else -90f
-                                )
+                        "Video" -> {
+                            Crossfade(
+                                targetState = currentIndex == index,
+                                animationSpec = tween(
+                                    durationMillis = 1000,
+                                    delayMillis = 500,
+                                    easing = FastOutSlowInEasing
+                                ),
+                                label = ""
+                            ) { isCurrent ->
+                                if (isCurrent) {
+                                    ExoPlayerView(
+                                        modifier = Modifier.fillMaxSize(),
+                                        videoUrl = content.property?.videoUrl.toString(),
+                                        isScaleFit = isScaleFit,
+                                        rotationDegrees = if (isDirectionHorizontal) 0f else -90f
+                                    )
+                                }
                             }
                         }
-                    }
 
-                    else -> Text("Not Supported")
+                        else -> Text("Not Supported")
+                    }
                 }
             }
         }

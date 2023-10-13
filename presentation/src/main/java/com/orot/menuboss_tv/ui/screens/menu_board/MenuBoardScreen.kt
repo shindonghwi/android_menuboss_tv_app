@@ -1,6 +1,8 @@
 package com.orot.menuboss_tv.ui.screens.menu_board
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -15,14 +17,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import com.orot.menuboss_tv.MainActivity
 import com.orot.menuboss_tv.ui.model.UiState
 import com.orot.menuboss_tv.ui.navigations.LocalMainViewModel
 import com.orot.menuboss_tv.ui.navigations.LocalNavController
 import com.orot.menuboss_tv.ui.navigations.RouteScreen
 import com.orot.menuboss_tv.ui.screens.auth.AuthScreen
-import com.orot.menuboss_tv.ui.screens.auth.AuthViewModel
 import com.orot.menuboss_tv.ui.screens.menu_board.widget.PlaylistSlider
 import com.orot.menuboss_tv.ui.screens.menu_board.widget.ScheduleSlider
 import com.orot.menuboss_tv.ui.screens.reload.ReloadScreen
@@ -35,21 +37,20 @@ import com.orot.menuboss_tv.utils.adjustedDp
 import com.orotcode.menuboss.grpc.lib.ContentEventResponse
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.net.URLEncoder
 
 @Composable
 fun MenuBoardScreen(
 ) {
-
+    val activity = LocalContext.current as MainActivity
     val navController = LocalNavController.current
     val mainViewModel = LocalMainViewModel.current
     val screenState = mainViewModel.screenState.collectAsState().value
     val grpcStatusCode = mainViewModel.grpcStatusCode.collectAsState().value
     val deviceState = mainViewModel.deviceState.collectAsState().value
     val shouldNavigateToAuth = mainViewModel.navigateToAuthScreen.collectAsState().value
+
+    BackHandler { activity.finish() }
 
     LaunchedEffect(key1 = Unit, block = {
         mainViewModel.run {
@@ -77,7 +78,10 @@ fun MenuBoardScreen(
         CoroutineScope(Dispatchers.Main).launch {
             when (grpcStatusCode) {
                 ContentEventResponse.ContentEvent.CONTENT_CHANGED.number -> {
-                    mainViewModel.requestGetDeviceInfo(executePostApiGetContent = true)
+                    mainViewModel.run {
+                        requestGetDeviceInfo(executePostApiGetContent = true)
+                        triggerEntryStatus(null)
+                    }
                 }
 
                 ContentEventResponse.ContentEvent.SCREEN_DELETED.number -> {
@@ -112,7 +116,12 @@ fun MenuBoardScreen(
             .fillMaxSize()
             .background(colorBackground),
         targetState = screenState,
-        animationSpec = tween(durationMillis = 1000), label = ""
+        animationSpec = tween(
+            durationMillis = 2000,
+            delayMillis = 500,
+            easing = FastOutSlowInEasing
+        ),
+        label = ""
     ) { item ->
         when (item) {
             is UiState.Idle,
@@ -132,16 +141,27 @@ fun MenuBoardScreen(
                 } else if (screenData?.isExpired == false) {
                     ExpiredScreen(modifier = Modifier.fillMaxSize())
                 } else {
-                    when (screenData?.isPlaylist) {
-                        true -> {
-                            screenData.playlistModel?.let { PlaylistSlider(model = it) }
-                        }
+                    Crossfade(
+                        modifier = Modifier.fillMaxSize(),
+                        targetState = screenData?.isPlaylist,
+                        animationSpec = tween(
+                            durationMillis = 2000,
+                            delayMillis = 500,
+                            easing = FastOutSlowInEasing
+                        ),
+                        label = ""
+                    ){
+                        when (it) {
+                            true -> {
+                                screenData?.playlistModel?.let { model -> PlaylistSlider(model = model) }
+                            }
 
-                        false -> {
-                            screenData.scheduleModel?.let { ScheduleSlider(model = it) }
-                        }
+                            false -> {
+                                screenData?.scheduleModel?.let { model -> ScheduleSlider(model = model) }
+                            }
 
-                        null -> EmptyContentScreen(modifier = Modifier.fillMaxSize())
+                            null -> EmptyContentScreen(modifier = Modifier.fillMaxSize())
+                        }
                     }
                 }
             }

@@ -2,6 +2,7 @@ package com.orot.menuboss_tv.ui.screens.menu_board.widget
 
 import android.graphics.Bitmap
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -60,8 +61,9 @@ fun PlaylistSlider(model: DevicePlaylistModel) {
                         Crossfade(
                             targetState = currentIndex == index,
                             animationSpec = tween(
-                                durationMillis = 500,
-                                delayMillis = 500
+                                durationMillis = 2000,
+                                delayMillis = 500,
+                                easing = FastOutSlowInEasing
                             ),
                             label = ""
                         ) { isCurrent ->
@@ -111,8 +113,9 @@ fun PlaylistSlider(model: DevicePlaylistModel) {
                         Crossfade(
                             targetState = currentIndex == index,
                             animationSpec = tween(
-                                durationMillis = 500,
-                                delayMillis = 500
+                                durationMillis = 1000,
+                                delayMillis = 500,
+                                easing = FastOutSlowInEasing
                             ),
                             label = ""
                         ) { isCurrent ->

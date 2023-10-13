@@ -3,6 +3,7 @@ package com.orot.menuboss_tv.ui.screens.auth
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -32,6 +33,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
+import com.orot.menuboss_tv.MainActivity
 import com.orot.menuboss_tv.ui.compose.modifier.tvSafeArea
 import com.orot.menuboss_tv.ui.compose.painter.rememberQrBitmapPainter
 import com.orot.menuboss_tv.ui.model.UiState
@@ -55,12 +57,16 @@ import java.net.URLEncoder
 @SuppressLint("HardwareIds")
 @Composable
 fun AuthScreen() {
+
+    val activity = LocalContext.current as MainActivity
     val navController = LocalNavController.current
     val mainViewModel = LocalMainViewModel.current
     val context = LocalContext.current
     val deviceState = mainViewModel.deviceState.collectAsState().value
 
     val shouldNavigateToMenuBoard = mainViewModel.navigateToMenuBoardScreen.collectAsState().value
+
+    BackHandler { activity.finish() }
 
     /**
      * @feature: ConnectEventResponse.ConnectEvent.ENTRY 상태가 되면,

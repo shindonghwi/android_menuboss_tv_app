@@ -5,16 +5,15 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-
 @Composable
 fun adjustedDp(original: Dp): Dp {
     val densityDpi = LocalConfiguration.current.densityDpi
-
     val adjustmentFactor = when {
-        densityDpi <= 160 -> 1.0f   // For mdpi and lower
-        densityDpi <= 320 -> 1.5f   // For xhdpi
-        densityDpi <= 480 -> 2.0f   // For xxhdpi
-        else -> 2.5f                // For xxxhdpi and above
+        densityDpi <= 120 -> 0.75f // For ldpi
+        densityDpi <= 160 -> 1.0f // For mdpi
+        densityDpi <= 240 -> 1.25f // For hdpi
+        densityDpi <= 480 -> 1.5f // Adjusted for better visibility in xhdpi & xxhdpi
+        else -> 2.0f // For xxxhdpi and above
     }
 
     val adjustedValue = original.value / adjustmentFactor
@@ -23,10 +22,11 @@ fun adjustedDp(original: Dp): Dp {
 
 fun adjustedDp(original: Dp, densityDpi: Int): Dp {
     val adjustmentFactor = when {
-        densityDpi <= 160 -> 1.0f   // For mdpi and lower
-        densityDpi <= 320 -> 1.5f   // For xhdpi
-        densityDpi <= 480 -> 2.0f   // For xxhdpi
-        else -> 2.5f                // For xxxhdpi and above
+        densityDpi <= 120 -> 0.75f // For ldpi
+        densityDpi <= 160 -> 1.0f // For mdpi
+        densityDpi <= 240 -> 1.25f // For hdpi
+        densityDpi <= 480 -> 1.5f // Adjusted for better visibility in xhdpi & xxhdpi
+        else -> 2.0f // For xxxhdpi and above
     }
 
     val adjustedValue = original.value / adjustmentFactor
