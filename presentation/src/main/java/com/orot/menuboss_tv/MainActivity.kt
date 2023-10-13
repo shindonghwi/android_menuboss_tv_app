@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
+import com.google.firebase.crashlytics.ktx.crashlytics
+import com.google.firebase.ktx.Firebase
 import com.orot.menuboss_tv.ui.navigations.Navigation
 import com.orot.menuboss_tv.ui.theme.MenuBossTVTheme
 import com.orot.menuboss_tv.utils.DeviceInfoUtil
