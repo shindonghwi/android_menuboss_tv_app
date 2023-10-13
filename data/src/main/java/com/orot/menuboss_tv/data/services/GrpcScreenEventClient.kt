@@ -63,10 +63,10 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
         }
     }
 
-    private val _connectEvents = MutableSharedFlow<ConnectEventResponse.ConnectEvent>()
-    private val _contentEvents = MutableSharedFlow<ContentEventResponse.ContentEvent>()
+    private val _connectEvents = MutableSharedFlow<Pair<ConnectEventResponse.ConnectEvent, Int>>()
+    private val _contentEvents = MutableSharedFlow<Pair<ContentEventResponse.ContentEvent, Int>>()
 
-    suspend fun openConnectStream(uuid: String): SharedFlow<ConnectEventResponse.ConnectEvent> {
+    suspend fun openConnectStream(uuid: String): SharedFlow<Pair<ConnectEventResponse.ConnectEvent, Int>> {
         initConnectChannel(uuid)
 
         val responseObserver = object : StreamObserver<ConnectEventResponse> {
@@ -75,7 +75,7 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
                     Log.d(TAG, "Received response: ${value.event}")
 
                     // 이벤트를 SharedFlow에 전달합니다.
-                    _connectEvents.emit(value.event)
+                    _connectEvents.emit(Pair(value.event, value.eventValue))
 
                     if (value.event == ConnectEventResponse.ConnectEvent.ENTRY) {
                         closeConnectChannel()
@@ -99,7 +99,7 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
     }
 
 
-    fun openContentStream(accessToken: String): SharedFlow<ContentEventResponse.ContentEvent> {
+    fun openContentStream(accessToken: String): SharedFlow<Pair<ContentEventResponse.ContentEvent, Int>> {
         initContentChannel(accessToken)
 
         val responseObserver = object : StreamObserver<ContentEventResponse> {
@@ -108,7 +108,7 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
                     Log.d(TAG, "Received response: ${value.event}")
 
                     // 이벤트를 SharedFlow에 전달합니다.
-                    _contentEvents.emit(value.event)
+                    _contentEvents.emit(Pair(value.event, value.eventValue))
 
                     if (value.event == ContentEventResponse.ContentEvent.SCREEN_DELETED) {
                         closeContentChannel()
@@ -123,7 +123,6 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
 
             override fun onCompleted() {
                 Log.d(TAG, "Stream completed")
-                closeContentChannel()
             }
         }
 

@@ -23,16 +23,19 @@ class ScreenEventsRepositoryImpl @Inject constructor(private val grpcClient: Grp
             while (!shouldBreakLoop) {  // 무한 재시도
                 try {
                     grpcClient.openConnectStream(uuid).collect { response ->
-                        Log.w(logTag, "openConnectStreamImpl with response: $response")
-                        emit(ApiResponse(status = 200, message = "", data = response))
+                        val event = response.first
 
-                        if (response == ConnectEventResponse.ConnectEvent.ENTRY) {
+                        Log.w(logTag, "openConnectStreamImpl with response: $response")
+                        emit(ApiResponse(status = 200, message = "", data = event))
+
+                        if (event == ConnectEventResponse.ConnectEvent.ENTRY) {
                             shouldBreakLoop = true
-                            emit(ApiResponse(status = 500, message = "", data = response))
                             return@collect
                         }
                     }
                 } catch (e: Exception) {
+                    shouldBreakLoop = true
+                    emit(ApiResponse(status = 500, message = "", data = null))
                     Log.w(logTag, "Connection error: $e")
                     delay(delayTimeMillis)  // 재시도 전 일정 시간 대기
                 }
@@ -46,16 +49,19 @@ class ScreenEventsRepositoryImpl @Inject constructor(private val grpcClient: Grp
             while (!shouldBreakLoop) {  // 무한 재시도 조건에 플래그 사용
                 try {
                     grpcClient.openContentStream(accessToken).collect { response ->
-                        Log.w(logTag, "openContentStreamImpl with response: $response")
-                        emit(ApiResponse(status = 200, message = "", data = response))
+                        val event = response.first
 
-                        if (response == ContentEventResponse.ContentEvent.SCREEN_DELETED) {
-                            emit(ApiResponse(status = 500, message = "", data = response))
+                        Log.w(logTag, "openContentStreamImpl with response: $event")
+                        emit(ApiResponse(status = 200, message = "", data = event))
+
+                        if (event == ContentEventResponse.ContentEvent.SCREEN_DELETED) {
                             shouldBreakLoop = true
                             return@collect
                         }
                     }
                 } catch (e: Exception) {
+                    shouldBreakLoop = true
+                    emit(ApiResponse(status = 500, message = "", data = null))
                     Log.w(logTag, "Connection error: $e")
                     delay(delayTimeMillis)  // 재시도 전 일정 시간 대기
                 }

@@ -23,22 +23,45 @@ android {
     }
 
     sourceSets {
-        create("prod") {
-            res.srcDir("src/prod")
+        // Android TV와 Fire TV를 위한 리소스 폴더 설정
+        create("devAndroidTv") {
+            res.srcDir("src/devAndroidTv")
         }
-        create("dev") {
-            res.srcDir("src/dev")
+        create("prodAndroidTv") {
+            res.srcDir("src/androidTvProd")
         }
+        create("devFireTv") {
+            res.srcDir("src/fireTvDev")
+        }
+        create("prodFireTv") {
+            res.srcDir("src/fireTvProd")
+        }
+
     }
 
-    flavorDimensions += "default"
+    flavorDimensions.addAll(listOf("platform"))
+
     productFlavors {
-        create("dev") {
+        create("devAndroidTv") {
+            dimension = "platform"
             applicationIdSuffix = DebugConfig.suffixName
             versionNameSuffix = DebugConfig.versionName
             manifestPlaceholders["appLabel"] = DebugConfig.app_label
         }
-        create("prod") {
+        create("prodAndroidTv") {
+            dimension = "platform"
+            applicationIdSuffix = ReleaseConfig.suffixName
+            versionNameSuffix = ReleaseConfig.versionName
+            manifestPlaceholders["appLabel"] = ReleaseConfig.app_label
+        }
+        create("devFireTv") {
+            dimension = "platform"
+            applicationIdSuffix = DebugConfig.suffixName
+            versionNameSuffix = DebugConfig.versionName
+            manifestPlaceholders["appLabel"] = DebugConfig.app_label
+        }
+        create("prodFireTv") {
+            dimension = "platform"
             applicationIdSuffix = ReleaseConfig.suffixName
             versionNameSuffix = ReleaseConfig.versionName
             manifestPlaceholders["appLabel"] = ReleaseConfig.app_label

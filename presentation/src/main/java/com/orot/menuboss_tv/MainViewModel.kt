@@ -99,6 +99,7 @@ class MainViewModel @Inject constructor(
                         }
                     } else if (response is Resource.Error) {
                         Log.w(TAG, "subscribeConnectStream: Fail", )
+                        _grpcStatusCode.value = null
                         openedConnectedStream = false
                         return@collect
                     }
@@ -132,6 +133,7 @@ class MainViewModel @Inject constructor(
                     if (response is Resource.Success) {
                         openedContentStream = true
                     } else if (response is Resource.Error) {
+                        _grpcStatusCode.value = null
                         openedContentStream = false
                         Log.w(TAG, "subscribeContentStream: RUN COLLECT END", )
                         return@collect
