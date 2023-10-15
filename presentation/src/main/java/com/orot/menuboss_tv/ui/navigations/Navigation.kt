@@ -25,7 +25,7 @@ val LocalMainViewModel = compositionLocalOf<MainViewModel> {
 fun Navigation(uuidValue: String) {
     val navController = rememberNavController()
     val mainViewModel = hiltViewModel<MainViewModel>().apply {
-        uuid = uuidValue
+        updateUUID(uuidValue)
     }
 
     CompositionLocalProvider(
@@ -37,7 +37,7 @@ fun Navigation(uuidValue: String) {
             startDestination = RouteScreen.SplashScreen.route
         ) {
             composable(RouteScreen.SplashScreen.route) {
-                SplashScreen()
+                SplashScreen(uuid = uuidValue)
             }
             composable(RouteScreen.AuthScreen.route) {
                 AuthScreen()
