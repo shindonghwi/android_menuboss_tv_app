@@ -1,5 +1,6 @@
 package com.orot.menuboss_tv.ui.screens.splash
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,14 +37,8 @@ fun SplashScreen(
      * @feature: 디바이스 정보 요청
      * @author: 2023/10/15 12:52 PM donghwishin
      */
-    DisposableEffect(key1 = Unit, effect = {
-        splashViewModel.run {
-            // 디바이스 정보 요청
-            CoroutineScope(Dispatchers.Main).launch { requestGetDeviceInfo(uuid = uuid) }
-
-            // 뷰 모델 상태 초기화
-            onDispose { initState() }
-        }
+    LaunchedEffect(key1 = Unit, block = {
+        splashViewModel.requestGetDeviceInfo(uuid = uuid)
     })
 
     /**
@@ -87,16 +82,21 @@ fun SplashScreen(
      *  2. 디바이스 정보가 정상적으로 응답되지 않으면, 디바이스 정보를 다시 요청합니다.
      * }
      */
-    LaunchedEffect(key1 = Unit, block = {
+    DisposableEffect(key1 = deviceState, effect = {
         splashViewModel.run {
-            if (deviceState is UiState.Success) {
-                if (deviceState.data?.status == "Unlinked") {
-                    triggerAuthState(true)
-                } else if (deviceState.data?.status == "Linked") {
-                    triggerMenuState(true)
+            CoroutineScope(Dispatchers.Main).launch {
+                if (deviceState is UiState.Success) {
+                    if (deviceState.data?.status == "Unlinked") {
+                        triggerAuthState(true)
+                    } else if (deviceState.data?.status == "Linked") {
+                        triggerMenuState(true)
+                    }
+                } else if (deviceState is UiState.Error) {
+                    requestGetDeviceInfo(uuid = uuid)
                 }
-            } else if (deviceState is UiState.Error) {
-                requestGetDeviceInfo(uuid = uuid)
+            }
+            onDispose {
+                initState()
             }
         }
     })
