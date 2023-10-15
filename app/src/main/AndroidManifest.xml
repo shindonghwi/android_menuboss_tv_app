@@ -23,11 +23,12 @@
         android:allowBackup="true"
         android:banner="@drawable/ic_banner"
         android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher"
         android:label="${appLabel}"
-        android:usesCleartextTraffic="true"
+        android:largeHeap="true"
+        android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         android:theme="@style/Theme.MenuBossTV"
+        android:usesCleartextTraffic="true"
         tools:targetApi="m">
         <activity
             android:name=".MainActivity"

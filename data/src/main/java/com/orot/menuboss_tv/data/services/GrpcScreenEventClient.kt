@@ -11,134 +11,161 @@ import io.grpc.ManagedChannelBuilder
 import io.grpc.Metadata
 import io.grpc.stub.MetadataUtils
 import io.grpc.stub.StreamObserver
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import java.util.concurrent.TimeUnit
 
 
 class GrpcScreenEventClient : SafeGrpcRequest() {
-    private lateinit var metadata: Metadata
+
+    // status code = 701 // 서버 연결 실패.
+
+    companion object {
+        private const val TAG = "GrpcScreenEventClient"
+    }
+
     private var connectChannel: ManagedChannel? = null
     private var contentChannel: ManagedChannel? = null
 
     private var connectBlockingStub: ScreenEventServiceGrpc.ScreenEventServiceStub? = null
     private var contentBlockingStub: ScreenEventServiceGrpc.ScreenEventServiceStub? = null
 
-    private val TAG = "GrpcScreenEvent"
+    private val _connectEvents =
+        MutableStateFlow<Pair<ConnectEventResponse.ConnectEvent?, Int>?>(null)
+    private val connectEvents: StateFlow<Pair<ConnectEventResponse.ConnectEvent?, Int>?> get() = _connectEvents
+
+    private val _contentEvents =
+        MutableStateFlow<Pair<ContentEventResponse.ContentEvent?, Int>?>(null)
+    private val contentEvents: StateFlow<Pair<ContentEventResponse.ContentEvent?, Int>?> get() = _contentEvents
 
     private fun initConnectChannel(uuid: String) {
         if (connectChannel == null) {
-            metadata = Metadata()
-            val uuidKey = Metadata.Key.of("x-unique-id", Metadata.ASCII_STRING_MARSHALLER)
-            metadata.put(uuidKey, uuid)
-            Log.w(TAG, "initConnectChannel: $metadata")
+            _connectEvents.tryEmit(null)
+            Log.w(TAG, "initConnectChannel")
+
             connectChannel =
                 ManagedChannelBuilder.forAddress("dev-screen-grpc.themenuboss.com", 443)
                     .useTransportSecurity()
-                    .intercept(MetadataUtils.newAttachHeadersInterceptor(metadata)).build()
+                    .intercept(MetadataUtils.newAttachHeadersInterceptor(
+                        Metadata().apply {
+                            put(
+                                Metadata.Key.of(
+                                    "x-unique-id",
+                                    Metadata.ASCII_STRING_MARSHALLER
+                                ),
+                                uuid
+                            )
+                        }
+                    )).build()
 
             connectChannel?.let {
                 // 기존 코루틴 스텁을 기본 스텁으로 변경합니다.
                 connectBlockingStub = ScreenEventServiceGrpc.newStub(it)
+
+                val responseObserver = object : StreamObserver<ConnectEventResponse> {
+                    override fun onNext(value: ConnectEventResponse) {
+                        Log.d(TAG, "Received response: ${value.event}")
+                        _connectEvents.tryEmit(Pair(value.event, value.eventValue))
+
+                        if (value.event == ConnectEventResponse.ConnectEvent.ENTRY) {
+                            closeConnectChannel()
+                        }
+
+                    }
+
+                    override fun onError(t: Throwable) {
+                        Log.e(TAG, "Error in stream", t)
+                        if (_connectEvents.value?.second != 701){
+                            _connectEvents.tryEmit(Pair(null, 701))
+                        }
+                        closeConnectChannel()
+                    }
+
+                    override fun onCompleted() {
+                        Log.d(TAG, "Stream completed")
+                    }
+                }
+
+                connectBlockingStub?.connectStream(Empty.getDefaultInstance(), responseObserver)
             }
         }
     }
 
     private fun initContentChannel(accessToken: String) {
         if (contentChannel == null) {
-            metadata = Metadata()
-            val uuidKey = Metadata.Key.of("Authorization", Metadata.ASCII_STRING_MARSHALLER)
-            metadata.put(uuidKey, accessToken)
-            Log.w(TAG, "initContentChannel: $metadata")
+            _contentEvents.tryEmit(null)
+            Log.w(TAG, "initContentChannel")
+
             contentChannel =
                 ManagedChannelBuilder.forAddress("dev-screen-grpc.themenuboss.com", 443)
                     .useTransportSecurity()
-                    .intercept(MetadataUtils.newAttachHeadersInterceptor(metadata)).build()
+                    .intercept(MetadataUtils.newAttachHeadersInterceptor(
+                        Metadata().apply {
+                            put(
+                                Metadata.Key.of(
+                                    "Authorization",
+                                    Metadata.ASCII_STRING_MARSHALLER
+                                ),
+                                accessToken
+                            )
+                        }
+                    )).build()
 
             contentChannel?.let {
                 contentBlockingStub = ScreenEventServiceGrpc.newStub(it)
-            }
-        }
-    }
 
-    private val _connectEvents = MutableSharedFlow<Pair<ConnectEventResponse.ConnectEvent, Int>>()
-    private val _contentEvents = MutableSharedFlow<Pair<ContentEventResponse.ContentEvent, Int>>()
+                val responseObserver = object : StreamObserver<ContentEventResponse> {
+                    override fun onNext(value: ContentEventResponse) {
+                        Log.d(TAG, "Received response: ${value.event}")
+                        _contentEvents.tryEmit(Pair(value.event, value.eventValue))
 
-    suspend fun openConnectStream(uuid: String): SharedFlow<Pair<ConnectEventResponse.ConnectEvent, Int>> {
-        initConnectChannel(uuid)
-
-        val responseObserver = object : StreamObserver<ConnectEventResponse> {
-            override fun onNext(value: ConnectEventResponse) {
-                CoroutineScope(Dispatchers.IO).launch {
-                    Log.d(TAG, "Received response: ${value.event}")
-
-                    // 이벤트를 SharedFlow에 전달합니다.
-                    _connectEvents.emit(Pair(value.event, value.eventValue))
-
-                    if (value.event == ConnectEventResponse.ConnectEvent.ENTRY) {
-                        closeConnectChannel()
+                        if (value.event == ContentEventResponse.ContentEvent.SCREEN_DELETED) {
+                            closeConnectChannel()
+                            closeContentChannel()
+                        }
                     }
-                }
-            }
 
-            override fun onError(t: Throwable) {
-                Log.e(TAG, "Error in stream", t)
-                closeConnectChannel()
-            }
-
-            override fun onCompleted() {
-                Log.d(TAG, "Stream completed")
-            }
-        }
-
-        connectBlockingStub?.connectStream(Empty.getDefaultInstance(), responseObserver)
-
-        return _connectEvents
-    }
-
-
-    fun openContentStream(accessToken: String): SharedFlow<Pair<ContentEventResponse.ContentEvent, Int>> {
-        initContentChannel(accessToken)
-
-        val responseObserver = object : StreamObserver<ContentEventResponse> {
-            override fun onNext(value: ContentEventResponse) {
-                CoroutineScope(Dispatchers.IO).launch {
-                    Log.d(TAG, "Received response: ${value.event}")
-
-                    // 이벤트를 SharedFlow에 전달합니다.
-                    _contentEvents.emit(Pair(value.event, value.eventValue))
-
-                    if (value.event == ContentEventResponse.ContentEvent.SCREEN_DELETED) {
+                    override fun onError(t: Throwable) {
+                        Log.e(TAG, "Error in stream", t)
+                        if (_contentEvents.value?.second != 701){
+                            _contentEvents.tryEmit(Pair(null, 701))
+                        }
+                        closeConnectChannel()
                         closeContentChannel()
                     }
+
+                    override fun onCompleted() {
+                        Log.d(TAG, "Stream completed")
+                    }
                 }
-            }
 
-            override fun onError(t: Throwable) {
-                Log.e(TAG, "Error in stream", t)
-                closeContentChannel()
-            }
-
-            override fun onCompleted() {
-                Log.d(TAG, "Stream completed")
+                contentBlockingStub?.contentStream(Empty.getDefaultInstance(), responseObserver)
             }
         }
+    }
 
-        contentBlockingStub?.contentStream(Empty.getDefaultInstance(), responseObserver)
 
-        return _contentEvents
+    fun openConnectStream(uuid: String): StateFlow<Pair<ConnectEventResponse.ConnectEvent?, Int>?> {
+        initConnectChannel(uuid)
+        return connectEvents
+    }
+
+
+    fun openContentStream(accessToken: String): StateFlow<Pair<ContentEventResponse.ContentEvent?, Int>?> {
+        initContentChannel(accessToken)
+        return contentEvents
     }
 
     fun closeConnectChannel() {
         connectChannel?.shutdown()
         connectChannel = null
+        connectBlockingStub = null
     }
 
     fun closeContentChannel() {
         contentChannel?.shutdown()
         contentChannel = null
+        contentBlockingStub = null
     }
 
 }

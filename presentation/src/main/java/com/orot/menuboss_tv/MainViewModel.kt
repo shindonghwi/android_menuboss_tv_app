@@ -1,9 +1,7 @@
 package com.orot.menuboss_tv
 
 import android.util.Log
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.orot.menuboss_tv.domain.entities.DeviceModel
 import com.orot.menuboss_tv.domain.entities.Resource
 import com.orot.menuboss_tv.domain.usecases.GetDeviceUseCase
 import com.orot.menuboss_tv.domain.usecases.GetPlaylistUseCase
@@ -11,17 +9,20 @@ import com.orot.menuboss_tv.domain.usecases.GetScheduleUseCase
 import com.orot.menuboss_tv.domain.usecases.SubscribeConnectStreamUseCase
 import com.orot.menuboss_tv.domain.usecases.SubscribeContentStreamUseCase
 import com.orot.menuboss_tv.firebase.FirebaseAnalyticsUtil
+import com.orot.menuboss_tv.ui.base.BaseViewModel
 import com.orot.menuboss_tv.ui.model.SimpleScreenModel
 import com.orot.menuboss_tv.ui.model.UiState
-import com.orot.menuboss_tv.utils.coroutineScopeOnDefault
 import com.orotcode.menuboss.grpc.lib.ConnectEventResponse
 import com.orotcode.menuboss.grpc.lib.ContentEventResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -32,83 +33,63 @@ class MainViewModel @Inject constructor(
     private val getScheduleUseCase: GetScheduleUseCase,
     private val firebaseAnalyticsUtil: FirebaseAnalyticsUtil,
     private val getDeviceUseCase: GetDeviceUseCase,
-) : ViewModel() {
+) : BaseViewModel() {
 
     companion object {
         private const val TAG = "MainViewModel"
-    }
-
-    val navigateToAuthScreen = MutableStateFlow(false)
-    fun triggerAuthState(flag: Boolean) = run { navigateToAuthScreen.value = flag }
-
-
-    val navigateToMenuBoardScreen = MutableStateFlow(false)
-    fun triggerMenuBoardState(flag: Boolean) = run { navigateToMenuBoardScreen.value = flag }
-
-
-    /**
-     * @feature: 디바이스의 코드와 QR URL을 관리합니다.
-     * @author: 2023/10/12 12:33 PM donghwishin
-     */
-    var code = MutableStateFlow<String?>(null)
-    var qrUrl = MutableStateFlow<String?>(null)
-
-    private fun _updateCodeAndQrUrl(code: String?, qrUrl: String?) {
-        this.code.value = code
-        this.qrUrl.value = qrUrl
-        Log.w(TAG, "updateCodeAndQrUrl: $code $qrUrl")
     }
 
     /**
      * @feature: 디바이스의 고유한 식별자입니다.
      * @author: 2023/10/03 11:37 AM donghwishin
      */
-    var uuid: String = ""
+    private var _uuid: String = ""
 
-    val deviceState = MutableStateFlow<UiState<DeviceModel>>(UiState.Idle)
-    val screenState = MutableStateFlow<UiState<SimpleScreenModel>>(UiState.Idle)
+    fun updateUUID(uuid: String) = run { this._uuid = uuid }
+    fun getUUID(): String = _uuid
+
+    /**
+     * @feature: 콘텐츠 스트림의 accessToken
+     * @author: 2023/10/03 11:37 AM donghwishin
+     */
+    private var _accessToken: String = ""
+
+    fun updateAccessToken(accessToken: String) = run { this._accessToken = accessToken }
+
+
+    private val _screenState = MutableStateFlow<UiState<SimpleScreenModel>>(UiState.Idle)
+    val screenState: StateFlow<UiState<SimpleScreenModel>> get() = _screenState
 
     /**
      * @feature: GRPC 연결 스트림을 구독합니다.
      * @author: 2023/10/03 11:38 AM donghwishin
      */
-    private var openedConnectedStream = false
-    private var openedContentStream = false
     private val _grpcStatusCode = MutableStateFlow<Int?>(null)
     val grpcStatusCode: StateFlow<Int?> get() = _grpcStatusCode
 
-    fun triggerEntryStatus(number: Int?) = run { _grpcStatusCode.value = number }
-    fun triggerDeviceStatus(state: UiState<DeviceModel>) = run { deviceState.value = state }
+    suspend fun subscribeConnectStream() {
+        Log.w(TAG, "subscribeConnectStream: START")
+        val uuid = getUUID()
 
-    fun subscribeConnectStream() {
-        try {
-            Log.w(TAG, "subscribeConnectStream: RUN", )
-            if (openedConnectedStream) return
-            coroutineScopeOnDefault {
-                delay(500)
-                Log.w(TAG, "subscribeConnectStream: RUN : subscribeConnectStream START", )
+        subscribeConnectStreamUseCase(uuid).collect { response ->
+            Log.w(TAG, "subscribeConnectStream: response : ${response?.first} ${response?.second}")
 
-                subscribeConnectStreamUseCase(uuid).collect { response ->
-                    if (response is Resource.Success) {
-                        Log.w(TAG, "subscribeConnectStream: Success : ${response.data}", )
-                        openedConnectedStream = true
-                        if (response.data == ConnectEventResponse.ConnectEvent.ENTRY) {
-                            _grpcStatusCode.value = ConnectEventResponse.ConnectEvent.ENTRY.number
-                            openedConnectedStream = false
-                            return@collect
-                        }
-                    } else if (response is Resource.Error) {
-                        Log.w(TAG, "subscribeConnectStream: Fail", )
-                        _grpcStatusCode.value = null
-                        openedConnectedStream = false
-                        return@collect
-                    }
+            response?.let {
+                val event = it.first
+                val status = it.second
+
+                if (event == ConnectEventResponse.ConnectEvent.ENTRY) {
+                    _grpcStatusCode.value = ConnectEventResponse.ConnectEvent.ENTRY.number
+                } else if (status == 701) {
+                    _grpcStatusCode.value = null
+                    delay(1000)
+                    subscribeConnectStream()
+                    return@collect
                 }
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error in subscribeConnectStream: ${e.message}")
         }
     }
+
 
     /**
      * @feature: GRPC 컨텐츠 스트림을 구독합니다.
@@ -120,53 +101,51 @@ class MainViewModel @Inject constructor(
      *
      * }
      */
-    fun subscribeContentStream(accessToken: String) {
-        try {
-            Log.w(TAG, "subscribeContentStream: RUN: $accessToken", )
-            if (openedContentStream) return
-            coroutineScopeOnDefault {
-                Log.w(TAG, "subscribeContentStream: RUN START", )
-                subscribeContentStreamUseCase(accessToken).collect { response ->
+    suspend fun subscribeContentStream() {
+        Log.w(TAG, "subscribeContentStream: RUN: $_accessToken")
 
-                    Log.w("Asddsadsasda", "subscribeContentStream: ${response}", )
+        subscribeContentStreamUseCase(_accessToken).collect { response ->
+            response?.let {
+                Log.w(TAG, "subscribeContentStream: response $it")
 
-                    if (response is Resource.Success) {
-                        openedContentStream = true
-                    } else if (response is Resource.Error) {
-                        _grpcStatusCode.value = null
-                        openedContentStream = false
-                        Log.w(TAG, "subscribeContentStream: RUN COLLECT END", )
-                        return@collect
-                    }
+                val event = it.first
+                val status = it.second
 
-                    when (response.data) {
+                if (status == 701){
+                    _grpcStatusCode.value = null
+                    requestGetDeviceInfo(executeContentsCallApiAction = false)
+                    delay(1000)
+                    subscribeContentStream()
+                    return@collect
+                }else{
+                    Log.w(TAG, "subscribeContentStream: event: $event")
+                    when (event) {
                         ContentEventResponse.ContentEvent.CONTENT_CHANGED -> {
                             _grpcStatusCode.value = ContentEventResponse.ContentEvent.CONTENT_CHANGED.number
+                            requestGetDeviceInfo(executeContentsCallApiAction = true)
                         }
 
                         ContentEventResponse.ContentEvent.CONTENT_EMPTY -> {
-                            screenState.emit(UiState.Success(data = SimpleScreenModel(isPlaylist = null)))
+                            _screenState.emit(UiState.Success(data = SimpleScreenModel(isPlaylist = null)))
                             _grpcStatusCode.value = ContentEventResponse.ContentEvent.CONTENT_EMPTY.number
                         }
 
                         ContentEventResponse.ContentEvent.SCREEN_DELETED -> {
+                            _screenState.emit(UiState.Success(data = SimpleScreenModel(isPlaylist = null)))
                             _grpcStatusCode.value = ContentEventResponse.ContentEvent.SCREEN_DELETED.number
-                            openedContentStream = false
+                            triggerAuthState(true)
                             return@collect
                         }
 
                         ContentEventResponse.ContentEvent.SCREEN_EXPIRED -> {
-                            _grpcStatusCode.value = ContentEventResponse.ContentEvent.SCREEN_EXPIRED.number
+                            _grpcStatusCode.value =
+                                ContentEventResponse.ContentEvent.SCREEN_EXPIRED.number
                         }
 
-                        else -> {
-                            UiState.Error(response.message.toString())
-                        }
+                        else -> {}
                     }
                 }
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error in subscribeContentStream: ${e.message}")
         }
     }
 
@@ -174,13 +153,10 @@ class MainViewModel @Inject constructor(
      * @feature: 디바이스 정보를 조회합니다.
      * @author: 2023/10/03 11:39 AM donghwishin
      */
-    suspend fun requestGetDeviceInfo(
-        delayTime: Long = 0L,
-        executePostApiGetContent: Boolean = false
+    private suspend fun requestGetDeviceInfo(
+        executeContentsCallApiAction: Boolean,
     ) {
-        delay(delayTime)
-
-        Log.w(TAG, "MainViewModel requestGetDeviceInfo: $uuid")
+        val uuid = getUUID()
         firebaseAnalyticsUtil.recordEvent(
             FirebaseAnalyticsUtil.Event.GET_DEVICE_INFO, hashMapOf("uuid" to uuid)
         )
@@ -189,34 +165,20 @@ class MainViewModel @Inject constructor(
             Log.w(TAG, "requestGetDeviceInfo: $it")
             when (it) {
                 is Resource.Loading -> {
-                    deviceState.emit(UiState.Loading)
-                    screenState.emit(UiState.Loading)
+                    _screenState.emit(UiState.Loading)
                 }
 
                 is Resource.Error -> {
-                    deviceState.emit(UiState.Error(it.message.toString()))
-                    screenState.emit(UiState.Error(it.message.toString()))
+                    _screenState.emit(UiState.Error(it.message.toString()))
                 }
 
                 is Resource.Success -> {
-                    deviceState.emit(UiState.Success(data = it.data))
-
-
-                    it.data?.let { response ->
-                        if (response.status == "Unlinked") {
-                            _updateCodeAndQrUrl(
-                                code = response.linkProfile?.pinCode,
-                                qrUrl = response.linkProfile?.qrUrl
-                            )
-                        }
-                    }
-
-                    if (executePostApiGetContent) {
-                        val accessToken = it.data?.property?.accessToken.toString()
+                    updateAccessToken(it.data?.property?.accessToken.toString())
+                    if (executeContentsCallApiAction) {
                         if (it.data?.playing?.contentType == "Playlist") {
-                            requestGetDevicePlaylist(accessToken)
+                            requestGetDevicePlaylist()
                         } else if (it.data?.playing?.contentType == "Schedule") {
-                            requestGetDeviceSchedule(accessToken)
+                            requestGetDeviceSchedule()
                         }
                     }
                 }
@@ -228,20 +190,21 @@ class MainViewModel @Inject constructor(
      * @feature: 디바이스의 스케줄을 조회합니다.
      * @author: 2023/10/03 11:39 AM donghwishin
      */
-    private suspend fun requestGetDeviceSchedule(accessToken: String) {
+    private suspend fun requestGetDeviceSchedule() {
+        val uuid = getUUID()
         firebaseAnalyticsUtil.recordEvent(
             FirebaseAnalyticsUtil.Event.GET_DEVICE_SCHEDULE_INFO, hashMapOf("uuid" to uuid)
         )
 
-        getScheduleUseCase(uuid, accessToken).onEach {
+        getScheduleUseCase(uuid, _accessToken).onEach {
             when (it) {
                 is Resource.Loading -> {}
                 is Resource.Error -> {
-                    screenState.emit(UiState.Error(it.message.toString()))
+                    _screenState.emit(UiState.Error(it.message.toString()))
                 }
 
                 is Resource.Success -> {
-                    screenState.emit(
+                    _screenState.emit(
                         UiState.Success(
                             data = SimpleScreenModel(
                                 isPlaylist = false,
@@ -259,21 +222,22 @@ class MainViewModel @Inject constructor(
      * @feature: 디바이스의 플레이리스트를 조회합니다.
      * @author: 2023/10/03 11:39 AM donghwishin
      */
-    private suspend fun requestGetDevicePlaylist(accessToken: String) {
+    private suspend fun requestGetDevicePlaylist() {
+        val uuid = getUUID()
+
         firebaseAnalyticsUtil.recordEvent(
             FirebaseAnalyticsUtil.Event.GET_DEVICE_PLAYLIST_INFO, hashMapOf("uuid" to uuid)
         )
 
-        getPlaylistUseCase(uuid, accessToken).onEach {
-            Log.w(TAG, "asdsadsad requestGetDevicePlaylist: ${it}")
+        getPlaylistUseCase(uuid, _accessToken).onEach {
             when (it) {
                 is Resource.Loading -> {}
                 is Resource.Error -> {
-                    screenState.emit(UiState.Error(it.message.toString()))
+                    _screenState.emit(UiState.Error(it.message.toString()))
                 }
 
                 is Resource.Success -> {
-                    screenState.emit(
+                    _screenState.emit(
                         UiState.Success(
                             data = SimpleScreenModel(
                                 isPlaylist = true,

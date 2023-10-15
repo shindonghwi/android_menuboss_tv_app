@@ -1,6 +1,5 @@
 package com.orot.menuboss_tv.ui.screens.splash
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,6 +14,7 @@ import app.rive.runtime.kotlin.core.Loop
 import com.orot.menuboss_tv.presentation.R
 import com.orot.menuboss_tv.ui.components.RiveAnimation
 import com.orot.menuboss_tv.ui.model.UiState
+import com.orot.menuboss_tv.ui.navigations.LocalMainViewModel
 import com.orot.menuboss_tv.ui.navigations.LocalNavController
 import com.orot.menuboss_tv.ui.navigations.RouteScreen
 import com.orot.menuboss_tv.ui.theme.colorBackground
@@ -28,6 +28,7 @@ fun SplashScreen(
     splashViewModel: SplashViewModel = hiltViewModel()
 ) {
     val navController = LocalNavController.current
+    val mainViewModel = LocalMainViewModel.current
 
     val deviceState = splashViewModel.deviceState.collectAsState().value
     val doAuthScreenActionState = splashViewModel.navigateToAuthState.collectAsState().value
@@ -89,10 +90,11 @@ fun SplashScreen(
                     if (deviceState.data?.status == "Unlinked") {
                         triggerAuthState(true)
                     } else if (deviceState.data?.status == "Linked") {
+                        mainViewModel.updateAccessToken(
+                            deviceState.data.property?.accessToken.toString()
+                        )
                         triggerMenuState(true)
                     }
-                } else if (deviceState is UiState.Error) {
-                    requestGetDeviceInfo(uuid = uuid)
                 }
             }
             onDispose {

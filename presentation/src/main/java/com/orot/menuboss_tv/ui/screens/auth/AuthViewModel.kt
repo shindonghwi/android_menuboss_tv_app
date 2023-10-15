@@ -1,14 +1,15 @@
 package com.orot.menuboss_tv.ui.screens.auth
 
 import android.util.Log
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.orot.menuboss_tv.domain.entities.DeviceModel
 import com.orot.menuboss_tv.domain.entities.Resource
 import com.orot.menuboss_tv.domain.usecases.GetDeviceUseCase
 import com.orot.menuboss_tv.firebase.FirebaseAnalyticsUtil
+import com.orot.menuboss_tv.ui.base.BaseViewModel
 import com.orot.menuboss_tv.ui.model.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
@@ -19,27 +20,32 @@ import javax.inject.Inject
 class AuthViewModel @Inject constructor(
     private val firebaseAnalyticsUtil: FirebaseAnalyticsUtil,
     private val getDeviceUseCase: GetDeviceUseCase,
-) : ViewModel() {
+) : BaseViewModel() {
 
     companion object {
         private const val TAG = "AuthViewModel"
     }
 
-    private val _navigateToMenuBoardScreen = MutableStateFlow(false)
-    val navigateToMenuBoardScreen: StateFlow<Boolean> = _navigateToMenuBoardScreen
+    /**
+     * @feature: QR code, QR Url 정보를 관리합니다.
+     * @author: 2023/10/03 11:38 AM donghwishin
+     */
+    private val _pairCodeInfo = MutableStateFlow<UiState<Pair<String, String>>>(UiState.Idle)
+    val pairCodeInfo: StateFlow<UiState<Pair<String, String>>> get() = _pairCodeInfo
 
-    fun triggerNavigateToMenuBoardScreen() {
-        _navigateToMenuBoardScreen.value = true
-    }
+    /**
+     * @feature: accessToken 정보를 관리합니다.
+     * @author: 2023/10/03 11:38 AM donghwishin
+     */
+    private val _accessToken = MutableStateFlow<String?>(null)
+    val accessToken: StateFlow<String?> get() = _accessToken
 
-    fun initNavigateToMenuBoardScreen() {
-        _navigateToMenuBoardScreen.value = false
-    }
-
-    val deviceState = MutableStateFlow<UiState<DeviceModel>>(UiState.Idle)
-
+    /**
+     * @feature: 디바이스 정보를 조회합니다.
+     * @author: 2023/10/15 1:34 PM donghwishin
+    */
     suspend fun requestGetDeviceInfo(uuid: String) {
-        Log.d(TAG, "AuthViewModel requestGetDeviceInfo: $uuid")
+        Log.w(TAG, "requestGetDeviceInfo: $uuid")
 
         firebaseAnalyticsUtil.recordEvent(
             FirebaseAnalyticsUtil.Event.GET_DEVICE_INFO,
@@ -47,20 +53,34 @@ class AuthViewModel @Inject constructor(
         )
 
         getDeviceUseCase(uuid).onEach {
-            Log.d(TAG, "requestGetDeviceInfo status : $it")
+            Log.w(TAG, "requestGetDeviceInfo - response: $it")
             when (it) {
-                is Resource.Loading -> deviceState.emit(UiState.Loading)
+                is Resource.Loading -> _pairCodeInfo.emit(UiState.Loading)
                 is Resource.Error -> {
-                    val errorMessage = it.message ?: "Unknown error occurred"
-                    deviceState.emit(UiState.Error(errorMessage))
+                    delay(3000)
+                    requestGetDeviceInfo(uuid)
                 }
-                is Resource.Success -> deviceState.emit(UiState.Success(data = it.data))
+
+                is Resource.Success -> {
+                    val data = it.data
+                    if (data?.status == "Unlinked") {
+                        _pairCodeInfo.value = UiState.Success(
+                            data = Pair(
+                                data.linkProfile?.pinCode.toString(),
+                                data.linkProfile?.qrUrl.toString()
+                            )
+                        )
+                    }else if (data?.status == "Linked"){
+                        _accessToken.value = data.property?.accessToken
+                    }
+                }
             }
         }.launchIn(viewModelScope)
     }
 
-    fun initDeviceState(){
-        deviceState.value = UiState.Idle
+    override fun initState() {
+        super.initState()
+        _accessToken.value = null
+        Log.w(TAG, "initState")
     }
-
 }

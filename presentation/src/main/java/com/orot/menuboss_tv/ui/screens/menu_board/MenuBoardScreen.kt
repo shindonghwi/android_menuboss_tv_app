@@ -1,5 +1,6 @@
 package com.orot.menuboss_tv.ui.screens.menu_board
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -46,68 +47,24 @@ fun MenuBoardScreen(
     val navController = LocalNavController.current
     val mainViewModel = LocalMainViewModel.current
     val screenState = mainViewModel.screenState.collectAsState().value
-    val grpcStatusCode = mainViewModel.grpcStatusCode.collectAsState().value
-    val deviceState = mainViewModel.deviceState.collectAsState().value
-    val shouldNavigateToAuth = mainViewModel.navigateToAuthScreen.collectAsState().value
+    val doAuthScreenActionState = mainViewModel.navigateToAuthState.collectAsState().value
 
     BackHandler { activity.finish() }
 
     LaunchedEffect(key1 = Unit, block = {
-        mainViewModel.run {
-            triggerDeviceStatus(UiState.Idle)
-            triggerAuthState(false)
-            triggerEntryStatus(null)
-        }
+        mainViewModel.subscribeContentStream()
     })
 
-    /**
-     * @feature: 인증화면으로 이동하는 기능
-     * @author: 2023/10/12 1:06 PM donghwishin
-     */
-    LaunchedEffect(shouldNavigateToAuth) {
-        if (shouldNavigateToAuth) {
+    DisposableEffect(key1 = doAuthScreenActionState, effect = {
+        if (doAuthScreenActionState) {
             navController.navigate(RouteScreen.AuthScreen.route) {
                 popUpTo(navController.graph.startDestinationId) {
                     inclusive = true
                 }
             }
         }
-    }
-
-    DisposableEffect(key1 = grpcStatusCode, effect = {
-        CoroutineScope(Dispatchers.Main).launch {
-            when (grpcStatusCode) {
-                ContentEventResponse.ContentEvent.CONTENT_CHANGED.number -> {
-                    mainViewModel.run {
-                        requestGetDeviceInfo(executePostApiGetContent = true)
-                        triggerEntryStatus(null)
-                    }
-                }
-
-                ContentEventResponse.ContentEvent.SCREEN_DELETED.number -> {
-                    mainViewModel.run {
-                        requestGetDeviceInfo()
-                        triggerAuthState(true)
-                    }
-                }
-            }
-        }
         onDispose {
-            mainViewModel.triggerDeviceStatus(UiState.Idle)
-        }
-    })
-
-    DisposableEffect(key1 = deviceState, effect = {
-        if (deviceState is UiState.Success) {
-            if (deviceState.data?.status == "Unlinked") {
-                mainViewModel.run {
-                    subscribeConnectStream()
-                    triggerAuthState(true)
-                }
-            }
-        }
-        onDispose {
-            mainViewModel.triggerAuthState(false)
+            mainViewModel.initState()
         }
     })
 

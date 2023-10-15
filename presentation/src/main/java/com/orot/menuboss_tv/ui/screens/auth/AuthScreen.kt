@@ -2,7 +2,6 @@ package com.orot.menuboss_tv.ui.screens.auth
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -33,7 +32,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.orot.menuboss_tv.MainActivity
+import com.orot.menuboss_tv.presentation.R
+import com.orot.menuboss_tv.ui.components.RiveAnimation
 import com.orot.menuboss_tv.ui.compose.modifier.tvSafeArea
 import com.orot.menuboss_tv.ui.compose.painter.rememberQrBitmapPainter
 import com.orot.menuboss_tv.ui.model.UiState
@@ -51,22 +53,47 @@ import com.orotcode.menuboss.grpc.lib.ConnectEventResponse
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.net.URLEncoder
 
 
 @SuppressLint("HardwareIds")
 @Composable
-fun AuthScreen() {
+fun AuthScreen(
+    authViewModel: AuthViewModel = hiltViewModel()
+) {
 
-    val activity = LocalContext.current as MainActivity
+    val context = LocalContext.current
+    val activity = context as MainActivity
     val navController = LocalNavController.current
     val mainViewModel = LocalMainViewModel.current
-    val context = LocalContext.current
-    val deviceState = mainViewModel.deviceState.collectAsState().value
 
-    val shouldNavigateToMenuBoard = mainViewModel.navigateToMenuBoardScreen.collectAsState().value
+    val doMenuScreenActionState = authViewModel.navigateToMenuState.collectAsState().value
+    val accessTokenState = authViewModel.accessToken.collectAsState().value
 
     BackHandler { activity.finish() }
+
+    /**
+     * @feature: 디바이스 정보 요청 & ConnectStream 구독
+     * @author: 2023/10/15 1:11 PM donghwishin
+     * @description{
+     *   QR Url, QR Code 를 가져오기 위해서는 디바이스 정보가 필요합니다.
+     * }
+     */
+    LaunchedEffect(key1 = Unit, block = {
+        val uuid = mainViewModel.getUUID()
+        authViewModel.requestGetDeviceInfo(uuid = uuid)
+        mainViewModel.subscribeConnectStream()
+    })
+
+    /**
+     * @feature: accessToken의 상태가 갱신되면, connectStream 을 해제 후, 재 구독합니다.
+     * @author: 2023/10/15 1:35 PM donghwishin
+     */
+    LaunchedEffect(key1 = accessTokenState, block = {
+        accessTokenState?.let { token ->
+            mainViewModel.updateAccessToken(token)
+            authViewModel.triggerMenuState(true)
+        }
+    })
 
     /**
      * @feature: ConnectEventResponse.ConnectEvent.ENTRY 상태가 되면,
@@ -79,28 +106,23 @@ fun AuthScreen() {
      * }
      */
     val grpcCode = mainViewModel.grpcStatusCode.collectAsState().value
-    DisposableEffect(key1 = grpcCode, effect = {
+    LaunchedEffect(key1 = grpcCode, block = {
         CoroutineScope(Dispatchers.Main).launch {
-            Log.w("asddsadsasad", "AuthScreen: $grpcCode", )
             when (grpcCode) {
                 ConnectEventResponse.ConnectEvent.ENTRY.number -> {
-                    mainViewModel.requestGetDeviceInfo()
+                    val uuid = mainViewModel.getUUID()
+                    authViewModel.requestGetDeviceInfo(uuid)
                 }
             }
         }
-
-        onDispose {
-            mainViewModel.triggerEntryStatus(null)
-        }
     })
-
 
     /**
      * @feature: 메뉴판 화면으로 이동하는 기능
      * @author: 2023/10/12 1:06 PM donghwishin
      */
-    DisposableEffect(key1 = shouldNavigateToMenuBoard, effect = {
-        if (shouldNavigateToMenuBoard) {
+    DisposableEffect(key1 = doMenuScreenActionState, effect = {
+        if (doMenuScreenActionState) {
             navController.navigate(RouteScreen.MenuBoardScreen.route) {
                 popUpTo(navController.graph.startDestinationId) {
                     inclusive = true
@@ -108,28 +130,7 @@ fun AuthScreen() {
             }
         }
         onDispose {
-            mainViewModel.triggerMenuBoardState(false)
-        }
-    })
-
-
-    /**
-     * @feature: 스크린 등록에 성공을 하고, 디바이스 정보를 가져온 후,
-     *              상태에 따라서 다음 화면으로 이동합니다.
-     *
-     * @author: 2023/10/03 11:13 AM donghwishin
-     */
-    DisposableEffect(key1 = deviceState, effect = {
-        if (deviceState is UiState.Success) {
-            if (deviceState.data?.status == "Linked") {
-                mainViewModel.run {
-                    subscribeContentStream(deviceState.data.property?.accessToken.toString())
-                    triggerMenuBoardState(true)
-                }
-            }
-        }
-        onDispose {
-            mainViewModel.triggerDeviceStatus(UiState.Idle)
+            authViewModel.triggerMenuState(false)
         }
     })
 
@@ -148,7 +149,7 @@ fun AuthScreen() {
 
             HeaderContent(modifier = Modifier.layoutId("header"))
 
-            BodyContent(modifier = Modifier.layoutId("body"))
+            BodyContent(modifier = Modifier.layoutId("body"), authViewModel = authViewModel)
 
             FooterContent(modifier = Modifier.layoutId("footer"))
         }
@@ -219,20 +220,27 @@ private fun HeaderContent(modifier: Modifier) {
 }
 
 @Composable
-private fun BodyContent(modifier: Modifier) {
-    val mainViewModel = LocalMainViewModel.current
+private fun BodyContent(
+    modifier: Modifier,
+    authViewModel: AuthViewModel
+) {
 
-    val code = mainViewModel.code.collectAsState().value
-    val qrUrl = mainViewModel.qrUrl.collectAsState().value
+    when (val codeInfoState = authViewModel.pairCodeInfo.collectAsState().value) {
+        is UiState.Success -> {
+            val code = codeInfoState.data?.first
+            val qrUrl = codeInfoState.data?.second
+            Row(
+                modifier = modifier,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                PinCode(modifier = Modifier.weight(1f), code = code)
+                OrDivider()
+                QRCode(modifier = Modifier.weight(1f), qrUrl = qrUrl)
+            }
+        }
 
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        PinCode(modifier = Modifier.weight(1f), code = code)
-        OrDivider()
-        QRCode(modifier = Modifier.weight(1f), qrUrl = qrUrl)
+        else -> Loading()
     }
 }
 
@@ -361,6 +369,21 @@ private fun QRCode(modifier: Modifier, qrUrl: String?) {
                 contentScale = ContentScale.FillBounds,
             )
         }
+    }
+}
 
+@Composable
+private fun Loading() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        RiveAnimation(
+            animation = R.raw.loading,
+            onInit = {
+                it.play()
+            },
+            onAnimEnd = {},
+        )
     }
 }
