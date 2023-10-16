@@ -11,9 +11,10 @@ import io.grpc.ManagedChannelBuilder
 import io.grpc.Metadata
 import io.grpc.stub.MetadataUtils
 import io.grpc.stub.StreamObserver
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 
 
 class GrpcScreenEventClient : SafeGrpcRequest() {
@@ -30,13 +31,22 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
     private var connectBlockingStub: ScreenEventServiceGrpc.ScreenEventServiceStub? = null
     private var contentBlockingStub: ScreenEventServiceGrpc.ScreenEventServiceStub? = null
 
-    private val _connectEvents =
-        MutableStateFlow<Pair<ConnectEventResponse.ConnectEvent?, Int>?>(null)
-    private val connectEvents: StateFlow<Pair<ConnectEventResponse.ConnectEvent?, Int>?> get() = _connectEvents
+    private var lastConnectEventValue: Int? = null
+    private var lastContentEventValue: Int? = null
+
+    private val _connectEvents = MutableSharedFlow<Pair<ConnectEventResponse.ConnectEvent?, Int>?>(
+        replay = 1,
+        extraBufferCapacity = 10,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+    private val connectEvents: Flow<Pair<ConnectEventResponse.ConnectEvent?, Int>?> get() = _connectEvents.asSharedFlow()
 
     private val _contentEvents =
-        MutableStateFlow<Pair<ContentEventResponse.ContentEvent?, Int>?>(null)
-    private val contentEvents: StateFlow<Pair<ContentEventResponse.ContentEvent?, Int>?> get() = _contentEvents
+        MutableSharedFlow<Pair<ContentEventResponse.ContentEvent?, Int>?>(
+            replay = 1, extraBufferCapacity = 10,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST
+        )
+    private val contentEvents: Flow<Pair<ContentEventResponse.ContentEvent?, Int>?> get() = _contentEvents.asSharedFlow()
 
     private fun initConnectChannel(uuid: String) {
         if (connectChannel == null) {
@@ -65,6 +75,7 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
                 val responseObserver = object : StreamObserver<ConnectEventResponse> {
                     override fun onNext(value: ConnectEventResponse) {
                         Log.d(TAG, "Received response: ${value.event}")
+                        lastConnectEventValue = value.eventValue
                         _connectEvents.tryEmit(Pair(value.event, value.eventValue))
 
                         if (value.event == ConnectEventResponse.ConnectEvent.ENTRY) {
@@ -75,8 +86,9 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
 
                     override fun onError(t: Throwable) {
                         Log.e(TAG, "Error in stream", t)
-                        if (_connectEvents.value?.second != 701){
+                        if (lastConnectEventValue != 701) {
                             _connectEvents.tryEmit(Pair(null, 701))
+                            lastConnectEventValue = 701
                         }
                         closeConnectChannel()
                     }
@@ -117,6 +129,7 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
                 val responseObserver = object : StreamObserver<ContentEventResponse> {
                     override fun onNext(value: ContentEventResponse) {
                         Log.d(TAG, "Received response: ${value.event}")
+                        lastContentEventValue = value.eventValue
                         _contentEvents.tryEmit(Pair(value.event, value.eventValue))
 
                         if (value.event == ContentEventResponse.ContentEvent.SCREEN_DELETED) {
@@ -127,8 +140,9 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
 
                     override fun onError(t: Throwable) {
                         Log.e(TAG, "Error in stream", t)
-                        if (_contentEvents.value?.second != 701){
+                        if (lastContentEventValue != 701) {
                             _contentEvents.tryEmit(Pair(null, 701))
+                            lastContentEventValue = 701
                         }
                         closeConnectChannel()
                         closeContentChannel()
@@ -144,28 +158,29 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
         }
     }
 
-
-    fun openConnectStream(uuid: String): StateFlow<Pair<ConnectEventResponse.ConnectEvent?, Int>?> {
+    fun openConnectStream(uuid: String): Flow<Pair<ConnectEventResponse.ConnectEvent?, Int>?> {
         initConnectChannel(uuid)
         return connectEvents
     }
 
-
-    fun openContentStream(accessToken: String): StateFlow<Pair<ContentEventResponse.ContentEvent?, Int>?> {
+    fun openContentStream(accessToken: String): Flow<Pair<ContentEventResponse.ContentEvent?, Int>?> {
         initContentChannel(accessToken)
         return contentEvents
     }
+
 
     fun closeConnectChannel() {
         connectChannel?.shutdown()
         connectChannel = null
         connectBlockingStub = null
+        lastConnectEventValue = null
     }
 
     fun closeContentChannel() {
         contentChannel?.shutdown()
         contentChannel = null
         contentBlockingStub = null
+        lastContentEventValue = null
     }
 
 }

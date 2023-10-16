@@ -81,6 +81,7 @@ class MainViewModel @Inject constructor(
                 if (event == ConnectEventResponse.ConnectEvent.ENTRY) {
                     _grpcStatusCode.value = ConnectEventResponse.ConnectEvent.ENTRY.number
                 } else if (status == 701) {
+                    _accessToken = ""
                     _grpcStatusCode.value = null
                     delay(1000)
                     subscribeConnectStream()
@@ -91,17 +92,16 @@ class MainViewModel @Inject constructor(
     }
 
 
+
     /**
      * @feature: GRPC 컨텐츠 스트림을 구독합니다.
      * @author: 2023/10/03 11:39 AM donghwishin
-     *
-     * @Description:{
-     *
-     * ContentEventResponse.ContentEvent.CONTENT_CHANGED -> 컨텐츠 변경 이벤트
-     *
-     * }
      */
+
+    var showingContents = false
+
     suspend fun subscribeContentStream() {
+        if (_accessToken.isEmpty()) return
         Log.w(TAG, "subscribeContentStream: RUN: $_accessToken")
 
         subscribeContentStreamUseCase(_accessToken).collect { response ->
@@ -112,6 +112,7 @@ class MainViewModel @Inject constructor(
                 val status = it.second
 
                 if (status == 701){
+                    _accessToken = ""
                     _grpcStatusCode.value = null
                     requestGetDeviceInfo(executeContentsCallApiAction = false)
                     delay(1000)
@@ -126,6 +127,7 @@ class MainViewModel @Inject constructor(
                         }
 
                         ContentEventResponse.ContentEvent.CONTENT_EMPTY -> {
+                            showingContents = false
                             _screenState.emit(UiState.Success(data = SimpleScreenModel(isPlaylist = null)))
                             _grpcStatusCode.value = ContentEventResponse.ContentEvent.CONTENT_EMPTY.number
                         }
@@ -165,12 +167,15 @@ class MainViewModel @Inject constructor(
             Log.w(TAG, "requestGetDeviceInfo: $it")
             when (it) {
                 is Resource.Loading -> {
-                    _screenState.emit(UiState.Loading)
+                    if (!showingContents){
+                        _screenState.emit(UiState.Loading)
+                    }
                 }
+                is Resource.Error -> {}
 
-                is Resource.Error -> {
-                    _screenState.emit(UiState.Error(it.message.toString()))
-                }
+//                is Resource.Error -> {
+//                    _screenState.emit(UiState.Error(it.message.toString()))
+//                }
 
                 is Resource.Success -> {
                     updateAccessToken(it.data?.property?.accessToken.toString())
@@ -237,6 +242,7 @@ class MainViewModel @Inject constructor(
                 }
 
                 is Resource.Success -> {
+                    showingContents = true
                     _screenState.emit(
                         UiState.Success(
                             data = SimpleScreenModel(
