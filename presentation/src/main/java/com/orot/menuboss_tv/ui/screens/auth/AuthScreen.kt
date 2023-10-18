@@ -235,8 +235,8 @@ private fun BodyContent(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 PinCode(modifier = Modifier.weight(1f), code = code)
-                OrDivider()
-                QRCode(modifier = Modifier.weight(1f), qrUrl = qrUrl)
+//                OrDivider()
+//                QRCode(modifier = Modifier.weight(1f), qrUrl = qrUrl)
             }
         }
 
@@ -274,17 +274,17 @@ private fun PinCode(modifier: Modifier, code: String?) {
         code?.let {
             Row(
                 modifier = Modifier
-                    .padding(top = adjustedDp(70.dp))
-                    .height(adjustedDp(48.dp)),
+                    .padding(top = adjustedDp(40.dp)) // 70.dp
+                    .height(adjustedDp(60.dp)), // 48.dp
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
             ) {
                 it.forEachIndexed { index, number ->
                     run {
                         AdjustedBoldText(
-                            modifier = Modifier.size(adjustedDp(48.dp)),
+                            modifier = Modifier.size(adjustedDp(60.dp)), // 48.dp
                             text = number.toString(),
-                            fontSize = adjustedDp(24.dp)
+                            fontSize = adjustedDp(48.dp) // 24.dp
                         )
 
                         if (index != code.lastIndex) Box(
@@ -304,7 +304,7 @@ private fun PinCode(modifier: Modifier, code: String?) {
 
         AdjustedMediumText(
             modifier = Modifier.padding(top = adjustedDp(20.dp)),
-            text = "Visit MenuBoss website\nAnd enter the code below",
+            text = "Visit MenuBoss website or mobile app\nAnd enter the code below",
             fontSize = adjustedDp(16.dp),
             color = colorWhite.copy(alpha = 0.5f),
         )
