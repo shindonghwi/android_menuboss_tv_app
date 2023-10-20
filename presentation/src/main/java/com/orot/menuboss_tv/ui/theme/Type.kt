@@ -14,6 +14,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Text
 import com.orot.menuboss_tv.presentation.R
@@ -61,12 +62,17 @@ fun AdjustedBoldText(
     modifier: Modifier = Modifier,
     text: String,
     fontSize: Dp,
+    letterSpacing: Double = 0.0,
     color: Color = colorWhite
 ) {
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         Text(
             text = text,
-            style = ManropeTypo.bold.copy(color = color, fontSize = fontSize.value.sp),
+            style = ManropeTypo.bold.copy(
+                color = color,
+                fontSize = fontSize.value.sp,
+                letterSpacing = letterSpacing.em,
+            ),
             textAlign = TextAlign.Center,
         )
     }

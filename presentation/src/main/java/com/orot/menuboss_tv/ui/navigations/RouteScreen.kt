@@ -10,5 +10,4 @@ sealed class RouteScreen(val route: String) {
 
     // 메뉴보드 화면
     data object MenuBoardScreen : RouteScreen("/menu_board")
-
 }

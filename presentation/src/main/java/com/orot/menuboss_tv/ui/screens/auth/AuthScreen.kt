@@ -2,6 +2,9 @@ package com.orot.menuboss_tv.ui.screens.auth
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -11,9 +14,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -23,17 +25,23 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.orot.menuboss_tv.MainActivity
+import com.orot.menuboss_tv.MainViewModel.Companion.MENUBOSS_LOGIN_URL
 import com.orot.menuboss_tv.presentation.R
 import com.orot.menuboss_tv.ui.components.RiveAnimation
 import com.orot.menuboss_tv.ui.compose.modifier.tvSafeArea
@@ -47,9 +55,11 @@ import com.orot.menuboss_tv.ui.source_pack.iconpack.Logo
 import com.orot.menuboss_tv.ui.theme.AdjustedBoldText
 import com.orot.menuboss_tv.ui.theme.AdjustedMediumText
 import com.orot.menuboss_tv.ui.theme.colorBackground
+import com.orot.menuboss_tv.ui.theme.colorLightSkyBlue
 import com.orot.menuboss_tv.ui.theme.colorWhite
 import com.orot.menuboss_tv.utils.adjustedDp
 import com.orotcode.menuboss.grpc.lib.ConnectEventResponse
+import focusableWithClick
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -70,6 +80,29 @@ fun AuthScreen(
     val accessTokenState = authViewModel.accessToken.collectAsState().value
 
     BackHandler { activity.finish() }
+
+    val resumedOnce = remember { mutableStateOf(false) }
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+
+    DisposableEffect(lifecycle) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME && resumedOnce.value) {
+                CoroutineScope(Dispatchers.Main).launch {
+                    val uuid = mainViewModel.getUUID()
+                    authViewModel.requestGetDeviceInfo(uuid = uuid)
+                }
+            } else if (event == Lifecycle.Event.ON_RESUME) {
+                // 첫 번째 onResume 호출에 대해 감지하고 상태를 업데이트합니다.
+                resumedOnce.value = true
+            }
+        }
+        lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycle.removeObserver(observer)
+        }
+    }
+
 
     /**
      * @feature: 디바이스 정보 요청 & ConnectStream 구독
@@ -234,7 +267,7 @@ private fun BodyContent(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                PinCode(modifier = Modifier.weight(1f), code = code)
+                PinCode(modifier = Modifier.weight(1f), code = code, authViewModel = authViewModel)
 //                OrDivider()
 //                QRCode(modifier = Modifier.weight(1f), qrUrl = qrUrl)
             }
@@ -255,7 +288,13 @@ private fun FooterContent(modifier: Modifier) {
 }
 
 @Composable
-private fun PinCode(modifier: Modifier, code: String?) {
+private fun PinCode(
+    modifier: Modifier, code: String?,
+    authViewModel: AuthViewModel
+) {
+
+    val context = LocalContext.current
+    val mainViewModel = LocalMainViewModel.current
 
     val alpha: Float by animateFloatAsState(
         targetValue = if (code != null) 1f else 0f,
@@ -271,42 +310,36 @@ private fun PinCode(modifier: Modifier, code: String?) {
 
         AdjustedBoldText(text = "Enter Pin Code", fontSize = adjustedDp(24.dp))
 
-        code?.let {
-            Row(
-                modifier = Modifier
-                    .padding(top = adjustedDp(40.dp)) // 70.dp
-                    .height(adjustedDp(60.dp)), // 48.dp
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-            ) {
-                it.forEachIndexed { index, number ->
-                    run {
-                        AdjustedBoldText(
-                            modifier = Modifier.size(adjustedDp(60.dp)), // 48.dp
-                            text = number.toString(),
-                            fontSize = adjustedDp(48.dp) // 24.dp
-                        )
-
-                        if (index != code.lastIndex) Box(
-                            Modifier.fillMaxHeight(), contentAlignment = Alignment.Center
-                        ) {
-                            Spacer(
-                                Modifier
-                                    .width(adjustedDp(12.dp))
-                                    .height(adjustedDp(2.5.dp))
-                                    .background(colorWhite)
-                            )
-                        }
-                    }
-                }
-            }
-        }
+        AdjustedBoldText(
+            modifier = Modifier
+                .padding(top = adjustedDp(20.dp))
+                .fillMaxWidth(), // 48.dp
+            text = code.toString(),
+            letterSpacing = 0.5,
+            fontSize = adjustedDp(140.dp) // 24.dp
+        )
 
         AdjustedMediumText(
-            modifier = Modifier.padding(top = adjustedDp(20.dp)),
-            text = "Visit MenuBoss website or mobile app\nAnd enter the code below",
-            fontSize = adjustedDp(16.dp),
+            modifier = Modifier.padding(top = adjustedDp(30.dp)),
+            text = "Click the link below to register your pin code on the website",
+            fontSize = adjustedDp(14.dp),
             color = colorWhite.copy(alpha = 0.5f),
+        )
+
+        AdjustedBoldText(
+            modifier = Modifier
+                .padding(top = adjustedDp(12.dp))
+                .focusableWithClick {
+                    val intent = Intent(Intent.ACTION_VIEW).apply {
+                        data = Uri.parse("https://dev-www.themenuboss.com/login")
+                        setPackage("com.amazon.cloud9") // Amazon Silk의 패키지 이름
+                    }
+                    context.startActivity(intent)
+                }
+                .padding(vertical = adjustedDp(8.dp), horizontal = adjustedDp(12.dp)),
+            text = MENUBOSS_LOGIN_URL,
+            fontSize = adjustedDp(20.dp),
+            color = colorLightSkyBlue,
         )
     }
 }
