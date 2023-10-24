@@ -17,7 +17,7 @@ interface TvApi {
      *
      * @author: 2023/08/08 4:18 PM donghwishin
      */
-    @GET("$API_VERSION/screens/{uuid}")
+    @GET("$API_VERSION/screens/connect/{uuid}")
     suspend fun getDeviceInfo(
         @Path(value = "uuid") uuid: String,
     ): Response<ApiResponse<DeviceModel>>
@@ -27,7 +27,7 @@ interface TvApi {
      *
      * @author: 2023/10/03 11:56 AM donghwishin
      */
-    @GET("$API_VERSION/screens/{uuid}/playlist")
+    @GET("$API_VERSION/screens/connect/{uuid}/playlist")
     suspend fun getDevicePlaylist(
         @Path(value = "uuid") uuid: String,
         @Header("Authorization") authorization: String? = null
@@ -38,7 +38,7 @@ interface TvApi {
      *
      * @author: 2023/10/03 11:56 AM donghwishin
      */
-    @GET("$API_VERSION/screens/{uuid}/schedule")
+    @GET("$API_VERSION/screens/connect/{uuid}/schedule")
     suspend fun getDeviceSchedule(
         @Path(value = "uuid") uuid: String,
         @Header("Authorization") authorization: String? = null
