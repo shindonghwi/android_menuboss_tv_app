@@ -151,6 +151,20 @@ fun AuthScreen(
     })
 
     /**
+     * @feature: connectStream 연결 실패로, 디바이스 정보를 다시 조회합니다.
+     * @author: 2023/10/24 10:49 PM donghwishin
+     */
+    val connectStreamFailed = mainViewModel.connectStreamFailCalled.collectAsState().value
+    LaunchedEffect(key1 = connectStreamFailed, block = {
+        CoroutineScope(Dispatchers.Main).launch {
+            val uuid = mainViewModel.getUUID()
+            connectStreamFailed?.let {
+                authViewModel.requestGetDeviceInfo(uuid)
+            }
+        }
+    })
+
+    /**
      * @feature: 메뉴판 화면으로 이동하는 기능
      * @author: 2023/10/12 1:06 PM donghwishin
      */

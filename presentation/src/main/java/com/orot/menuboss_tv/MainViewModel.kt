@@ -68,6 +68,10 @@ class MainViewModel @Inject constructor(
     private val _grpcStatusCode = MutableStateFlow<Int?>(null)
     val grpcStatusCode: StateFlow<Int?> get() = _grpcStatusCode
 
+
+    private val _connectStreamFailCalled = MutableStateFlow<Any?>(null)
+    val connectStreamFailCalled: StateFlow<Any?> get() = _connectStreamFailCalled
+
     suspend fun subscribeConnectStream() {
         Log.w(TAG, "subscribeConnectStream: START")
         val uuid = getUUID()
@@ -82,9 +86,10 @@ class MainViewModel @Inject constructor(
                 if (event == ConnectEventResponse.ConnectEvent.ENTRY) {
                     _grpcStatusCode.value = ConnectEventResponse.ConnectEvent.ENTRY.number
                 } else if (status == 701) {
+                    delay(3000)
                     _accessToken = ""
                     _grpcStatusCode.value = null
-                    delay(1000)
+                    _connectStreamFailCalled.value = Any()
                     subscribeConnectStream()
                     return@collect
                 }
