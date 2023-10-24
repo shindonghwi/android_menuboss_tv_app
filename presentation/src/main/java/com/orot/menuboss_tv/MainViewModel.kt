@@ -15,14 +15,11 @@ import com.orot.menuboss_tv.ui.model.UiState
 import com.orotcode.menuboss.grpc.lib.ConnectEventResponse
 import com.orotcode.menuboss.grpc.lib.ContentEventResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -86,17 +83,16 @@ class MainViewModel @Inject constructor(
                 if (event == ConnectEventResponse.ConnectEvent.ENTRY) {
                     _grpcStatusCode.value = ConnectEventResponse.ConnectEvent.ENTRY.number
                 } else if (status == 701) {
-                    delay(3000)
                     _accessToken = ""
                     _grpcStatusCode.value = null
                     _connectStreamFailCalled.value = Any()
+                    delay(1000)
                     subscribeConnectStream()
                     return@collect
                 }
             }
         }
     }
-
 
 
     /**
@@ -117,30 +113,33 @@ class MainViewModel @Inject constructor(
                 val event = it.first
                 val status = it.second
 
-                if (status == 701){
+                if (status == 701) {
                     _accessToken = ""
                     _grpcStatusCode.value = null
                     requestGetDeviceInfo(executeContentsCallApiAction = false)
                     delay(1000)
                     subscribeContentStream()
                     return@collect
-                }else{
+                } else {
                     Log.w(TAG, "subscribeContentStream: event: $event")
                     when (event) {
                         ContentEventResponse.ContentEvent.CONTENT_CHANGED -> {
-                            _grpcStatusCode.value = ContentEventResponse.ContentEvent.CONTENT_CHANGED.number
+                            _grpcStatusCode.value =
+                                ContentEventResponse.ContentEvent.CONTENT_CHANGED.number
                             requestGetDeviceInfo(executeContentsCallApiAction = true)
                         }
 
                         ContentEventResponse.ContentEvent.CONTENT_EMPTY -> {
                             showingContents = false
                             _screenState.emit(UiState.Success(data = SimpleScreenModel(isPlaylist = null)))
-                            _grpcStatusCode.value = ContentEventResponse.ContentEvent.CONTENT_EMPTY.number
+                            _grpcStatusCode.value =
+                                ContentEventResponse.ContentEvent.CONTENT_EMPTY.number
                         }
 
                         ContentEventResponse.ContentEvent.SCREEN_DELETED -> {
                             _screenState.emit(UiState.Success(data = SimpleScreenModel(isPlaylist = null)))
-                            _grpcStatusCode.value = ContentEventResponse.ContentEvent.SCREEN_DELETED.number
+                            _grpcStatusCode.value =
+                                ContentEventResponse.ContentEvent.SCREEN_DELETED.number
                             triggerAuthState(true)
                             return@collect
                         }
@@ -173,10 +172,11 @@ class MainViewModel @Inject constructor(
             Log.w(TAG, "requestGetDeviceInfo: $it")
             when (it) {
                 is Resource.Loading -> {
-                    if (!showingContents){
+                    if (!showingContents) {
                         _screenState.emit(UiState.Loading)
                     }
                 }
+
                 is Resource.Error -> {}
 
 //                is Resource.Error -> {

@@ -2,7 +2,6 @@ package com.orot.menuboss_tv.ui.screens.auth
 
 import android.util.Log
 import androidx.lifecycle.viewModelScope
-import com.orot.menuboss_tv.domain.entities.DeviceModel
 import com.orot.menuboss_tv.domain.entities.Resource
 import com.orot.menuboss_tv.domain.usecases.GetDeviceUseCase
 import com.orot.menuboss_tv.firebase.FirebaseAnalyticsUtil
@@ -43,7 +42,7 @@ class AuthViewModel @Inject constructor(
     /**
      * @feature: 디바이스 정보를 조회합니다.
      * @author: 2023/10/15 1:34 PM donghwishin
-    */
+     */
     suspend fun requestGetDeviceInfo(uuid: String) {
         Log.w(TAG, "requestGetDeviceInfo: $uuid")
 
@@ -64,13 +63,14 @@ class AuthViewModel @Inject constructor(
                 is Resource.Success -> {
                     val data = it.data
                     if (data?.status == "Unlinked") {
+                        delay(1000) // 인증 코드 변경시 화면 깜빡거림 방지
                         _pairCodeInfo.value = UiState.Success(
                             data = Pair(
                                 data.linkProfile?.pinCode.toString(),
                                 data.linkProfile?.qrUrl.toString()
                             )
                         )
-                    }else if (data?.status == "Linked"){
+                    } else if (data?.status == "Linked") {
                         _accessToken.value = data.property?.accessToken
                     }
                 }
