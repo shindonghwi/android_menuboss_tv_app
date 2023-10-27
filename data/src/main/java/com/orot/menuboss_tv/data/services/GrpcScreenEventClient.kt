@@ -2,7 +2,7 @@ package com.orot.menuboss_tv.data.services
 
 import android.util.Log
 import com.google.protobuf.Empty
-import com.orot.menuboss_tv.data.constants.GRPC_BASE_URL
+import com.orot.menuboss_tv.domain.constants.GRPC_BASE_URL
 import com.orot.menuboss_tv.data.utils.SafeGrpcRequest
 import com.orotcode.menuboss.grpc.lib.ConnectEventResponse
 import com.orotcode.menuboss.grpc.lib.ContentEventResponse

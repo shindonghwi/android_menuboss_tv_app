@@ -1,6 +1,6 @@
 package com.orot.menuboss_tv.data.services
 
-import com.orot.menuboss_tv.data.constants.API_VERSION
+import com.orot.menuboss_tv.domain.constants.API_VERSION
 import com.orot.menuboss_tv.domain.entities.ApiResponse
 import com.orot.menuboss_tv.domain.entities.DeviceModel
 import com.orot.menuboss_tv.domain.entities.DevicePlaylistModel

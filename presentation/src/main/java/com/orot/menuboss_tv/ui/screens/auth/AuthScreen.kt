@@ -42,7 +42,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.orot.menuboss_tv.MainActivity
-import com.orot.menuboss_tv.MainViewModel.Companion.MENUBOSS_LOGIN_URL
+import com.orot.menuboss_tv.domain.constants.WEB_LOGIN_URL
 import com.orot.menuboss_tv.presentation.R
 import com.orot.menuboss_tv.ui.components.RiveAnimation
 import com.orot.menuboss_tv.ui.compose.modifier.tvSafeArea
@@ -345,19 +345,19 @@ private fun PinCode(
                 .focusableWithClick {
                     try {
                         val intent = Intent(Intent.ACTION_VIEW).apply {
-                            data = Uri.parse(MENUBOSS_LOGIN_URL)
+                            data = Uri.parse(WEB_LOGIN_URL)
                             setPackage("com.amazon.cloud9") // Package name for Amazon Silk
                         }
                         context.startActivity(intent)
                     } catch (e: ActivityNotFoundException) {
-                        val fallbackIntent = Intent(Intent.ACTION_VIEW, Uri.parse(MENUBOSS_LOGIN_URL))
+                        val fallbackIntent = Intent(Intent.ACTION_VIEW, Uri.parse(WEB_LOGIN_URL))
                         context.startActivity(fallbackIntent)
                     } catch (e: Exception){
                         Toast.makeText(context, "Error: $e", Toast.LENGTH_SHORT).show()
                     }
                 }
                 .padding(vertical = adjustedDp(8.dp), horizontal = adjustedDp(12.dp)),
-            text = MENUBOSS_LOGIN_URL,
+            text = WEB_LOGIN_URL,
             fontSize = adjustedDp(20.dp),
             color = colorLightSkyBlue,
         )

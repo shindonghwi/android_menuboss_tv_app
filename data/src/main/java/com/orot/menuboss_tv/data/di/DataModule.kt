@@ -1,7 +1,7 @@
 package com.orot.menuboss_tv.data.di
 
 import com.orot.menuboss_tv.data.services.TvApi
-import com.orot.menuboss_tv.data.constants.BASE_URL
+import com.orot.menuboss_tv.domain.constants.BASE_URL
 import com.orot.menuboss_tv.data.repository.ScreenEventsRepositoryImpl
 import com.orot.menuboss_tv.data.services.GrpcScreenEventClient
 import com.orot.menuboss_tv.domain.repository.ScreenEventsRepository

@@ -33,7 +33,6 @@ class MainViewModel @Inject constructor(
 ) : BaseViewModel() {
 
     companion object {
-        const val MENUBOSS_LOGIN_URL = "https://www.themenuboss.com/login"
         private const val TAG = "MainViewModel"
     }
 
@@ -178,11 +177,6 @@ class MainViewModel @Inject constructor(
                 }
 
                 is Resource.Error -> {}
-
-//                is Resource.Error -> {
-//                    _screenState.emit(UiState.Error(it.message.toString()))
-//                }
-
                 is Resource.Success -> {
                     updateAccessToken(it.data?.property?.accessToken.toString())
                     if (executeContentsCallApiAction) {
