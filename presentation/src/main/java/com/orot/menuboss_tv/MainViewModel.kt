@@ -33,7 +33,7 @@ class MainViewModel @Inject constructor(
 ) : BaseViewModel() {
 
     companion object {
-        const val MENUBOSS_LOGIN_URL = "https://dev-www.themenuboss.com/login"
+        const val MENUBOSS_LOGIN_URL = "https://www.themenuboss.com/login"
         private const val TAG = "MainViewModel"
     }
 

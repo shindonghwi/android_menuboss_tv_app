@@ -1,6 +1,7 @@
 package com.orot.menuboss_tv.ui.screens.auth
 
 import android.annotation.SuppressLint
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -281,9 +282,9 @@ private fun BodyContent(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                PinCode(modifier = Modifier.weight(1f), code = code, authViewModel = authViewModel)
-//                OrDivider()
-//                QRCode(modifier = Modifier.weight(1f), qrUrl = qrUrl)
+                PinCode(modifier = Modifier.weight(1f), code = code)
+                OrDivider()
+                QRCode(modifier = Modifier.weight(1f), qrUrl = qrUrl)
             }
         }
 
@@ -304,11 +305,9 @@ private fun FooterContent(modifier: Modifier) {
 @Composable
 private fun PinCode(
     modifier: Modifier, code: String?,
-    authViewModel: AuthViewModel
 ) {
 
     val context = LocalContext.current
-    val mainViewModel = LocalMainViewModel.current
 
     val alpha: Float by animateFloatAsState(
         targetValue = if (code != null) 1f else 0f,
@@ -344,11 +343,18 @@ private fun PinCode(
             modifier = Modifier
                 .padding(top = adjustedDp(12.dp))
                 .focusableWithClick {
-                    val intent = Intent(Intent.ACTION_VIEW).apply {
-                        data = Uri.parse("https://dev-www.themenuboss.com/login")
-                        setPackage("com.amazon.cloud9") // Amazon Silk의 패키지 이름
+                    try {
+                        val intent = Intent(Intent.ACTION_VIEW).apply {
+                            data = Uri.parse(MENUBOSS_LOGIN_URL)
+                            setPackage("com.amazon.cloud9") // Package name for Amazon Silk
+                        }
+                        context.startActivity(intent)
+                    } catch (e: ActivityNotFoundException) {
+                        val fallbackIntent = Intent(Intent.ACTION_VIEW, Uri.parse(MENUBOSS_LOGIN_URL))
+                        context.startActivity(fallbackIntent)
+                    } catch (e: Exception){
+                        Toast.makeText(context, "Error: $e", Toast.LENGTH_SHORT).show()
                     }
-                    context.startActivity(intent)
                 }
                 .padding(vertical = adjustedDp(8.dp), horizontal = adjustedDp(12.dp)),
             text = MENUBOSS_LOGIN_URL,
@@ -409,8 +415,8 @@ private fun QRCode(modifier: Modifier, qrUrl: String?) {
         qrUrl?.let {
             Image(
                 modifier = Modifier
-                    .padding(top = adjustedDp(40.dp))
-                    .size(adjustedDp(180.dp)),
+                    .padding(top = adjustedDp(60.dp))
+                    .size(adjustedDp(260.dp)),
                 painter = rememberQrBitmapPainter(it),
                 contentDescription = "QR Code",
                 contentScale = ContentScale.FillBounds,

@@ -9,4 +9,10 @@ val BASE_URL = if (BuildConfig.DEBUG) {
     "https://app-api.themenuboss.com"
 }
 
+val GRPC_BASE_URL = if (BuildConfig.DEBUG) {
+    "dev-screen-grpc.themenuboss.com"
+} else {
+    "screen-grpc.themenuboss.com"
+}
+
 const val API_VERSION = "v1"
