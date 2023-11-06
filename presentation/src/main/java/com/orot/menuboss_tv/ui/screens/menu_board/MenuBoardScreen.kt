@@ -1,6 +1,5 @@
 package com.orot.menuboss_tv.ui.screens.menu_board
 
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -26,19 +25,15 @@ import com.orot.menuboss_tv.ui.navigations.LocalMainViewModel
 import com.orot.menuboss_tv.ui.navigations.LocalNavController
 import com.orot.menuboss_tv.ui.navigations.RouteScreen
 import com.orot.menuboss_tv.ui.screens.auth.AuthScreen
+import com.orot.menuboss_tv.ui.screens.common.reload.ReloadScreen
 import com.orot.menuboss_tv.ui.screens.menu_board.widget.PlaylistSlider
 import com.orot.menuboss_tv.ui.screens.menu_board.widget.ScheduleSlider
-import com.orot.menuboss_tv.ui.screens.reload.ReloadScreen
 import com.orot.menuboss_tv.ui.source_pack.IconPack
 import com.orot.menuboss_tv.ui.source_pack.iconpack.Logo
 import com.orot.menuboss_tv.ui.theme.AdjustedBoldText
 import com.orot.menuboss_tv.ui.theme.AdjustedMediumText
 import com.orot.menuboss_tv.ui.theme.colorBackground
 import com.orot.menuboss_tv.utils.adjustedDp
-import com.orotcode.menuboss.grpc.lib.ContentEventResponse
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 @Composable
 fun MenuBoardScreen(
@@ -95,7 +90,7 @@ fun MenuBoardScreen(
 
                 if (screenData?.isDeleted == true) {
                     AuthScreen()
-                } else if (screenData?.isExpired == false) {
+                } else if (screenData?.isExpired == true) {
                     ExpiredScreen(modifier = Modifier.fillMaxSize())
                 } else {
                     Crossfade(
@@ -107,7 +102,7 @@ fun MenuBoardScreen(
                             easing = FastOutSlowInEasing
                         ),
                         label = ""
-                    ){
+                    ) {
                         when (it) {
                             true -> {
                                 screenData?.playlistModel?.let { model -> PlaylistSlider(model = model) }

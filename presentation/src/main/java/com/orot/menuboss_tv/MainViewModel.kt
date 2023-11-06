@@ -65,9 +65,17 @@ class MainViewModel @Inject constructor(
     val grpcStatusCode: StateFlow<Int?> get() = _grpcStatusCode
 
 
+    /**
+     * @feature: GRPC 연결 스트림이 실패했을 때 호출됩니다.
+     * @author: 2023/11/06 9:48 AM donghwishin
+     */
     private val _connectStreamFailCalled = MutableStateFlow<Any?>(null)
     val connectStreamFailCalled: StateFlow<Any?> get() = _connectStreamFailCalled
 
+    /**
+     * @feature: GRPC Connect Stream을 구독합니다.
+     * @author: 2023/11/06 9:49 AM donghwishin
+     */
     suspend fun subscribeConnectStream() {
         Log.w(TAG, "subscribeConnectStream: START")
         val uuid = getUUID()
@@ -82,17 +90,24 @@ class MainViewModel @Inject constructor(
                 if (event == ConnectEventResponse.ConnectEvent.ENTRY) {
                     _grpcStatusCode.value = ConnectEventResponse.ConnectEvent.ENTRY.number
                 } else if (status == 701) {
-                    _accessToken = ""
-                    _grpcStatusCode.value = null
-                    _connectStreamFailCalled.value = Any()
-                    delay(1000)
-                    subscribeConnectStream()
+                    connectStreamFailInit()
                     return@collect
                 }
             }
         }
     }
 
+    /**
+     * @feature: GRPC Connect Stream이 실패했을 때 초기화합니다.
+     * @author: 2023/11/06 9:53 AM donghwishin
+     */
+    private suspend fun connectStreamFailInit() {
+        _accessToken = ""
+        _grpcStatusCode.value = null
+        _connectStreamFailCalled.value = Any()
+        delay(1000)
+        subscribeConnectStream()
+    }
 
     /**
      * @feature: GRPC 컨텐츠 스트림을 구독합니다.
@@ -113,39 +128,32 @@ class MainViewModel @Inject constructor(
                 val status = it.second
 
                 if (status == 701) {
-                    _accessToken = ""
-                    _grpcStatusCode.value = null
-                    requestGetDeviceInfo(executeContentsCallApiAction = false)
-                    delay(1000)
-                    subscribeContentStream()
+                    contentStreamFailInit()
                     return@collect
                 } else {
                     Log.w(TAG, "subscribeContentStream: event: $event")
                     when (event) {
                         ContentEventResponse.ContentEvent.CONTENT_CHANGED -> {
-                            _grpcStatusCode.value =
-                                ContentEventResponse.ContentEvent.CONTENT_CHANGED.number
+                            _grpcStatusCode.value = ContentEventResponse.ContentEvent.CONTENT_CHANGED.number
                             requestGetDeviceInfo(executeContentsCallApiAction = true)
                         }
 
                         ContentEventResponse.ContentEvent.CONTENT_EMPTY -> {
                             showingContents = false
                             _screenState.emit(UiState.Success(data = SimpleScreenModel(isPlaylist = null)))
-                            _grpcStatusCode.value =
-                                ContentEventResponse.ContentEvent.CONTENT_EMPTY.number
+                            _grpcStatusCode.value = ContentEventResponse.ContentEvent.CONTENT_EMPTY.number
                         }
 
                         ContentEventResponse.ContentEvent.SCREEN_DELETED -> {
                             _screenState.emit(UiState.Success(data = SimpleScreenModel(isPlaylist = null)))
-                            _grpcStatusCode.value =
-                                ContentEventResponse.ContentEvent.SCREEN_DELETED.number
+                            _grpcStatusCode.value = ContentEventResponse.ContentEvent.SCREEN_DELETED.number
                             triggerAuthState(true)
                             return@collect
                         }
 
                         ContentEventResponse.ContentEvent.SCREEN_EXPIRED -> {
-                            _grpcStatusCode.value =
-                                ContentEventResponse.ContentEvent.SCREEN_EXPIRED.number
+                            _screenState.emit(UiState.Success(data = SimpleScreenModel(isExpired = true)))
+                            _grpcStatusCode.value = ContentEventResponse.ContentEvent.SCREEN_EXPIRED.number
                         }
 
                         else -> {}
@@ -154,6 +162,19 @@ class MainViewModel @Inject constructor(
             }
         }
     }
+
+    /**
+     * @feature: GRPC 컨텐츠 스트림이 실패했을 때 초기화합니다.
+     * @author: 2023/11/06 9:54 AM donghwishin
+     */
+    private suspend fun contentStreamFailInit() {
+        _accessToken = ""
+        _grpcStatusCode.value = null
+        requestGetDeviceInfo(executeContentsCallApiAction = false)
+        delay(1000)
+        subscribeContentStream()
+    }
+
 
     /**
      * @feature: 디바이스 정보를 조회합니다.

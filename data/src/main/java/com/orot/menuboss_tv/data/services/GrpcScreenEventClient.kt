@@ -2,8 +2,8 @@ package com.orot.menuboss_tv.data.services
 
 import android.util.Log
 import com.google.protobuf.Empty
-import com.orot.menuboss_tv.domain.constants.GRPC_BASE_URL
 import com.orot.menuboss_tv.data.utils.SafeGrpcRequest
+import com.orot.menuboss_tv.domain.constants.GRPC_BASE_URL
 import com.orotcode.menuboss.grpc.lib.ConnectEventResponse
 import com.orotcode.menuboss.grpc.lib.ContentEventResponse
 import com.orotcode.menuboss.grpc.lib.ScreenEventServiceGrpc
@@ -36,17 +36,15 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
     private var lastContentEventValue: Int? = null
 
     private val _connectEvents = MutableSharedFlow<Pair<ConnectEventResponse.ConnectEvent?, Int>?>(
-        replay = 1,
-        extraBufferCapacity = 10,
+        replay = 1, extraBufferCapacity = 10,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
     private val connectEvents: Flow<Pair<ConnectEventResponse.ConnectEvent?, Int>?> get() = _connectEvents.asSharedFlow()
 
-    private val _contentEvents =
-        MutableSharedFlow<Pair<ContentEventResponse.ContentEvent?, Int>?>(
-            replay = 1, extraBufferCapacity = 10,
-            onBufferOverflow = BufferOverflow.DROP_OLDEST
-        )
+    private val _contentEvents = MutableSharedFlow<Pair<ContentEventResponse.ContentEvent?, Int>?>(
+        replay = 1, extraBufferCapacity = 10,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
     private val contentEvents: Flow<Pair<ContentEventResponse.ContentEvent?, Int>?> get() = _contentEvents.asSharedFlow()
 
     private fun initConnectChannel(uuid: String) {
@@ -54,23 +52,21 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
             _connectEvents.tryEmit(null)
             Log.w(TAG, "initConnectChannel")
 
-            connectChannel =
-                ManagedChannelBuilder.forAddress(GRPC_BASE_URL, 443)
-                    .useTransportSecurity()
-                    .intercept(MetadataUtils.newAttachHeadersInterceptor(
-                        Metadata().apply {
-                            put(
-                                Metadata.Key.of(
-                                    "x-unique-id",
-                                    Metadata.ASCII_STRING_MARSHALLER
-                                ),
-                                uuid
-                            )
-                        }
-                    )).build()
+            connectChannel = ManagedChannelBuilder.forAddress(GRPC_BASE_URL, 443)
+                .useTransportSecurity()
+                .intercept(MetadataUtils.newAttachHeadersInterceptor(
+                    Metadata().apply {
+                        put(
+                            Metadata.Key.of(
+                                "x-unique-id",
+                                Metadata.ASCII_STRING_MARSHALLER
+                            ),
+                            uuid
+                        )
+                    }
+                )).build()
 
             connectChannel?.let {
-                // 기존 코루틴 스텁을 기본 스텁으로 변경합니다.
                 connectBlockingStub = ScreenEventServiceGrpc.newStub(it)
 
                 val responseObserver = object : StreamObserver<ConnectEventResponse> {
@@ -109,20 +105,13 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
             _contentEvents.tryEmit(null)
             Log.w(TAG, "initContentChannel")
 
-            contentChannel =
-                ManagedChannelBuilder.forAddress(GRPC_BASE_URL, 443)
-                    .useTransportSecurity()
-                    .intercept(MetadataUtils.newAttachHeadersInterceptor(
-                        Metadata().apply {
-                            put(
-                                Metadata.Key.of(
-                                    "Authorization",
-                                    Metadata.ASCII_STRING_MARSHALLER
-                                ),
-                                accessToken
-                            )
-                        }
-                    )).build()
+            contentChannel = ManagedChannelBuilder.forAddress(GRPC_BASE_URL, 443)
+                .useTransportSecurity()
+                .intercept(MetadataUtils.newAttachHeadersInterceptor(
+                    Metadata().apply {
+                        put(Metadata.Key.of("Authorization", Metadata.ASCII_STRING_MARSHALLER), accessToken)
+                    }
+                )).build()
 
             contentChannel?.let {
                 contentBlockingStub = ScreenEventServiceGrpc.newStub(it)

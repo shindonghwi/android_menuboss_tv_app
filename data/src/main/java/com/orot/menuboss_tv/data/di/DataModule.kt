@@ -1,9 +1,9 @@
 package com.orot.menuboss_tv.data.di
 
-import com.orot.menuboss_tv.data.services.TvApi
-import com.orot.menuboss_tv.domain.constants.BASE_URL
 import com.orot.menuboss_tv.data.repository.ScreenEventsRepositoryImpl
 import com.orot.menuboss_tv.data.services.GrpcScreenEventClient
+import com.orot.menuboss_tv.data.services.TvApi
+import com.orot.menuboss_tv.domain.constants.BASE_URL
 import com.orot.menuboss_tv.domain.repository.ScreenEventsRepository
 import dagger.Module
 import dagger.Provides
@@ -43,14 +43,8 @@ object DataModule {
             val currentTimeZone = TimeZone.getDefault().id
 
             val newRequest = request().newBuilder()
-                .addHeader(
-                    "Accept-Language",
-                    "${currentLocale.language}-${currentLocale.country}"
-                )
-                .addHeader(
-                    "Application-Time-Zone",
-                    currentTimeZone
-                )
+                .addHeader("Accept-Language", "${currentLocale.language}-${currentLocale.country}")
+                .addHeader("Application-Time-Zone", currentTimeZone)
                 .build()
             proceed(newRequest)
         }
