@@ -40,9 +40,9 @@ class SplashViewModel @Inject constructor(
     val deviceState: StateFlow<UiState<DeviceModel>> get() = _deviceState
 
     /**
-     * @feature: Api가 성공적으로 응답되었는지 여부를 관리합니다. (디바이스 정보 조회 시 사용합니다.)
+     * @feature: 디바이스 정보 수집을 계속 시도할지 여부를 관리합니다.
      */
-    var isApiCallSuccess = false
+    private var isCollectRunning = false
 
 
     /**
@@ -51,11 +51,11 @@ class SplashViewModel @Inject constructor(
      */
     suspend fun requestGetDeviceInfo(uuid: String) {
         Log.w(TAG, "requestGetDeviceInfo: $uuid")
+        var attempt = 0
         viewModelScope.launch {
-
-            while (!isApiCallSuccess) {
+            while (!isCollectRunning) {
                 accessToken = ""
-                delay(calculateDelay(2))
+                delay(calculateDelay(attempt))
                 getDeviceUseCase(uuid).collect { resource ->
                     Log.w(TAG, "requestGetDeviceInfo - response: $resource")
                     when (resource) {
@@ -64,12 +64,13 @@ class SplashViewModel @Inject constructor(
                         is Resource.Success -> handleSuccess(resource.data)
                     }
                 }
+                attempt++  // 재시도 횟수 증가
             }
         }
     }
 
     private fun calculateDelay(attempt: Int): Long {
-        val maxDelay = 60000L  // 최대 지연 시간 (예: 60초)
+        val maxDelay = 30000L  // 최대 지연 시간 (예: 30초)
         val delay = (2.0.pow(attempt.toDouble()) * 1000L).toLong() // 지수 백오프
         return min(delay, maxDelay)
     }
@@ -78,12 +79,12 @@ class SplashViewModel @Inject constructor(
         _deviceState.emit(UiState.Success(data = data))
         when (data?.status) {
             "Unlinked" -> {
-                isApiCallSuccess = true
+                isCollectRunning = true
                 triggerAuthState(true)
             }
 
             "Linked" -> {
-                isApiCallSuccess = true
+                isCollectRunning = true
                 accessToken = data.property?.accessToken.toString()
                 triggerMenuState(true)
             }
