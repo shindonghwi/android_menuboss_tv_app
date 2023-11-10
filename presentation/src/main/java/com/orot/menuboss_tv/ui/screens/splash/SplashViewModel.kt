@@ -19,7 +19,6 @@ import kotlin.math.pow
 
 @HiltViewModel
 class SplashViewModel @Inject constructor(
-    private val firebaseAnalyticsUtil: FirebaseAnalyticsUtil,
     private val getDeviceUseCase: GetDeviceUseCase,
 ) : BaseViewModel() {
 
@@ -79,14 +78,14 @@ class SplashViewModel @Inject constructor(
         _deviceState.emit(UiState.Success(data = data))
         when (data?.status) {
             "Unlinked" -> {
-                triggerAuthState(false)
                 isApiCallSuccess = true
+                triggerAuthState(true)
             }
 
             "Linked" -> {
-                triggerMenuState(false)
-                accessToken = data.property?.accessToken.toString()
                 isApiCallSuccess = true
+                accessToken = data.property?.accessToken.toString()
+                triggerMenuState(true)
             }
 
             else -> _deviceState.emit(UiState.Error("Not Supported Status"))
