@@ -64,14 +64,14 @@ class SplashViewModel @Inject constructor(
                         is Resource.Success -> handleSuccess(resource.data)
                     }
                 }
-                attempt++  // 재시도 횟수 증가
+                attempt++
             }
         }
     }
 
     private fun calculateDelay(attempt: Int): Long {
         val maxDelay = 30000L  // 최대 지연 시간 (예: 30초)
-        val delay = (2.0.pow(attempt.toDouble()) * 1000L).toLong() // 지수 백오프
+        val delay = (1.3.pow(attempt.toDouble()) * 1000L).toLong() // 지수 백오프
         return min(delay, maxDelay)
     }
 
