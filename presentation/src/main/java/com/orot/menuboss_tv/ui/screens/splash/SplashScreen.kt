@@ -9,8 +9,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import app.rive.runtime.kotlin.core.Loop
+import com.orot.menuboss_tv.logging.datadog.DataDogLoggingUtil
 import com.orot.menuboss_tv.presentation.R
 import com.orot.menuboss_tv.ui.components.RiveAnimation
 import com.orot.menuboss_tv.ui.model.UiState
@@ -22,6 +26,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+/**
+ * @description{
+ *   TODO: 스플래시 화면에서 에러 처리나 로딩중일때 화면에 표시 해야 할 것들이 있음.
+ * }
+*/
+
 @Composable
 fun SplashScreen(
     uuid: String,
@@ -30,9 +40,27 @@ fun SplashScreen(
     val navController = LocalNavController.current
     val mainViewModel = LocalMainViewModel.current
 
-    val deviceState = splashViewModel.deviceState.collectAsState().value
     val doAuthScreenActionState = splashViewModel.navigateToAuthState.collectAsState().value
     val doMenuScreenActionState = splashViewModel.navigateToMenuState.collectAsState().value
+
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+
+    DisposableEffect(lifecycle) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_CREATE) {
+                DataDogLoggingUtil.startView(
+                    RouteScreen.SplashScreen.route, "${RouteScreen.SplashScreen}"
+                )
+            } else if (event == Lifecycle.Event.ON_PAUSE) {
+                DataDogLoggingUtil.stopView(RouteScreen.SplashScreen.route)
+            }
+        }
+        lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycle.removeObserver(observer)
+        }
+    }
 
     /**
      * @feature: 디바이스 정보 요청
@@ -62,6 +90,7 @@ fun SplashScreen(
      */
     LaunchedEffect(doMenuScreenActionState) {
         if (doMenuScreenActionState) {
+            mainViewModel.updateAccessToken(splashViewModel.accessToken)
             navController.navigate(RouteScreen.MenuBoardScreen.route) {
                 popUpTo(navController.graph.startDestinationId) {
                     inclusive = true
@@ -69,39 +98,6 @@ fun SplashScreen(
             }
         }
     }
-
-    /**
-     * @feature: 디바이스 정보 응답 관찰
-     * @author: 2023/10/15 12:52 PM donghwishin
-     *
-     * @description{
-     *
-     *  1. 디바이스 정보가 정상적으로 응답되면,
-     *      1-1. 디바이스 상태가 Unlinked이면, 인증화면으로 이동합니다.
-     *      1-2. 디바이스 상태가 Linked이면, 메뉴판 화면으로 이동합니다.
-     *
-     *  2. 디바이스 정보가 정상적으로 응답되지 않으면, 디바이스 정보를 다시 요청합니다.
-     * }
-     */
-    DisposableEffect(key1 = deviceState, effect = {
-        splashViewModel.run {
-            CoroutineScope(Dispatchers.Main).launch {
-                if (deviceState is UiState.Success) {
-                    if (deviceState.data?.status == "Unlinked") {
-                        triggerAuthState(true)
-                    } else if (deviceState.data?.status == "Linked") {
-                        mainViewModel.updateAccessToken(
-                            deviceState.data.property?.accessToken.toString()
-                        )
-                        triggerMenuState(true)
-                    }
-                }
-            }
-            onDispose {
-                initState()
-            }
-        }
-    })
 
     Box(
         modifier = Modifier
