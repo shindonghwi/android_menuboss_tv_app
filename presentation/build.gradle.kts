@@ -33,11 +33,8 @@ dependencies {
 
     Libraries.AndroidX.run {
         implementation(core)
-        implementation("com.google.android.exoplayer:exoplayer:2.16.1")
+        implementation(exoplayer)
     }
-
-    implementation("io.coil-kt:coil-compose:2.4.0")
-
 
     Libraries.Compose.run {
         implementation(uiTooling)

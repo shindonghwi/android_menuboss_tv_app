@@ -6,7 +6,6 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.gms.google-services")
     id("com.google.dagger.hilt.android")
-    id("com.google.firebase.crashlytics")
     kotlin("kapt")
 }
 
@@ -105,12 +104,6 @@ dependencies {
     }
     Libraries.Hilt.run {
         implementation(daggerAndroid)
-    }
-
-    Libraries.Google.run {
-        api(platform(firebaseBom))
-        api(firebaseCrashlyticsKtx)
-        api(firebaseAnallyticsKtx)
     }
 
     Kapts.Hilt.run {

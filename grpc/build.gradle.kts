@@ -32,6 +32,8 @@ android {
 }
 
 dependencies {
+    api(project(":logging"))
+
     Libraries.Coroutine.apply {
         implementation(core)
     }

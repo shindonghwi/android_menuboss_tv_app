@@ -13,14 +13,14 @@ object Versions {
         const val startup = "1.1.1"
         const val multidex = "2.0.1"
         const val core = "1.10.1"
-        const val exoplayer = "1.1.1"
+        const val exoplayer = "2.16.1"
     }
 
     object Compose {
         const val compiler = "1.5.1"
         const val activity = "1.7.2"
         const val tv = "1.0.0-alpha07"
-        const val coil = "2.2.2"
+        const val coil = "2.4.0"
         const val navigation = "2.6.0"
         const val viewModel = "2.6.1"
         const val bom = "2023.01.00"
@@ -75,6 +75,7 @@ object Libraries {
         const val startup = "androidx.startup:startup-runtime:${Versions.AndroidX.startup}"
         const val multidex = "androidx.multidex:multidex:${Versions.AndroidX.multidex}"
         const val core = "androidx.core:core-ktx:${Versions.AndroidX.core}"
+        const val exoplayer = "com.google.android.exoplayer:exoplayer:${Versions.AndroidX.exoplayer}"
     }
 
     object Rive {
