@@ -152,7 +152,6 @@ class MainViewModel @Inject constructor(
                         }
 
                         ContentEventResponse.ContentEvent.SCREEN_EXPIRED -> {
-                            _screenState.emit(UiState.Success(data = SimpleScreenModel(isExpired = true)))
                             _grpcStatusCode.value = ContentEventResponse.ContentEvent.SCREEN_EXPIRED.number
                         }
 
@@ -200,12 +199,20 @@ class MainViewModel @Inject constructor(
                 is Resource.Error -> {}
                 is Resource.Success -> {
                     updateAccessToken(it.data?.property?.accessToken.toString())
-                    if (executeContentsCallApiAction) {
-                        if (it.data?.playing?.contentType == "Playlist") {
-                            requestGetDevicePlaylist()
-                        } else if (it.data?.playing?.contentType == "Schedule") {
-                            requestGetDeviceSchedule()
+                    if (it.data?.status == "Linked") {
+                        if (executeContentsCallApiAction) {
+                            if (it.data?.playing?.contentType == "Playlist") {
+                                requestGetDevicePlaylist()
+                            } else if (it.data?.playing?.contentType == "Schedule") {
+                                requestGetDeviceSchedule()
+                            }
                         }
+                    } else {
+                        _screenState.emit(UiState.Idle)
+                        showingContents = false
+                        _grpcStatusCode.value = null
+                        updateAccessToken("")
+                        triggerAuthState(true)
                     }
                 }
             }
