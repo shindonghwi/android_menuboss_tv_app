@@ -13,6 +13,7 @@ data class DeviceModel(
     )
 
     data class Property(
+        val version: String?,
         val name: String?,
         val accessToken: String?,
         val screenUrl: String?,

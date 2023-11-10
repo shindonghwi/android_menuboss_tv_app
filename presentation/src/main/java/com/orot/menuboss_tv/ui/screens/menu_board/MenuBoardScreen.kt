@@ -105,13 +105,20 @@ fun MenuBoardScreen(
                     ) {
                         when (it) {
                             true -> {
-                                screenData?.playlistModel?.let { model -> PlaylistSlider(model = model) }
+                                if (screenData?.playlistModel?.contents.isNullOrEmpty()) {
+                                    EmptyContentScreen(modifier = Modifier.fillMaxSize())
+                                } else {
+                                    screenData?.playlistModel?.let { model -> PlaylistSlider(model = model) }
+                                }
                             }
 
                             false -> {
-                                screenData?.scheduleModel?.let { model -> ScheduleSlider(model = model) }
+                                if (screenData?.scheduleModel?.timeline.isNullOrEmpty()) {
+                                    EmptyContentScreen(modifier = Modifier.fillMaxSize())
+                                } else {
+                                    screenData?.scheduleModel?.let { model -> ScheduleSlider(model = model) }
+                                }
                             }
-
                             null -> EmptyContentScreen(modifier = Modifier.fillMaxSize())
                         }
                     }
