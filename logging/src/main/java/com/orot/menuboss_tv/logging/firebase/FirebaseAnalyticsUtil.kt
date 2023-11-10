@@ -1,17 +1,20 @@
-package com.orot.menuboss_tv.firebase
+package com.orot.menuboss_tv.logging.firebase
 
 import android.os.Bundle
+import android.util.Log
 import com.google.firebase.analytics.FirebaseAnalytics
 import javax.inject.Inject
 
 class FirebaseAnalyticsUtil @Inject constructor(private val analytics: FirebaseAnalytics) {
 
+    companion object{
+        private const val TAG = "FirebaseAnalyticsUtil"
+    }
+
     enum class Event(val value: String) {
         GET_DEVICE_INFO("getDeviceInfo"), // 디바이스 정보 조회 API
         GET_DEVICE_PLAYLIST_INFO("getDevicePlaylist"), // 플레이리스트 정보 조회 API
         GET_DEVICE_SCHEDULE_INFO("getDeviceSchedule"), // 스케줄 정보 조회 API
-        CREATE_FAIL_UUID("createFailUUID"), // UUID 생성 실패
-        NOT_FOUND_MAC_ADDRESS("notFoundMacAddress"), // MAC Address 조회 실패
         ERROR("error") // 에러
     }
 
@@ -21,13 +24,20 @@ class FirebaseAnalyticsUtil @Inject constructor(private val analytics: FirebaseA
                 analytics.setUserId(message["uuid"])
             }
 
+            analytics.logEvent("test_event", Bundle().apply {
+                putString("testKey", "testValue")
+            })
+
             analytics.logEvent(event.name, Bundle().apply {
                 message.forEach { (key, value) ->
                     putString(key, value)
                 }
             })
+
+            Log.w(TAG, "recordEvent: $event Success", )
         } catch (e: Exception) {
             e.printStackTrace()
+            Log.w(TAG, "recordEvent: $event Fail", )
         }
     }
 }

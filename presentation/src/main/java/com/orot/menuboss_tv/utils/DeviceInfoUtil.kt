@@ -1,6 +1,6 @@
 package com.orot.menuboss_tv.utils
 
-import com.orot.menuboss_tv.firebase.FirebaseAnalyticsUtil
+import com.orot.menuboss_tv.logging.firebase.FirebaseAnalyticsUtil
 import java.net.NetworkInterface
 import java.nio.ByteBuffer
 import java.security.MessageDigest
@@ -43,16 +43,7 @@ class DeviceInfoUtil @Inject constructor(
             macAddress = getReSearchMacAddress()
         }
 
-        return if (isValidMacAddress(macAddress)) {
-            macAddress
-        } else {
-            firebaseAnalyticsUtil.recordEvent(
-                FirebaseAnalyticsUtil.Event.NOT_FOUND_MAC_ADDRESS, hashMapOf(
-                    "macAddress" to "wlan not found",
-                )
-            )
-            ""
-        }
+        return macAddress
     }
 
     /** wlan을 검색 대상으로 잡고 MAC Address 조회. 일반적인 경우에는 여기로 오지 않음. */
@@ -76,21 +67,6 @@ class DeviceInfoUtil @Inject constructor(
             return ""
         }
         return ""
-    }
-
-    private fun isValidMacAddress(macAddress: String): Boolean {
-        val pattern = Regex("^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$")
-        val isValid = pattern.matches(macAddress)
-
-        if (!isValid) {
-            firebaseAnalyticsUtil.recordEvent(
-                FirebaseAnalyticsUtil.Event.CREATE_FAIL_UUID, hashMapOf(
-                    "macAddress" to macAddress,
-                )
-            )
-        }
-
-        return isValid
     }
 
     /**

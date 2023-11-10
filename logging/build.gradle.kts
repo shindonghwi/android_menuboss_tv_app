@@ -2,6 +2,8 @@ plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
     id("com.google.firebase.crashlytics")
+    id("com.google.dagger.hilt.android")
+    kotlin("kapt")
 }
 
 android {
@@ -21,12 +23,13 @@ android {
             )
         }
     }
+
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = AppConfig.javaVersion
+        targetCompatibility = AppConfig.javaVersion
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = AppConfig.jvmTarget
     }
 }
 
@@ -37,4 +40,23 @@ dependencies {
         api(firebaseAnallyticsKtx)
         api(playServiceMeasurement)
     }
+
+    Libraries.Hilt.run {
+        api(daggerAndroid)
+    }
+
+    Kapts.Hilt.run {
+        kapt(daggerHiltCompiler)
+        kapt(daggerHiltAndroidCompiler)
+        kapt(daggerHiltAndroid)
+    }
+
+    api("com.datadoghq:dd-sdk-android-rum:2.2.0")
+    api("com.datadoghq:dd-sdk-android-okhttp:2.2.0")
+
+
+}
+
+kapt {
+    correctErrorTypes = true
 }

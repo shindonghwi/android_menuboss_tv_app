@@ -1,5 +1,8 @@
 package com.orot.menuboss_tv.data.di
 
+import com.datadog.android.okhttp.DatadogEventListener
+import com.datadog.android.okhttp.DatadogInterceptor
+import com.datadog.android.rum.RumResourceAttributesProvider
 import com.orot.menuboss_tv.data.repository.ScreenEventsRepositoryImpl
 import com.orot.menuboss_tv.data.services.GrpcScreenEventClient
 import com.orot.menuboss_tv.data.services.TvApi
@@ -11,11 +14,14 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import okhttp3.Request
 import okhttp3.Response
 import okhttp3.logging.HttpLoggingInterceptor
+import okio.BufferedSource
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.io.IOException
+import java.nio.charset.Charset
 import java.util.Locale
 import java.util.TimeZone
 import java.util.concurrent.TimeUnit
@@ -52,6 +58,10 @@ object DataModule {
 
     private fun provideOkHttpClient(): OkHttpClient =
         OkHttpClient.Builder().run {
+            addInterceptor(DatadogInterceptor(
+                rumResourceAttributesProvider = CustomRumResourceAttributesProvider()
+            ))
+            eventListenerFactory(DatadogEventListener.Factory())
             addInterceptor(AppInterceptor())
             addInterceptor(HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY
@@ -74,4 +84,17 @@ object DataModule {
     @Provides
     fun provideScreenEventsRepository(grpcClient: GrpcScreenEventClient): ScreenEventsRepository =
         ScreenEventsRepositoryImpl(grpcClient)
+}
+
+class CustomRumResourceAttributesProvider : RumResourceAttributesProvider {
+    override fun onProvideAttributes(
+        request: Request,
+        response: Response?,
+        throwable: Throwable?
+    ): Map<String, Any?> {
+        val headers = request.headers
+        return headers.names().associate {
+            "headers.${it.lowercase(Locale.US)}" to headers.values(it).first()
+        }
+    }
 }

@@ -62,6 +62,10 @@ dependencies {
         implementation(gson)
     }
 
+    Libraries.Hilt.run {
+        api(daggerAndroid)
+    }
+
     Kapts.Hilt.run {
         kapt(daggerHiltCompiler)
         kapt(daggerHiltAndroidCompiler)
