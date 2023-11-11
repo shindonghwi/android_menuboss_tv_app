@@ -74,7 +74,7 @@ fun SplashScreen(
      * @feature: 인증화면으로 이동하는 기능
      * @author: 2023/10/12 1:06 PM donghwishin
      */
-    LaunchedEffect(doAuthScreenActionState) {
+    DisposableEffect(key1 = doAuthScreenActionState, effect = {
         if (doAuthScreenActionState) {
             navController.navigate(RouteScreen.AuthScreen.route) {
                 popUpTo(navController.graph.startDestinationId) {
@@ -82,13 +82,16 @@ fun SplashScreen(
                 }
             }
         }
-    }
+        onDispose {
+            splashViewModel.triggerAuthState(false)
+        }
+    })
 
     /**
      * @feature: 메뉴판 화면으로 이동하는 기능
      * @author: 2023/10/12 1:06 PM donghwishin
      */
-    LaunchedEffect(doMenuScreenActionState) {
+    DisposableEffect(key1 = doMenuScreenActionState, effect = {
         if (doMenuScreenActionState) {
             mainViewModel.updateAccessToken(splashViewModel.accessToken)
             navController.navigate(RouteScreen.MenuBoardScreen.route) {
@@ -97,7 +100,10 @@ fun SplashScreen(
                 }
             }
         }
-    }
+        onDispose {
+            splashViewModel.triggerMenuState(false)
+        }
+    })
 
     Box(
         modifier = Modifier

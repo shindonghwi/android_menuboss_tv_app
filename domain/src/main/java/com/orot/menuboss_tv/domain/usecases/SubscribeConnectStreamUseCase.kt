@@ -6,6 +6,6 @@ import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class SubscribeConnectStreamUseCase @Inject constructor(private val screenEventsRepository: ScreenEventsRepository) {
-    suspend operator fun invoke(uuid: String): Flow<Pair<ConnectEventResponse.ConnectEvent?, Int>?> =
+    suspend operator fun invoke(uuid: String): Flow<Pair<ConnectEventResponse.ConnectEvent?, Int>> =
         screenEventsRepository.openConnectStream(uuid)
 }

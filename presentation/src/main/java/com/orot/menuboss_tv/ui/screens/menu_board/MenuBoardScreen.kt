@@ -18,8 +18,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.orot.menuboss_tv.MainActivity
+import com.orot.menuboss_tv.logging.datadog.DataDogLoggingUtil
 import com.orot.menuboss_tv.ui.model.UiState
 import com.orot.menuboss_tv.ui.navigations.LocalMainViewModel
 import com.orot.menuboss_tv.ui.navigations.LocalNavController
@@ -46,10 +50,29 @@ fun MenuBoardScreen(
 
     BackHandler { activity.finish() }
 
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+
+    DisposableEffect(lifecycle) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_CREATE) {
+                DataDogLoggingUtil.startView(
+                    RouteScreen.MenuBoardScreen.route, "${RouteScreen.MenuBoardScreen}"
+                )
+            } else if (event == Lifecycle.Event.ON_PAUSE) {
+                DataDogLoggingUtil.stopView(RouteScreen.MenuBoardScreen.route)
+            }
+        }
+        lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycle.removeObserver(observer)
+        }
+    }
+
+
     LaunchedEffect(key1 = Unit, block = {
         mainViewModel.subscribeContentStream()
     })
-
     DisposableEffect(key1 = doAuthScreenActionState, effect = {
         if (doAuthScreenActionState) {
             navController.navigate(RouteScreen.AuthScreen.route) {
@@ -119,6 +142,7 @@ fun MenuBoardScreen(
                                     screenData?.scheduleModel?.let { model -> ScheduleSlider(model = model) }
                                 }
                             }
+
                             null -> EmptyContentScreen(modifier = Modifier.fillMaxSize())
                         }
                     }

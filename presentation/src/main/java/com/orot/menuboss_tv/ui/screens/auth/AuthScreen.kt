@@ -43,6 +43,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.orot.menuboss_tv.MainActivity
 import com.orot.menuboss_tv.domain.constants.WEB_LOGIN_URL
+import com.orot.menuboss_tv.logging.datadog.DataDogLoggingUtil
 import com.orot.menuboss_tv.presentation.R
 import com.orot.menuboss_tv.ui.components.RiveAnimation
 import com.orot.menuboss_tv.ui.compose.modifier.tvSafeArea
@@ -64,6 +65,7 @@ import focusableWithClick
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 @SuppressLint("HardwareIds")
@@ -76,9 +78,11 @@ fun AuthScreen(
     val activity = context as MainActivity
     val navController = LocalNavController.current
     val mainViewModel = LocalMainViewModel.current
+    val uuid = mainViewModel.getUUID()
 
+    val isConnectStreamConnectedState = mainViewModel.isConnectStreamConnected.collectAsState().value
+    val grpcConnectEventState = mainViewModel.grpcConnectEvent.collectAsState().value
     val doMenuScreenActionState = authViewModel.navigateToMenuState.collectAsState().value
-    val accessTokenState = authViewModel.accessToken.collectAsState().value
 
     BackHandler { activity.finish() }
 
@@ -87,14 +91,19 @@ fun AuthScreen(
 
     DisposableEffect(lifecycle) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME && resumedOnce.value) {
+            if (event == Lifecycle.Event.ON_CREATE) {
+                DataDogLoggingUtil.startView(
+                    RouteScreen.AuthScreen.route, "${RouteScreen.AuthScreen}"
+                )
+            } else if (event == Lifecycle.Event.ON_RESUME && resumedOnce.value) {
                 CoroutineScope(Dispatchers.Main).launch {
-                    val uuid = mainViewModel.getUUID()
                     authViewModel.requestGetDeviceInfo(uuid = uuid)
                 }
             } else if (event == Lifecycle.Event.ON_RESUME) {
                 // 첫 번째 onResume 호출에 대해 감지하고 상태를 업데이트합니다.
                 resumedOnce.value = true
+            } else if (event == Lifecycle.Event.ON_PAUSE) {
+                DataDogLoggingUtil.stopView(RouteScreen.AuthScreen.route)
             }
         }
         lifecycle.addObserver(observer)
@@ -113,74 +122,54 @@ fun AuthScreen(
      * }
      */
     LaunchedEffect(key1 = Unit, block = {
-        val uuid = mainViewModel.getUUID()
-        authViewModel.requestGetDeviceInfo(uuid = uuid)
         mainViewModel.subscribeConnectStream()
     })
 
     /**
-     * @feature: accessToken의 상태가 갱신되면, connectStream 을 해제 후, 재 구독합니다.
-     * @author: 2023/10/15 1:35 PM donghwishin
+     * @feature: Connect Stream 연결 상태 - 이벤트
+     * @author: 2023/10/15 1:11 PM donghwishin
      */
-    LaunchedEffect(key1 = accessTokenState, block = {
-        accessTokenState?.let { token ->
-            mainViewModel.updateAccessToken(token)
-            authViewModel.triggerMenuState(true)
+    LaunchedEffect(key1 = grpcConnectEventState, block = {
+        if (grpcConnectEventState == ConnectEventResponse.ConnectEvent.ENTRY) {
+            authViewModel.requestGetDeviceInfo(uuid)
         }
     })
 
     /**
-     * @feature: ConnectEventResponse.ConnectEvent.ENTRY 상태가 되면,
-     * MenuBoardScreen 으로 이동합니다.
-     *
-     * @author: 2023/10/02 6:19 PM donghwishin
-     *
-     * @description{
-     *   ConnectEvent.ENTRY: 스크린 등록 이벤트
-     * }
+     * @feature: Connect Stream 연결 상태 - 코드 임시 ( 연결성공만 처리 )
+     * @author: 2023/10/15 1:11 PM donghwishin
      */
-    val grpcCode = mainViewModel.grpcStatusCode.collectAsState().value
-    LaunchedEffect(key1 = grpcCode, block = {
-        CoroutineScope(Dispatchers.Main).launch {
-            when (grpcCode) {
-                ConnectEventResponse.ConnectEvent.ENTRY.number -> {
-                    val uuid = mainViewModel.getUUID()
-                    authViewModel.requestGetDeviceInfo(uuid)
-                }
-            }
+    LaunchedEffect(key1 = isConnectStreamConnectedState, block = {
+        if (isConnectStreamConnectedState) {
+            authViewModel.requestGetDeviceInfo(uuid = uuid)
         }
-    })
-
-    /**
-     * @feature: connectStream 연결 실패로, 디바이스 정보를 다시 조회합니다.
-     * @author: 2023/10/24 10:49 PM donghwishin
-     */
-    val connectStreamFailed = mainViewModel.connectStreamFailCalled.collectAsState().value
-    LaunchedEffect(key1 = connectStreamFailed, block = {
-        CoroutineScope(Dispatchers.Main).launch {
-            val uuid = mainViewModel.getUUID()
-            connectStreamFailed?.let {
-                authViewModel.requestGetDeviceInfo(uuid)
-            }
-        }
-    })
+    }
+    )
 
     /**
      * @feature: 메뉴판 화면으로 이동하는 기능
      * @author: 2023/10/12 1:06 PM donghwishin
      */
-    DisposableEffect(key1 = doMenuScreenActionState, effect = {
+    LaunchedEffect(key1 = doMenuScreenActionState) {
         if (doMenuScreenActionState) {
+            mainViewModel.updateAccessToken(authViewModel.accessToken)
             navController.navigate(RouteScreen.MenuBoardScreen.route) {
                 popUpTo(navController.graph.startDestinationId) {
                     inclusive = true
                 }
             }
         }
+    }
+
+    /**
+     * @feature: 화면을 벗어날때 메뉴판 화면으로 이동하는 상태를 초기화 시킨다.
+     * @author: 2023/11/11 12:16 PM donghwishin
+     */
+    DisposableEffect(key1 = doMenuScreenActionState) {
         onDispose {
             authViewModel.triggerMenuState(false)
         }
-    })
+    }
 
     Box(
         modifier = Modifier
@@ -190,8 +179,7 @@ fun AuthScreen(
         ConstraintLayout(
             modifier = Modifier
                 .tvSafeArea()
-                .fillMaxSize(),
-            constraintSet = createConstraintSet(context = context)
+                .fillMaxSize(), constraintSet = createConstraintSet(context = context)
         ) {
             LogoImage(modifier = Modifier.layoutId("logo"))
 
@@ -269,8 +257,7 @@ private fun HeaderContent(modifier: Modifier) {
 
 @Composable
 private fun BodyContent(
-    modifier: Modifier,
-    authViewModel: AuthViewModel
+    modifier: Modifier, authViewModel: AuthViewModel
 ) {
 
     when (val codeInfoState = authViewModel.pairCodeInfo.collectAsState().value) {
@@ -310,9 +297,7 @@ private fun PinCode(
     val context = LocalContext.current
 
     val alpha: Float by animateFloatAsState(
-        targetValue = if (code != null) 1f else 0f,
-        animationSpec = tween(durationMillis = 700),
-        label = ""
+        targetValue = if (code != null) 1f else 0f, animationSpec = tween(durationMillis = 700), label = ""
     )
 
     Column(
@@ -327,9 +312,7 @@ private fun PinCode(
             modifier = Modifier
                 .padding(top = adjustedDp(20.dp))
                 .fillMaxWidth(), // 48.dp
-            text = code.toString(),
-            letterSpacing = 0.5,
-            fontSize = adjustedDp(140.dp) // 24.dp
+            text = code.toString(), letterSpacing = 0.5, fontSize = adjustedDp(140.dp) // 24.dp
         )
 
         AdjustedMediumText(
@@ -352,8 +335,10 @@ private fun PinCode(
                     } catch (e: ActivityNotFoundException) {
                         val fallbackIntent = Intent(Intent.ACTION_VIEW, Uri.parse(WEB_LOGIN_URL))
                         context.startActivity(fallbackIntent)
-                    } catch (e: Exception){
-                        Toast.makeText(context, "Error: $e", Toast.LENGTH_SHORT).show()
+                    } catch (e: Exception) {
+                        Toast
+                            .makeText(context, "Error: $e", Toast.LENGTH_SHORT)
+                            .show()
                     }
                 }
                 .padding(vertical = adjustedDp(8.dp), horizontal = adjustedDp(12.dp)),
@@ -396,9 +381,7 @@ private fun OrDivider() {
 private fun QRCode(modifier: Modifier, qrUrl: String?) {
 
     val alpha: Float by animateFloatAsState(
-        targetValue = if (qrUrl != null) 1f else 0f,
-        animationSpec = tween(durationMillis = 700),
-        label = ""
+        targetValue = if (qrUrl != null) 1f else 0f, animationSpec = tween(durationMillis = 700), label = ""
     )
 
     Column(
@@ -428,8 +411,7 @@ private fun QRCode(modifier: Modifier, qrUrl: String?) {
 @Composable
 private fun Loading() {
     Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
     ) {
         RiveAnimation(
             animation = R.raw.loading,

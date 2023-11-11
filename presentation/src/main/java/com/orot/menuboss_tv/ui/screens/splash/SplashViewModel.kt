@@ -42,7 +42,7 @@ class SplashViewModel @Inject constructor(
     /**
      * @feature: 디바이스 정보 수집을 계속 시도할지 여부를 관리합니다.
      */
-    private var isCollectRunning = false
+    private var isCollectRunning = true
 
 
     /**
@@ -52,15 +52,20 @@ class SplashViewModel @Inject constructor(
     suspend fun requestGetDeviceInfo(uuid: String) {
         Log.w(TAG, "requestGetDeviceInfo: $uuid")
         var attempt = 0
+        isCollectRunning = true
+
         viewModelScope.launch {
-            while (!isCollectRunning) {
+            while (isCollectRunning) {
                 accessToken = ""
-                delay(calculateDelay(attempt))
                 getDeviceUseCase(uuid).collect { resource ->
                     Log.w(TAG, "requestGetDeviceInfo - response: $resource")
                     when (resource) {
                         is Resource.Loading -> _deviceState.emit(UiState.Loading)
-                        is Resource.Error -> _deviceState.emit(UiState.Error(resource.message.toString()))
+                        is Resource.Error -> {
+                            _deviceState.emit(UiState.Error(resource.message.toString()))
+                            delay(calculateDelay(attempt))
+                            return@collect
+                        }
                         is Resource.Success -> handleSuccess(resource.data)
                     }
                 }
@@ -76,17 +81,18 @@ class SplashViewModel @Inject constructor(
     }
 
     private suspend fun handleSuccess(data: DeviceModel?) {
-        _deviceState.emit(UiState.Success(data = data))
         when (data?.status) {
             "Unlinked" -> {
-                isCollectRunning = true
+                isCollectRunning = false
                 triggerAuthState(true)
+                _deviceState.emit(UiState.Success(data = data))
             }
 
             "Linked" -> {
-                isCollectRunning = true
+                isCollectRunning = false
                 accessToken = data.property?.accessToken.toString()
                 triggerMenuState(true)
+                _deviceState.emit(UiState.Success(data = data))
             }
 
             else -> _deviceState.emit(UiState.Error("Not Supported Status"))

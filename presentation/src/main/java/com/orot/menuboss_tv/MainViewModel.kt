@@ -8,18 +8,20 @@ import com.orot.menuboss_tv.domain.usecases.GetPlaylistUseCase
 import com.orot.menuboss_tv.domain.usecases.GetScheduleUseCase
 import com.orot.menuboss_tv.domain.usecases.SubscribeConnectStreamUseCase
 import com.orot.menuboss_tv.domain.usecases.SubscribeContentStreamUseCase
-import com.orot.menuboss_tv.firebase.FirebaseAnalyticsUtil
+import com.orot.menuboss_tv.logging.firebase.FirebaseAnalyticsUtil
 import com.orot.menuboss_tv.ui.base.BaseViewModel
 import com.orot.menuboss_tv.ui.model.SimpleScreenModel
 import com.orot.menuboss_tv.ui.model.UiState
 import com.orotcode.menuboss.grpc.lib.ConnectEventResponse
 import com.orotcode.menuboss.grpc.lib.ContentEventResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -61,52 +63,39 @@ class MainViewModel @Inject constructor(
      * @feature: GRPC 연결 스트림을 구독합니다.
      * @author: 2023/10/03 11:38 AM donghwishin
      */
-    private val _grpcStatusCode = MutableStateFlow<Int?>(null)
-    val grpcStatusCode: StateFlow<Int?> get() = _grpcStatusCode
+    private val _grpcConnectEvent = MutableStateFlow<ConnectEventResponse.ConnectEvent?>(null)
+    val grpcConnectEvent: StateFlow<ConnectEventResponse.ConnectEvent?> get() = _grpcConnectEvent
 
 
-    /**
-     * @feature: GRPC 연결 스트림이 실패했을 때 호출됩니다.
-     * @author: 2023/11/06 9:48 AM donghwishin
-     */
-    private val _connectStreamFailCalled = MutableStateFlow<Any?>(null)
-    val connectStreamFailCalled: StateFlow<Any?> get() = _connectStreamFailCalled
+    private val _isConnectStreamConnected = MutableStateFlow<Boolean>(false)
+    val isConnectStreamConnected: StateFlow<Boolean> get() = _isConnectStreamConnected
 
     /**
      * @feature: GRPC Connect Stream을 구독합니다.
      * @author: 2023/11/06 9:49 AM donghwishin
      */
-    suspend fun subscribeConnectStream() {
-        Log.w(TAG, "subscribeConnectStream: START")
-        val uuid = getUUID()
+    suspend fun subscribeConnectStream(uuid: String = getUUID()) {
+        Log.w(TAG, "subscribeConnectStream: START: $uuid")
 
-        subscribeConnectStreamUseCase(uuid).collect { response ->
-            Log.w(TAG, "subscribeConnectStream: response : ${response?.first} ${response?.second}")
+        viewModelScope.launch {
+            subscribeConnectStreamUseCase(uuid).collect { response, ->
+                Log.w(TAG, "subscribeConnectStream: $uuid - (EVENT: ${response.first}) Collect")
 
-            response?.let {
-                val event = it.first
-                val status = it.second
+                response.second.let {
+                    if (it == 1) {
+                        _isConnectStreamConnected.value = true
+                        return@collect
+                    }
+                }
 
-                if (event == ConnectEventResponse.ConnectEvent.ENTRY) {
-                    _grpcStatusCode.value = ConnectEventResponse.ConnectEvent.ENTRY.number
-                } else if (status == 701) {
-                    connectStreamFailInit()
-                    return@collect
+                response.first?.let {
+                    if (it == ConnectEventResponse.ConnectEvent.ENTRY) {
+                        _grpcConnectEvent.value = ConnectEventResponse.ConnectEvent.ENTRY
+                        return@collect
+                    }
                 }
             }
         }
-    }
-
-    /**
-     * @feature: GRPC Connect Stream이 실패했을 때 초기화합니다.
-     * @author: 2023/11/06 9:53 AM donghwishin
-     */
-    private suspend fun connectStreamFailInit() {
-        _accessToken = ""
-        _grpcStatusCode.value = null
-        _connectStreamFailCalled.value = Any()
-        delay(1000)
-        subscribeConnectStream()
     }
 
     /**
@@ -134,25 +123,25 @@ class MainViewModel @Inject constructor(
                     Log.w(TAG, "subscribeContentStream: event: $event")
                     when (event) {
                         ContentEventResponse.ContentEvent.CONTENT_CHANGED -> {
-                            _grpcStatusCode.value = ContentEventResponse.ContentEvent.CONTENT_CHANGED.number
+//                            _grpcStatusCode.value = ContentEventResponse.ContentEvent.CONTENT_CHANGED.number
                             requestGetDeviceInfo(executeContentsCallApiAction = true)
                         }
 
                         ContentEventResponse.ContentEvent.CONTENT_EMPTY -> {
                             showingContents = false
                             _screenState.emit(UiState.Success(data = SimpleScreenModel(isPlaylist = null)))
-                            _grpcStatusCode.value = ContentEventResponse.ContentEvent.CONTENT_EMPTY.number
+//                            _grpcStatusCode.value = ContentEventResponse.ContentEvent.CONTENT_EMPTY.number
                         }
 
                         ContentEventResponse.ContentEvent.SCREEN_DELETED -> {
                             _screenState.emit(UiState.Success(data = SimpleScreenModel(isPlaylist = null)))
-                            _grpcStatusCode.value = ContentEventResponse.ContentEvent.SCREEN_DELETED.number
+//                            _grpcStatusCode.value = ContentEventResponse.ContentEvent.SCREEN_DELETED.number
                             triggerAuthState(true)
                             return@collect
                         }
 
                         ContentEventResponse.ContentEvent.SCREEN_EXPIRED -> {
-                            _grpcStatusCode.value = ContentEventResponse.ContentEvent.SCREEN_EXPIRED.number
+//                            _grpcStatusCode.value = ContentEventResponse.ContentEvent.SCREEN_EXPIRED.number
                         }
 
                         else -> {}
@@ -168,7 +157,7 @@ class MainViewModel @Inject constructor(
      */
     private suspend fun contentStreamFailInit() {
         _accessToken = ""
-        _grpcStatusCode.value = null
+//        _grpcStatusCode.value = null
         requestGetDeviceInfo(executeContentsCallApiAction = false)
         delay(1000)
         subscribeContentStream()
@@ -210,7 +199,7 @@ class MainViewModel @Inject constructor(
                     } else {
                         _screenState.emit(UiState.Idle)
                         showingContents = false
-                        _grpcStatusCode.value = null
+//                        _grpcStatusCode.value = null
                         updateAccessToken("")
                         triggerAuthState(true)
                     }

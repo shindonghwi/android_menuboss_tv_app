@@ -2,22 +2,26 @@ package com.orot.menuboss_tv.ui.screens.auth
 
 import android.util.Log
 import androidx.lifecycle.viewModelScope
+import com.orot.menuboss_tv.domain.entities.DeviceModel
 import com.orot.menuboss_tv.domain.entities.Resource
 import com.orot.menuboss_tv.domain.usecases.GetDeviceUseCase
-import com.orot.menuboss_tv.firebase.FirebaseAnalyticsUtil
+import com.orot.menuboss_tv.logging.firebase.FirebaseAnalyticsUtil
 import com.orot.menuboss_tv.ui.base.BaseViewModel
 import com.orot.menuboss_tv.ui.model.UiState
+import com.orot.menuboss_tv.ui.screens.splash.SplashViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.math.min
+import kotlin.math.pow
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
-    private val firebaseAnalyticsUtil: FirebaseAnalyticsUtil,
     private val getDeviceUseCase: GetDeviceUseCase,
 ) : BaseViewModel() {
 
@@ -36,8 +40,12 @@ class AuthViewModel @Inject constructor(
      * @feature: accessToken 정보를 관리합니다.
      * @author: 2023/10/03 11:38 AM donghwishin
      */
-    private val _accessToken = MutableStateFlow<String?>(null)
-    val accessToken: StateFlow<String?> get() = _accessToken
+    var accessToken: String = ""
+
+    /**
+     * @feature: 디바이스 정보 수집을 계속 시도할지 여부를 관리합니다.
+     */
+    private var isCollectRunning = true
 
     /**
      * @feature: 디바이스 정보를 조회합니다.
@@ -45,42 +53,63 @@ class AuthViewModel @Inject constructor(
      */
     suspend fun requestGetDeviceInfo(uuid: String) {
         Log.w(TAG, "requestGetDeviceInfo: $uuid")
+        var attempt = 0
+        isCollectRunning = true
 
-        firebaseAnalyticsUtil.recordEvent(
-            FirebaseAnalyticsUtil.Event.GET_DEVICE_INFO,
-            hashMapOf("uuid" to uuid)
-        )
-
-        getDeviceUseCase(uuid).onEach {
-            Log.w(TAG, "requestGetDeviceInfo - response: $it")
-            when (it) {
-                is Resource.Loading -> _pairCodeInfo.emit(UiState.Loading)
-                is Resource.Error -> {
-                    delay(3000)
-                    requestGetDeviceInfo(uuid)
-                }
-
-                is Resource.Success -> {
-                    val data = it.data
-                    if (data?.status == "Unlinked") {
-                        delay(1000) // 인증 코드 변경시 화면 깜빡거림 방지
-                        _pairCodeInfo.value = UiState.Success(
-                            data = Pair(
-                                data.linkProfile?.pinCode.toString(),
-                                data.linkProfile?.qrUrl.toString()
-                            )
-                        )
-                    } else if (data?.status == "Linked") {
-                        _accessToken.value = data.property?.accessToken
+        viewModelScope.launch {
+            while (isCollectRunning) {  // 무한 루프
+                getDeviceUseCase(uuid).collect { resource ->
+                    when (resource) {
+                        is Resource.Loading -> _pairCodeInfo.emit(UiState.Loading)
+                        is Resource.Error -> {
+                            _pairCodeInfo.emit(UiState.Error(resource.message.toString()))
+                            delay(calculateDelay(attempt))
+                            return@collect
+                        }
+                        is Resource.Success -> {
+                            handleSuccess(resource.data)
+                        }
                     }
                 }
+                attempt++
             }
-        }.launchIn(viewModelScope)
+        }
     }
+
+    private fun calculateDelay(attempt: Int): Long {
+        val maxDelay = 30000L  // 최대 지연 시간 (예: 30초)
+        val delay = (1.3.pow(attempt.toDouble()) * 1000L).toLong() // 지수 백오프
+        return min(delay, maxDelay)
+    }
+
+    private suspend fun handleSuccess(data: DeviceModel?) {
+        when (data?.status) {
+            "Unlinked" -> {
+                isCollectRunning = false
+                delay(500) // 인증 코드 변경시 화면 깜빡거림 방지
+                _pairCodeInfo.emit(
+                    UiState.Success(
+                        data = Pair(
+                            data.linkProfile?.pinCode.toString(),
+                            data.linkProfile?.qrUrl.toString()
+                        )
+                    )
+                )
+            }
+
+            "Linked" -> {
+                isCollectRunning = false
+                accessToken = data.property?.accessToken.toString()
+                triggerMenuState(true)
+            }
+
+            else -> _pairCodeInfo.emit(UiState.Error("Not Supported Status"))
+        }
+    }
+
 
     override fun initState() {
         super.initState()
-        _accessToken.value = null
         Log.w(TAG, "initState")
     }
 }
