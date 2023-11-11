@@ -3,83 +3,108 @@ package com.orot.menuboss_tv
 
 import android.os.Build
 import android.os.Bundle
-import android.os.StrictMode
-import android.os.StrictMode.ThreadPolicy
-import android.provider.Settings
 import android.util.Log
+import android.view.View
+import android.view.WindowInsets
+import android.view.WindowInsetsController
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.core.view.WindowCompat
-import androidx.tv.material3.ExperimentalTvMaterial3Api
-import androidx.tv.material3.Surface
-import com.amazon.A3L.messaging.A3LMessaging
-import com.google.android.gms.tasks.Task
+import com.google.firebase.crashlytics.ktx.crashlytics
+import com.google.firebase.ktx.Firebase
 import com.orot.menuboss_tv.ui.navigations.Navigation
 import com.orot.menuboss_tv.ui.theme.MenuBossTVTheme
-import java.util.Objects
+import com.orot.menuboss_tv.utils.DeviceInfoUtil
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 
-@OptIn(ExperimentalTvMaterial3Api::class)
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var deviceInfoUtil: DeviceInfoUtil
+
+    companion object {
+        private const val TAG = "MainActivity"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         WindowCompat.setDecorFitsSystemWindows(window, false)
-
-        StrictMode.setThreadPolicy(ThreadPolicy.Builder().permitAll().build())
-
-        A3LMessaging.getToken()
-            .addOnCompleteListener { task: Task<String> ->
-                Log.w(TAG, "onComplete: ", task.exception)
-                if (!task.isSuccessful) {
-                    Log.w(TAG, "Fetching FCM/ADM registration token failed", task.exception)
-                    return@addOnCompleteListener
-                }
-
-                // Get new FCM registration token
-                val token = task.result
-                Log.w(TAG, "onComplete: token :$token")
-                Log.d(TAG, token)
-            }
-
-        val currentPlatform = A3LMessaging.getCurrentPlatform(applicationContext)
-        Log.w("Asdadssdasda", "currentPlatform ${currentPlatform}")
-        Log.w("Asdadssdasda", "BUILD_TYPE ${com.amazon.A3L.messaging.BuildConfig.BUILD_TYPE}")
-
-        Log.w("Asdadssdasda", "serialNumber ${Build.MANUFACTURER}")
-        Log.w("zxcjkzhxck;lzxcjk",Build.MANUFACTURER + " " + Build.MODEL + " " + Build.DEVICE+ " " + Build.VERSION.INCREMENTAL + " " + Build.SERIAL);
-        Log.w("zxcjkzhxck;lzxcjk",Build.PRODUCT + " " + Build.BRAND + " " + Build.HARDWARE+ " " + Build.VERSION.RELEASE + " " + Build.VERSION.SDK_INT);
-        Log.w("zxcjkzhxck;lzxcjk",Build.FINGERPRINT);
-
-        val android_id: String = Settings.Secure.getString(
-            applicationContext.contentResolver,
-            Settings.Secure.ANDROID_ID
-        )
-        Log.w("zxcjkzhxck;lzxcjk", "android_id : ${android_id}")
-
-        val dd = Objects.hash(android_id, Build.FINGERPRINT)
-        Log.w("zxcjkzhxck;lzxcjk", "dd : ${dd}")
-
-
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) // 화면이 안꺼지게 방지
 
         setContent {
             MenuBossTVTheme {
-                Surface(
-                    shape = RectangleShape,
-                    modifier = Modifier.fillMaxSize(),
-                ) {
-                    Navigation()
+                Box(modifier = Modifier.fillMaxSize()) {
+                    Navigation(uuidValue = getXUniqueId())
                 }
             }
         }
-
     }
 
-    companion object {
-        const val TAG = "SampleA3LMainActivity"
+    override fun onResume() {
+        super.onResume()
+        hideSystemUI()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        window.decorView.setOnSystemUiVisibilityChangeListener(null)
+    }
+
+    @Suppress("DEPRECATION")
+    private fun hideSystemUI() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val controller = window.insetsController
+            controller?.apply {
+                hide(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
+                systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            }
+        } else {
+            window.decorView.systemUiVisibility = (
+                    View.SYSTEM_UI_FLAG_IMMERSIVE
+                            or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                            or View.SYSTEM_UI_FLAG_FULLSCREEN
+                    )
+
+            // For older versions, you'll have to use the deprecated method
+            window.decorView.setOnSystemUiVisibilityChangeListener { visibility ->
+                if (visibility and View.SYSTEM_UI_FLAG_FULLSCREEN == 0) {
+                    hideSystemUI()
+                }
+            }
+        }
+    }
+
+
+    /**
+     * @feature: 디바이스의 고유한 식별자를 생성합니다.
+     * @author: 2023/10/03 11:39 AM donghwishin
+     */
+    private fun getXUniqueId(): String {
+        return deviceInfoUtil.run {
+            val uuid1 = generateUniqueUUID(
+                getMacAddress(),
+                "${Build.PRODUCT}${Build.BRAND}${Build.HARDWARE}"
+            )
+            val uuid2 = generateUniqueUUID(
+                getMacAddress(),
+                "${Build.MANUFACTURER}${Build.MODEL}${Build.DEVICE}"
+            )
+            val uuid3 =
+                generateUniqueUUID(getMacAddress(), Build.FINGERPRINT)
+            val uuid = generateUniqueUUID(
+                uuid1.toString(),
+                "$uuid2$uuid3"
+            ).toString()
+            Log.w(TAG, "getXUniqueId: $uuid")
+            return@run uuid
+        }
     }
 }

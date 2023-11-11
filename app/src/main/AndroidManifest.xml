@@ -6,9 +6,11 @@
         android:name="android.permission.ACCESS_WIFI_STATE"
         tools:ignore="LeanbackUsesWifi" />
 
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
-
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
 
     <uses-feature
         android:name="android.software.leanback"
@@ -20,11 +22,15 @@
     <application
         android:name=".MenuBossTVApp"
         android:allowBackup="true"
-        android:banner="@mipmap/ic_launcher"
+        android:banner="@drawable/ic_banner"
         android:icon="@mipmap/ic_launcher"
         android:label="${appLabel}"
+        android:largeHeap="true"
+        android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
-        android:theme="@style/Theme.MenuBossTV">
+        android:theme="@style/Theme.MenuBossTV"
+        android:usesCleartextTraffic="true"
+        tools:targetApi="m">
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -36,33 +42,13 @@
             </intent-filter>
         </activity>
 
-        <receiver
-            android:name=".MyA3LMessagingService"
-            android:enabled="true"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.amazon.A3L.messaging.intent.REGISTRATION" />
-                <action android:name="com.amazon.A3L.messaging.intent.MESSAGE" />
-            </intent-filter>
-        </receiver>
-
-        <meta-data
-            android:name="com.a3l.clsName"
-            android:value="com.orot.menuboss_tv.MyA3LMessagingService" />
-
-        <meta-data
-            android:name="ADM_SERVER_CONFIG_FILE_NAME"
-            android:value="adm_server_configuration.json" />
-        <meta-data
-            android:name="FCM_SERVER_CONFIG_FILE_NAME"
-            android:value="fcm_server_configuration.json" />
-
         <provider
             android:name="androidx.startup.InitializationProvider"
             android:authorities="${applicationId}.androidx-startup"
             android:exported="false"
             tools:node="merge">
-            <meta-data android:name="app.rive.runtime.kotlin.RiveInitializer"
+            <meta-data
+                android:name="app.rive.runtime.kotlin.RiveInitializer"
                 android:value="androidx.startup" />
         </provider>
 

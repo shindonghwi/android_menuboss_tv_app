@@ -1,6 +1,8 @@
 plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
+    id("com.google.dagger.hilt.android")
+    kotlin("kapt")
 }
 
 android {
@@ -26,37 +28,51 @@ android {
 }
 
 dependencies {
-    api (project(":core"))
 
+    api(project(":domain"))
 
-    Libraries.apply {
-
-        Libraries.KTX.run {
-            implementation(core)
-        }
-
-        Libraries.Compose.run {
-            implementation(uiTooling)
-            implementation(activity)
-            implementation(tvFoundation)
-            implementation(tvMaterial)
-            implementation(coil)
-            implementation(navigation)
-            implementation(viewModel)
-            implementation(bom)
-        }
-
-        Libraries.Google.run {
-            implementation(guava)
-            implementation(zxing)
-            implementation(fcm)
-        }
-
-
-
-        Libraries.Rive.run {
-            implementation(rive)
-        }
-
+    Libraries.AndroidX.run {
+        implementation(core)
+        implementation(exoplayer)
     }
+
+    Libraries.Compose.run {
+        implementation(uiTooling)
+        implementation(activity)
+        implementation(tvFoundation)
+        implementation(tvMaterial)
+        implementation(coil)
+        implementation(navigation)
+        implementation(viewModel)
+        implementation(bom)
+        implementation(contraintLayout)
+    }
+
+    Libraries.Google.run {
+        implementation(guava)
+        implementation(zxing)
+        implementation(fcm)
+    }
+
+    Libraries.Rive.run {
+        implementation(rive)
+    }
+
+    Libraries.Gson.run {
+        implementation(gson)
+    }
+
+    Libraries.Hilt.run {
+        api(daggerAndroid)
+    }
+
+    Kapts.Hilt.run {
+        kapt(daggerHiltCompiler)
+        kapt(daggerHiltAndroidCompiler)
+        kapt(daggerHiltAndroid)
+    }
+}
+
+kapt {
+    correctErrorTypes = true
 }

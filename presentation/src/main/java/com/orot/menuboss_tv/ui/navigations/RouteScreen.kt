@@ -2,23 +2,12 @@ package com.orot.menuboss_tv.ui.navigations
 
 sealed class RouteScreen(val route: String) {
 
-    // 홈
-    object HomeScreen : RouteScreen("/home/")
-    object NotificationsScreen : RouteScreen("/notifications/")
-    object EpisodeListScreen : RouteScreen("/episode_list/")
+    // 스플래시 화면
+    data object SplashScreen : RouteScreen("/splash")
 
-    // 질문
-    object QuestionScreen : RouteScreen("/question/")
+    // 인증 화면
+    data object AuthScreen : RouteScreen("/auth")
 
-    // 답변
-    object AnswerAudioScreen : RouteScreen("/answer/register/audio")
-    object AnswerTextScreen : RouteScreen("/answer/register/text")
-    object AnswerDetailScreen : RouteScreen("/answer/detail")
-    object AnswerEditScreen : RouteScreen("/answer/edit")
-    object AnswerConnectedScreen : RouteScreen("/answer/connect/")
-
-    // 노트
-    object NoteAudioScreen : RouteScreen("/note/audio/")
-    object NoteDetailScreen : RouteScreen("/note/detail/")
-
+    // 메뉴보드 화면
+    data object MenuBoardScreen : RouteScreen("/menu_board")
 }

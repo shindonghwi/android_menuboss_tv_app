@@ -1,86 +1,123 @@
 package com.orot.menuboss_tv.ui.screens.splash
 
-import android.util.Log
-import androidx.annotation.RawRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
-import app.rive.runtime.kotlin.RiveAnimationView
-import app.rive.runtime.kotlin.controllers.RiveFileController
-import app.rive.runtime.kotlin.core.Fit
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import app.rive.runtime.kotlin.core.Loop
-import app.rive.runtime.kotlin.core.PlayableInstance
+import com.orot.menuboss_tv.logging.datadog.DataDogLoggingUtil
 import com.orot.menuboss_tv.presentation.R
+import com.orot.menuboss_tv.ui.components.RiveAnimation
+import com.orot.menuboss_tv.ui.model.UiState
+import com.orot.menuboss_tv.ui.navigations.LocalMainViewModel
 import com.orot.menuboss_tv.ui.navigations.LocalNavController
+import com.orot.menuboss_tv.ui.navigations.RouteScreen
 import com.orot.menuboss_tv.ui.theme.colorBackground
-import com.orot.menuboss_tv.utils.coroutineScopeOnMain
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+/**
+ * @description{
+ *   TODO: 스플래시 화면에서 에러 처리나 로딩중일때 화면에 표시 해야 할 것들이 있음.
+ * }
+*/
+
 @Composable
-fun SplashScreen() {
+fun SplashScreen(
+    uuid: String,
+    splashViewModel: SplashViewModel = hiltViewModel()
+) {
     val navController = LocalNavController.current
+    val mainViewModel = LocalMainViewModel.current
+
+    val doAuthScreenActionState = splashViewModel.navigateToAuthState.collectAsState().value
+    val doMenuScreenActionState = splashViewModel.navigateToMenuState.collectAsState().value
+
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+
+    DisposableEffect(lifecycle) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_CREATE) {
+                DataDogLoggingUtil.startView(
+                    RouteScreen.SplashScreen.route, "${RouteScreen.SplashScreen}"
+                )
+            } else if (event == Lifecycle.Event.ON_PAUSE) {
+                DataDogLoggingUtil.stopView(RouteScreen.SplashScreen.route)
+            }
+        }
+        lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycle.removeObserver(observer)
+        }
+    }
+
+    /**
+     * @feature: 디바이스 정보 요청
+     * @author: 2023/10/15 12:52 PM donghwishin
+     */
+    LaunchedEffect(key1 = Unit, block = {
+        splashViewModel.requestGetDeviceInfo(uuid = uuid)
+    })
+
+    /**
+     * @feature: 인증화면으로 이동하는 기능
+     * @author: 2023/10/12 1:06 PM donghwishin
+     */
+    DisposableEffect(key1 = doAuthScreenActionState, effect = {
+        if (doAuthScreenActionState) {
+            navController.navigate(RouteScreen.AuthScreen.route) {
+                popUpTo(navController.graph.startDestinationId) {
+                    inclusive = true
+                }
+            }
+        }
+        onDispose {
+            splashViewModel.triggerAuthState(false)
+        }
+    })
+
+    /**
+     * @feature: 메뉴판 화면으로 이동하는 기능
+     * @author: 2023/10/12 1:06 PM donghwishin
+     */
+    DisposableEffect(key1 = doMenuScreenActionState, effect = {
+        if (doMenuScreenActionState) {
+            mainViewModel.updateAccessToken(splashViewModel.accessToken)
+            navController.navigate(RouteScreen.MenuBoardScreen.route) {
+                popUpTo(navController.graph.startDestinationId) {
+                    inclusive = true
+                }
+            }
+        }
+        onDispose {
+            splashViewModel.triggerMenuState(false)
+        }
+    })
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(colorBackground),
         contentAlignment = Alignment.Center
     ) {
-        ComposableRiveAnimationView(
-            modifier = Modifier.size(300.dp),
+        RiveAnimation(
             animation = R.raw.logo,
             onInit = {
                 it.play(loop = Loop.ONESHOT)
             },
-            onAnimEnd = {
-                coroutineScopeOnMain(initDelay = 1000) { navController.navigate("/auth") }
-            },
+            onAnimEnd = {},
         )
     }
 }
 
-
-@Composable
-fun ComposableRiveAnimationView(
-    modifier: Modifier = Modifier,
-    @RawRes animation: Int,
-    stateMachineName: String? = null,
-    alignment: app.rive.runtime.kotlin.core.Alignment = app.rive.runtime.kotlin.core.Alignment.CENTER,
-    fit: Fit = app.rive.runtime.kotlin.core.Fit.CONTAIN,
-    onInit: (RiveAnimationView) -> Unit,
-    onAnimEnd: () -> Unit
-) {
-    AndroidView(modifier = modifier, factory = { context ->
-        RiveAnimationView(context).also {
-            it.setRiveResource(
-                resId = animation,
-                stateMachineName = stateMachineName,
-                alignment = alignment,
-                fit = fit,
-                autoplay = false
-            )
-            it.registerListener(
-                object : RiveFileController.Listener {
-                    override fun notifyLoop(animation: PlayableInstance) {}
-                    override fun notifyPlay(animation: PlayableInstance) {}
-                    override fun notifyStateChanged(stateMachineName: String, stateName: String) {}
-                    override fun notifyStop(animation: PlayableInstance) {}
-                    override fun notifyPause(animation: PlayableInstance) = onAnimEnd.invoke()
-                },
-            )
-        }
-    }, update = { view -> onInit(view) })
-
-}

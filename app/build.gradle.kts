@@ -4,8 +4,10 @@ import java.util.Properties
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("kotlin-kapt")
     id("com.google.gms.google-services")
+    id("com.google.dagger.hilt.android")
+    id("com.google.firebase.crashlytics")
+    kotlin("kapt")
 }
 
 android {
@@ -21,22 +23,25 @@ android {
     }
 
     sourceSets {
-        create("prod") {
-            res.srcDir("src/prod/assets")
-        }
         create("dev") {
-            res.srcDir("src/dev/assets")
+            res.srcDir("src/dev")
+        }
+        create("prod") {
+            res.srcDir("src/prod")
         }
     }
 
-    flavorDimensions += "default"
+    flavorDimensions.addAll(listOf("version"))
+
     productFlavors {
         create("dev") {
+            dimension = "version"
             applicationIdSuffix = DebugConfig.suffixName
             versionNameSuffix = DebugConfig.versionName
             manifestPlaceholders["appLabel"] = DebugConfig.app_label
         }
         create("prod") {
+            dimension = "version"
             applicationIdSuffix = ReleaseConfig.suffixName
             versionNameSuffix = ReleaseConfig.versionName
             manifestPlaceholders["appLabel"] = ReleaseConfig.app_label
@@ -91,8 +96,24 @@ android {
 
 dependencies {
     implementation(project(":presentation"))
+    implementation(project(":domain"))
+    implementation(project(":data"))
 
     Libraries.AndroidX.run {
         implementation(startup)
+        implementation(multidex)
     }
+    Libraries.Hilt.run {
+        implementation(daggerAndroid)
+    }
+
+    Kapts.Hilt.run {
+        kapt(daggerHiltCompiler)
+        kapt(daggerHiltAndroidCompiler)
+        kapt(daggerHiltAndroid)
+    }
+}
+
+kapt {
+    correctErrorTypes = true
 }
