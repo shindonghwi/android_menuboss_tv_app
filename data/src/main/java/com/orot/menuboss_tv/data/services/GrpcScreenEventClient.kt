@@ -39,25 +39,22 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
     private var connectBlockingStub: ScreenEventServiceGrpc.ScreenEventServiceStub? = null
     private var contentBlockingStub: ScreenEventServiceGrpc.ScreenEventServiceStub? = null
 
-
-    private var lastContentEventValue: Int? = null
-
     private val _connectEvents = MutableSharedFlow<Pair<ConnectEventResponse.ConnectEvent?, Int>>(
         replay = 1, extraBufferCapacity = 10,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
     private val connectEvents: Flow<Pair<ConnectEventResponse.ConnectEvent?, Int>> get() = _connectEvents.asSharedFlow()
 
-    private val _contentEvents = MutableSharedFlow<Pair<ContentEventResponse.ContentEvent?, Int>?>(
+    private val _contentEvents = MutableSharedFlow<Pair<ContentEventResponse.ContentEvent?, Int>>(
         replay = 1, extraBufferCapacity = 10,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
-    private val contentEvents: Flow<Pair<ContentEventResponse.ContentEvent?, Int>?> get() = _contentEvents.asSharedFlow()
+    private val contentEvents: Flow<Pair<ContentEventResponse.ContentEvent?, Int>> get() = _contentEvents.asSharedFlow()
 
     private fun initConnectChannel(uuid: String) {
         if (connectChannel == null) {
             _connectEvents.tryEmit(Pair(null, 0))
-            Log.w(TAG, "initConnectChannel")
+            Log.w(TAG, "initConnectChannel : $uuid")
 
             connectChannel = ManagedChannelBuilder.forAddress(GRPC_BASE_URL, 443)
                 .useTransportSecurity()
@@ -81,7 +78,7 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
 
         val responseObserver = object : StreamObserver<ConnectEventResponse> {
             override fun onNext(value: ConnectEventResponse) {
-                Log.d(TAG, "Received response: ${value.event}")
+                Log.d(TAG, "startConnectStream Received response: ${value.event}")
                 _connectEvents.tryEmit(Pair(value.event, 3))
 
                 if (value.event == ConnectEventResponse.ConnectEvent.ENTRY) {
@@ -90,7 +87,7 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
             }
 
             override fun onError(t: Throwable) {
-                Log.e(TAG, "Error in stream", t)
+                Log.e(TAG, "startConnectStream Error in stream", t)
                 isConnected = false
                 closeConnectChannel()
 
@@ -102,7 +99,7 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
             }
 
             override fun onCompleted() {
-                Log.d(TAG, "Stream completed")
+                Log.d(TAG, "startConnectStream Stream completed")
             }
         }
 
@@ -111,7 +108,7 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
         // 연결 성공 처리를 위한 지연 로직
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                if (isConnected){
+                if (isConnected) {
                     delay(3000)  // 3초 대기
                     _connectEvents.tryEmit(Pair(null, 1)) // 연결 설공 이벤트 전달
                 }
@@ -123,8 +120,8 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
 
     private fun initContentChannel(accessToken: String) {
         if (contentChannel == null) {
-            _contentEvents.tryEmit(null)
-            Log.w(TAG, "initContentChannel")
+            _contentEvents.tryEmit(Pair(null, 0))
+            Log.w(TAG, "initContentChannel : $accessToken")
 
             contentChannel = ManagedChannelBuilder.forAddress(GRPC_BASE_URL, 443)
                 .useTransportSecurity()
@@ -136,35 +133,54 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
 
             contentChannel?.let {
                 contentBlockingStub = ScreenEventServiceGrpc.newStub(it)
+                startContentStream(accessToken)
+            }
+        }
+    }
 
-                val responseObserver = object : StreamObserver<ContentEventResponse> {
-                    override fun onNext(value: ContentEventResponse) {
-                        Log.d(TAG, "Received response: ${value.event}")
-                        lastContentEventValue = value.eventValue
-                        _contentEvents.tryEmit(Pair(value.event, value.eventValue))
+    private fun startContentStream(accessToken: String) {
+        var isConnected = true  // 연결 성공 여부를 추적하는 플래그
+        var retryDelay = INITIAL_RETRY_DELAY
 
-                        if (value.event == ContentEventResponse.ContentEvent.SCREEN_DELETED) {
-                            closeConnectChannel()
-                            closeContentChannel()
-                        }
-                    }
+        val responseObserver = object : StreamObserver<ContentEventResponse> {
+            override fun onNext(value: ContentEventResponse) {
+                Log.d(TAG, "startContentStream Received response: ${value.event}")
+                _contentEvents.tryEmit(Pair(value.event, value.eventValue))
 
-                    override fun onError(t: Throwable) {
-                        Log.e(TAG, "Error in stream", t)
-                        if (lastContentEventValue != 701) {
-                            _contentEvents.tryEmit(Pair(null, 701))
-                            lastContentEventValue = 701
-                        }
-                        closeConnectChannel()
-                        closeContentChannel()
-                    }
-
-                    override fun onCompleted() {
-                        Log.d(TAG, "Stream completed")
-                    }
+                if (value.event == ContentEventResponse.ContentEvent.SCREEN_DELETED) {
+                    closeConnectChannel()
+                    closeContentChannel()
                 }
+            }
 
-                contentBlockingStub?.contentStream(Empty.getDefaultInstance(), responseObserver)
+            override fun onError(t: Throwable) {
+                Log.e(TAG, "startContentStream Error in stream", t)
+                isConnected = false
+                closeConnectChannel()
+                closeContentChannel()
+
+                CoroutineScope(Dispatchers.IO).launch {
+                    delay(retryDelay)  // 지연을 추가
+                    retryDelay = (retryDelay * 2).coerceAtMost(MAX_RETRY_DELAY)
+                    initContentChannel(accessToken)
+                }
+            }
+
+            override fun onCompleted() {
+                Log.d(TAG, "startContentStream Stream completed")
+            }
+        }
+        contentBlockingStub?.contentStream(Empty.getDefaultInstance(), responseObserver)
+
+        // 연결 성공 처리를 위한 지연 로직
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                if (isConnected) {
+                    delay(3000)  // 3초 대기
+                    _contentEvents.tryEmit(Pair(null, 1)) // 연결 설공 이벤트 전달
+                }
+            } catch (e: CancellationException) {
+                Log.e(TAG, "Connection check was cancelled", e)
             }
         }
     }
@@ -190,7 +206,6 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
         contentChannel?.shutdown()
         contentChannel = null
         contentBlockingStub = null
-        lastContentEventValue = null
     }
 
 }

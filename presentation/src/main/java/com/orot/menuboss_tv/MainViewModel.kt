@@ -2,6 +2,7 @@ package com.orot.menuboss_tv
 
 import android.util.Log
 import androidx.lifecycle.viewModelScope
+import com.orot.menuboss_tv.domain.entities.DeviceModel
 import com.orot.menuboss_tv.domain.entities.Resource
 import com.orot.menuboss_tv.domain.usecases.GetDeviceUseCase
 import com.orot.menuboss_tv.domain.usecases.GetPlaylistUseCase
@@ -12,6 +13,7 @@ import com.orot.menuboss_tv.logging.firebase.FirebaseAnalyticsUtil
 import com.orot.menuboss_tv.ui.base.BaseViewModel
 import com.orot.menuboss_tv.ui.model.SimpleScreenModel
 import com.orot.menuboss_tv.ui.model.UiState
+import com.orot.menuboss_tv.ui.screens.splash.SplashViewModel
 import com.orotcode.menuboss.grpc.lib.ConnectEventResponse
 import com.orotcode.menuboss.grpc.lib.ContentEventResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -30,7 +32,6 @@ class MainViewModel @Inject constructor(
     private val subscribeContentStreamUseCase: SubscribeContentStreamUseCase,
     private val getPlaylistUseCase: GetPlaylistUseCase,
     private val getScheduleUseCase: GetScheduleUseCase,
-    private val firebaseAnalyticsUtil: FirebaseAnalyticsUtil,
     private val getDeviceUseCase: GetDeviceUseCase,
 ) : BaseViewModel() {
 
@@ -66,9 +67,19 @@ class MainViewModel @Inject constructor(
     private val _grpcConnectEvent = MutableStateFlow<ConnectEventResponse.ConnectEvent?>(null)
     val grpcConnectEvent: StateFlow<ConnectEventResponse.ConnectEvent?> get() = _grpcConnectEvent
 
-
+    /**
+     * @feature: 커넥트 스트림 서버 연결상태
+     * @author: 2023/11/11 2:36 PM donghwishin
+     */
     private val _isConnectStreamConnected = MutableStateFlow<Boolean>(false)
     val isConnectStreamConnected: StateFlow<Boolean> get() = _isConnectStreamConnected
+
+    /**
+     * @feature: 컨텐츠 스트림 서버 연결상태
+     * @author: 2023/11/11 2:36 PM donghwishin
+     */
+    private val _isContentStreamConnected = MutableStateFlow<Boolean>(false)
+    val isContentStreamConnected: StateFlow<Boolean> get() = _isContentStreamConnected
 
     /**
      * @feature: GRPC Connect Stream을 구독합니다.
@@ -78,7 +89,7 @@ class MainViewModel @Inject constructor(
         Log.w(TAG, "subscribeConnectStream: START: $uuid")
 
         viewModelScope.launch {
-            subscribeConnectStreamUseCase(uuid).collect { response, ->
+            subscribeConnectStreamUseCase(uuid).collect { response ->
                 Log.w(TAG, "subscribeConnectStream: $uuid - (EVENT: ${response.first}) Collect")
 
                 response.second.let {
@@ -103,66 +114,54 @@ class MainViewModel @Inject constructor(
      * @author: 2023/10/03 11:39 AM donghwishin
      */
 
-    var showingContents = false
+    private var showingContents = false
 
     suspend fun subscribeContentStream() {
         if (_accessToken.isEmpty()) return
         Log.w(TAG, "subscribeContentStream: RUN: $_accessToken")
 
         subscribeContentStreamUseCase(_accessToken).collect { response ->
-            response?.let {
-                Log.w(TAG, "subscribeContentStream: response $it")
+            Log.w(TAG, "subscribeContentStream: $_accessToken - (EVENT: ${response?.first}) Collect")
 
-                val event = it.first
-                val status = it.second
-
-                if (status == 701) {
-                    contentStreamFailInit()
+            response?.second.let {
+                if (it == 1) {
+                    _isContentStreamConnected.value = true
                     return@collect
-                } else {
-                    Log.w(TAG, "subscribeContentStream: event: $event")
-                    when (event) {
-                        ContentEventResponse.ContentEvent.CONTENT_CHANGED -> {
-//                            _grpcStatusCode.value = ContentEventResponse.ContentEvent.CONTENT_CHANGED.number
-                            requestGetDeviceInfo(executeContentsCallApiAction = true)
-                        }
-
-                        ContentEventResponse.ContentEvent.CONTENT_EMPTY -> {
-                            showingContents = false
-                            _screenState.emit(UiState.Success(data = SimpleScreenModel(isPlaylist = null)))
-//                            _grpcStatusCode.value = ContentEventResponse.ContentEvent.CONTENT_EMPTY.number
-                        }
-
-                        ContentEventResponse.ContentEvent.SCREEN_DELETED -> {
-                            _screenState.emit(UiState.Success(data = SimpleScreenModel(isPlaylist = null)))
-//                            _grpcStatusCode.value = ContentEventResponse.ContentEvent.SCREEN_DELETED.number
-                            triggerAuthState(true)
-                            return@collect
-                        }
-
-                        ContentEventResponse.ContentEvent.SCREEN_EXPIRED -> {
-//                            _grpcStatusCode.value = ContentEventResponse.ContentEvent.SCREEN_EXPIRED.number
-                        }
-
-                        else -> {}
-                    }
                 }
             }
+
+            response?.first?.let { event ->
+                when (event) {
+                    ContentEventResponse.ContentEvent.CONTENT_CHANGED -> {
+                        requestGetDeviceInfo(executeContentsCallApiAction = true)
+                    }
+
+                    ContentEventResponse.ContentEvent.CONTENT_EMPTY -> {
+                        showingContents = false
+                        _screenState.emit(UiState.Success(data = SimpleScreenModel(isPlaylist = null)))
+                    }
+
+                    ContentEventResponse.ContentEvent.SCREEN_DELETED -> {
+                        _screenState.emit(UiState.Success(data = SimpleScreenModel(isPlaylist = null)))
+                        triggerAuthState(true)
+                        return@collect
+                    }
+
+                    ContentEventResponse.ContentEvent.SCREEN_EXPIRED -> {
+                        _screenState.emit(UiState.Success(data = SimpleScreenModel(isExpired = true)))
+                    }
+
+                    else -> {}
+                }
+            }
+
         }
     }
 
     /**
-     * @feature: GRPC 컨텐츠 스트림이 실패했을 때 초기화합니다.
-     * @author: 2023/11/06 9:54 AM donghwishin
+     * @feature: 디바이스 정보 수집을 계속 시도할지 여부를 관리합니다.
      */
-    private suspend fun contentStreamFailInit() {
-        _accessToken = ""
-//        _grpcStatusCode.value = null
-        requestGetDeviceInfo(executeContentsCallApiAction = false)
-        delay(1000)
-        subscribeContentStream()
-    }
-
+    private var isCollectRunning = true
 
     /**
      * @feature: 디바이스 정보를 조회합니다.
@@ -172,40 +171,71 @@ class MainViewModel @Inject constructor(
         executeContentsCallApiAction: Boolean,
     ) {
         val uuid = getUUID()
-        firebaseAnalyticsUtil.recordEvent(
-            FirebaseAnalyticsUtil.Event.GET_DEVICE_INFO, hashMapOf("uuid" to uuid)
-        )
+        var attempt = 0
+        isCollectRunning = true
 
-        getDeviceUseCase(uuid).onEach {
-            Log.w(TAG, "requestGetDeviceInfo: $it")
-            when (it) {
-                is Resource.Loading -> {
-                    if (!showingContents) {
-                        _screenState.emit(UiState.Loading)
-                    }
-                }
+        Log.w(TAG, "requestGetDeviceInfo: $uuid")
 
-                is Resource.Error -> {}
-                is Resource.Success -> {
-                    updateAccessToken(it.data?.property?.accessToken.toString())
-                    if (it.data?.status == "Linked") {
-                        if (executeContentsCallApiAction) {
-                            if (it.data?.playing?.contentType == "Playlist") {
-                                requestGetDevicePlaylist()
-                            } else if (it.data?.playing?.contentType == "Schedule") {
-                                requestGetDeviceSchedule()
-                            }
+        viewModelScope.launch {
+            while (isCollectRunning) {
+                updateAccessToken("")
+                getDeviceUseCase(uuid).collect { resource ->
+                    Log.w(TAG, "requestGetDeviceInfo - response: $resource")
+                    when (resource) {
+                        is Resource.Loading -> if (!showingContents) {
+                            _screenState.emit(UiState.Loading)
                         }
-                    } else {
-                        _screenState.emit(UiState.Idle)
-                        showingContents = false
-//                        _grpcStatusCode.value = null
-                        updateAccessToken("")
-                        triggerAuthState(true)
+
+                        is Resource.Error -> {
+                            _screenState.emit(UiState.Error(resource.message.toString()))
+                            delay(calculateDelay(attempt))
+                            return@collect
+                        }
+
+                        is Resource.Success -> handleSuccess(
+                            resource.data,
+                            executeContentsCallApiAction
+                        )
                     }
                 }
+                attempt++
             }
-        }.launchIn(viewModelScope)
+        }
+    }
+
+    private suspend fun handleSuccess(
+        data: DeviceModel?,
+        executeContentsCallApiAction: Boolean
+    ) {
+        updateAccessToken(data?.property?.accessToken.toString())
+        when (data?.status) {
+            "Linked" -> {
+                if (executeContentsCallApiAction) {
+                    when (data.playing?.contentType) {
+                        "Playlist" -> {
+                            requestGetDevicePlaylist()
+                        }
+                        "Schedule" -> {
+                            requestGetDeviceSchedule()
+                        }
+                        null -> {
+                            isCollectRunning = false
+                            _screenState.emit(UiState.Success(data = SimpleScreenModel(isPlaylist = null)))
+                        }
+                    }
+                }
+                isCollectRunning = false
+            }
+
+            "Unlinked" -> {
+                _screenState.emit(UiState.Idle)
+                showingContents = false
+                updateAccessToken("")
+                triggerAuthState(true)
+            }
+
+            else -> _screenState.emit(UiState.Error("Not Supported Status"))
+        }
     }
 
     /**
@@ -214,9 +244,6 @@ class MainViewModel @Inject constructor(
      */
     private suspend fun requestGetDeviceSchedule() {
         val uuid = getUUID()
-        firebaseAnalyticsUtil.recordEvent(
-            FirebaseAnalyticsUtil.Event.GET_DEVICE_SCHEDULE_INFO, hashMapOf("uuid" to uuid)
-        )
 
         getScheduleUseCase(uuid, _accessToken).onEach {
             when (it) {
@@ -226,6 +253,7 @@ class MainViewModel @Inject constructor(
                 }
 
                 is Resource.Success -> {
+                    isCollectRunning = false
                     _screenState.emit(
                         UiState.Success(
                             data = SimpleScreenModel(
@@ -247,10 +275,6 @@ class MainViewModel @Inject constructor(
     private suspend fun requestGetDevicePlaylist() {
         val uuid = getUUID()
 
-        firebaseAnalyticsUtil.recordEvent(
-            FirebaseAnalyticsUtil.Event.GET_DEVICE_PLAYLIST_INFO, hashMapOf("uuid" to uuid)
-        )
-
         getPlaylistUseCase(uuid, _accessToken).onEach {
             when (it) {
                 is Resource.Loading -> {}
@@ -260,6 +284,7 @@ class MainViewModel @Inject constructor(
 
                 is Resource.Success -> {
                     showingContents = true
+                    isCollectRunning = false
                     _screenState.emit(
                         UiState.Success(
                             data = SimpleScreenModel(
