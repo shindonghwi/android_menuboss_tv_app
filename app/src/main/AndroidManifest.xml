@@ -23,7 +23,7 @@
         android:name=".MenuBossTVApp"
         android:allowBackup="true"
         android:banner="@drawable/ic_banner"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/ic_launcher_round"
         android:label="${appLabel}"
         android:largeHeap="true"
         android:roundIcon="@mipmap/ic_launcher"
