@@ -40,7 +40,7 @@ open class BaseViewModel : ViewModel() {
      * @author: 2023/11/11 2:44 PM donghwishin
     */
     fun calculateDelay(attempt: Int): Long {
-        val maxDelay = 30000L  // 최대 지연 시간 (예: 30초)
+        val maxDelay = 10000L  // 최대 지연 시간 (예: 30초)
         val delay = (1.3.pow(attempt.toDouble()) * 1000L).toLong() // 지수 백오프
         return min(delay, maxDelay)
     }
