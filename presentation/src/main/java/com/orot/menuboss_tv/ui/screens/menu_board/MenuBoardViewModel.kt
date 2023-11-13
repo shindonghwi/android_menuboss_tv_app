@@ -42,7 +42,7 @@ class MenuBoardViewModel @Inject constructor(
     suspend fun startProcess(uuid: String) {
         Log.w(TAG, "startProcess: $uuid")
         _screenState.emit(UiState.Loading)
-        requestGetDeviceInfo(uuid, inContentChangedEvent = false)
+        requestGetDeviceInfo(uuid)
     }
 
     private var currentConnectStreamJob: Job? = null
@@ -74,12 +74,6 @@ class MenuBoardViewModel @Inject constructor(
 
                     response.second.let {
                         when (it) {
-                            1 -> {
-                                Log.w(TAG, "subscribeConnectStream: 연결성공")
-                                isContentSteamConnected = true
-                                handleSuccess()
-                            }
-
                             2 -> {
                                 Log.w(TAG, "subscribeConnectStream: 연결실패")
                                 isContentSteamConnected = false
@@ -94,8 +88,14 @@ class MenuBoardViewModel @Inject constructor(
 
                     response.first?.let { event ->
                         when (event) {
+                            ContentEventResponse.ContentEvent.SCREEN_PASSED -> {
+                                Log.w(TAG, "subscribeConnectStream: 연결성공")
+                                isContentSteamConnected = true
+                                handleSuccess()
+                            }
+
                             ContentEventResponse.ContentEvent.CONTENT_CHANGED -> {
-                                requestGetDeviceInfo(uuid, inContentChangedEvent = true)
+                                requestGetDeviceInfo(uuid)
                             }
 
                             ContentEventResponse.ContentEvent.CONTENT_EMPTY -> {
@@ -131,10 +131,9 @@ class MenuBoardViewModel @Inject constructor(
      */
     private suspend fun requestGetDeviceInfo(
         uuid: String,
-        inContentChangedEvent: Boolean
     ) {
         deviceApiJob?.cancel()
-        Log.w(TAG, "requestGetDeviceInfo: $uuid | inContentChangedEvent: $inContentChangedEvent")
+        Log.w(TAG, "requestGetDeviceInfo: $uuid")
         deviceApiJob = viewModelScope.launch {
             getDeviceUseCase(uuid).collect { resource ->
                 when (resource) {
@@ -151,7 +150,7 @@ class MenuBoardViewModel @Inject constructor(
                     }
 
                     is Resource.Success -> {
-                        if (isContentSteamConnected || inContentChangedEvent) {
+                        if (isContentSteamConnected) {
                             handleSuccess(uuid, resource.data)
                         } else {
                             subscribeContentStream(
@@ -219,6 +218,7 @@ class MenuBoardViewModel @Inject constructor(
                 }
 
                 is Resource.Success -> {
+                    showingContents = true
                     _screenState.emit(
                         UiState.Success(
                             data = SimpleScreenModel(

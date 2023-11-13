@@ -157,18 +157,6 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
             }
         }
         contentBlockingStub?.contentStream(Empty.getDefaultInstance(), responseObserver)
-
-        // 연결 성공 처리를 위한 지연 로직
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                if (isConnected) {
-                    delay(3000)  // 3초 대기
-                    _contentEvents.tryEmit(Pair(null, 1)) // 연결 설공 이벤트 전달
-                }
-            } catch (e: CancellationException) {
-                Log.e(TAG, "Connection check was cancelled", e)
-            }
-        }
     }
 
     fun openConnectStream(uuid: String): Flow<Pair<ConnectEventResponse.ConnectEvent?, Int>> {
