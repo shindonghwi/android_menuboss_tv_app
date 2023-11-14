@@ -11,9 +11,11 @@ import com.orot.menuboss_tv.domain.usecases.SubscribeContentStreamUseCase
 import com.orot.menuboss_tv.ui.base.BaseViewModel
 import com.orot.menuboss_tv.ui.model.SimpleScreenModel
 import com.orot.menuboss_tv.ui.model.UiState
+import com.orot.menuboss_tv.ui.screens.auth.AuthViewModel
 import com.orotcode.menuboss.grpc.lib.ContentEventResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -45,7 +47,7 @@ class MenuBoardViewModel @Inject constructor(
         requestGetDeviceInfo(uuid)
     }
 
-    private var currentConnectStreamJob: Job? = null
+    private var currentContentStreamJob: Job? = null
     private var deviceApiJob: Job? = null
 
     private val _screenState = MutableStateFlow<UiState<SimpleScreenModel>>(UiState.Idle)
@@ -65,9 +67,9 @@ class MenuBoardViewModel @Inject constructor(
     ) {
         Log.w(TAG, "subscribeContentStream: START: $accessToken")
         // 기존 코루틴이 실행 중이라면 취소
-        currentConnectStreamJob?.cancel()
+        currentContentStreamJob?.cancel()
 
-        currentConnectStreamJob = viewModelScope.launch {
+        currentContentStreamJob = viewModelScope.launch {
             try {
                 subscribeContentStreamUseCase(accessToken).collect { response ->
                     Log.w(TAG, "subscribeContentStream: $accessToken - (EVENT: ${response.first}) Collect")
@@ -75,8 +77,10 @@ class MenuBoardViewModel @Inject constructor(
                     response.second.let {
                         when (it) {
                             2 -> {
-                                Log.w(TAG, "subscribeConnectStream: 연결실패")
+                                Log.w(TAG, "subscribeContentStream: 연결실패")
                                 isContentSteamConnected = false
+                                delay(3000)
+                                cancel()
                                 throw Exception()
                             }
 
@@ -89,7 +93,7 @@ class MenuBoardViewModel @Inject constructor(
                     response.first?.let { event ->
                         when (event) {
                             ContentEventResponse.ContentEvent.SCREEN_PASSED -> {
-                                Log.w(TAG, "subscribeConnectStream: 연결성공")
+                                Log.w(TAG, "subscribeContentStream: 연결성공")
                                 isContentSteamConnected = true
                                 handleSuccess()
                             }
@@ -106,11 +110,13 @@ class MenuBoardViewModel @Inject constructor(
                             ContentEventResponse.ContentEvent.SCREEN_DELETED -> {
                                 _screenState.emit(UiState.Success(data = SimpleScreenModel(isPlaylist = null)))
                                 triggerAuthState(true)
+                                cancel()
                                 return@collect
                             }
 
                             ContentEventResponse.ContentEvent.SCREEN_EXPIRED -> {
                                 _screenState.emit(UiState.Success(data = SimpleScreenModel(isExpired = true)))
+                                cancel()
                             }
 
                             else -> {}
@@ -119,8 +125,11 @@ class MenuBoardViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 Log.w(TAG, "subscribeContentStream: 에러 수신")
-                delay(3000)
-                startProcess(uuid)
+                if (!isContentSteamConnected){
+                    Log.w(TAG, "subscribeContentStream: 연결 재시도 준비")
+                    startProcess(uuid)
+                    Log.w(TAG, "subscribeContentStream: 연결 재시도 !")
+                }
             }
         }
     }

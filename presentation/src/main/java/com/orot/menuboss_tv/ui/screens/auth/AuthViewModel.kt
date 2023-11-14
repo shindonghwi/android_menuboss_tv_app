@@ -11,6 +11,7 @@ import com.orot.menuboss_tv.ui.model.UiState
 import com.orotcode.menuboss.grpc.lib.ConnectEventResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -84,6 +85,8 @@ class AuthViewModel @Inject constructor(
                             2 -> {
                                 Log.w(TAG, "subscribeConnectStream: 연결실패")
                                 isConnectSteamConnected = false
+                                delay(3000)
+                                cancel()
                                 throw Exception()
                             }
 
@@ -97,14 +100,18 @@ class AuthViewModel @Inject constructor(
                         if (it == ConnectEventResponse.ConnectEvent.ENTRY) {
                             Log.w(TAG, "subscribeConnectStream: ENTRY 수신")
                             triggerMenuState(true)
+                            cancel()
                             return@collect
                         }
                     }
                 }
             } catch (e: Exception) {
                 Log.w(TAG, "subscribeConnectStream: 에러 수신")
-                delay(3000)
-                startProcess(uuid)
+                if (!isConnectSteamConnected){
+                    Log.w(TAG, "subscribeConnectStream: 연결 재시도 준비")
+                    startProcess(uuid)
+                    Log.w(TAG, "subscribeConnectStream: 연결 재시도 !")
+                }
             }
         }
     }
