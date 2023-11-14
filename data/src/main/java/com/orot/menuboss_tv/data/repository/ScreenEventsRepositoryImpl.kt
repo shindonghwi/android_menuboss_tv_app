@@ -13,6 +13,6 @@ class ScreenEventsRepositoryImpl @Inject constructor(private val grpcClient: Grp
     override suspend fun openConnectStream(uuid: String): Flow<Pair<ConnectEventResponse.ConnectEvent?, Int>> =
         grpcClient.openConnectStream(uuid)
 
-    override suspend fun openContentStream(accessToken: String): Flow<Pair<ContentEventResponse.ContentEvent?, Int>?> =
+    override suspend fun openContentStream(accessToken: String): Flow<Pair<ContentEventResponse.ContentEvent?, Int>> =
         grpcClient.openContentStream(accessToken)
 }

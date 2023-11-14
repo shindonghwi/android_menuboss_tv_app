@@ -17,14 +17,9 @@ import app.rive.runtime.kotlin.core.Loop
 import com.orot.menuboss_tv.logging.datadog.DataDogLoggingUtil
 import com.orot.menuboss_tv.presentation.R
 import com.orot.menuboss_tv.ui.components.RiveAnimation
-import com.orot.menuboss_tv.ui.model.UiState
-import com.orot.menuboss_tv.ui.navigations.LocalMainViewModel
 import com.orot.menuboss_tv.ui.navigations.LocalNavController
 import com.orot.menuboss_tv.ui.navigations.RouteScreen
 import com.orot.menuboss_tv.ui.theme.colorBackground
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 /**
  * @description{
@@ -38,7 +33,6 @@ fun SplashScreen(
     splashViewModel: SplashViewModel = hiltViewModel()
 ) {
     val navController = LocalNavController.current
-    val mainViewModel = LocalMainViewModel.current
 
     val doAuthScreenActionState = splashViewModel.navigateToAuthState.collectAsState().value
     val doMenuScreenActionState = splashViewModel.navigateToMenuState.collectAsState().value
@@ -93,7 +87,6 @@ fun SplashScreen(
      */
     DisposableEffect(key1 = doMenuScreenActionState, effect = {
         if (doMenuScreenActionState) {
-            mainViewModel.updateAccessToken(splashViewModel.accessToken)
             navController.navigate(RouteScreen.MenuBoardScreen.route) {
                 popUpTo(navController.graph.startDestinationId) {
                     inclusive = true

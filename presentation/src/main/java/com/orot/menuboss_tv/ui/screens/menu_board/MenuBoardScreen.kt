@@ -20,12 +20,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.orot.menuboss_tv.MainActivity
 import com.orot.menuboss_tv.logging.datadog.DataDogLoggingUtil
 import com.orot.menuboss_tv.ui.model.UiState
-import com.orot.menuboss_tv.ui.navigations.LocalMainViewModel
 import com.orot.menuboss_tv.ui.navigations.LocalNavController
 import com.orot.menuboss_tv.ui.navigations.RouteScreen
 import com.orot.menuboss_tv.ui.screens.auth.AuthScreen
@@ -38,15 +38,17 @@ import com.orot.menuboss_tv.ui.theme.AdjustedBoldText
 import com.orot.menuboss_tv.ui.theme.AdjustedMediumText
 import com.orot.menuboss_tv.ui.theme.colorBackground
 import com.orot.menuboss_tv.utils.adjustedDp
+import java.util.UUID
 
 @Composable
 fun MenuBoardScreen(
+    uuid: String,
+    menuBoardViewModel: MenuBoardViewModel = hiltViewModel()
 ) {
     val activity = LocalContext.current as MainActivity
     val navController = LocalNavController.current
-    val mainViewModel = LocalMainViewModel.current
-    val screenState = mainViewModel.screenState.collectAsState().value
-    val doAuthScreenActionState = mainViewModel.navigateToAuthState.collectAsState().value
+    val screenState = menuBoardViewModel.screenState.collectAsState().value
+    val doAuthScreenActionState = menuBoardViewModel.navigateToAuthState.collectAsState().value
 
     BackHandler { activity.finish() }
 
@@ -71,8 +73,9 @@ fun MenuBoardScreen(
 
 
     LaunchedEffect(key1 = Unit, block = {
-        mainViewModel.subscribeContentStream()
+        menuBoardViewModel.startProcess(uuid = uuid)
     })
+
     DisposableEffect(key1 = doAuthScreenActionState, effect = {
         if (doAuthScreenActionState) {
             navController.navigate(RouteScreen.AuthScreen.route) {
@@ -82,7 +85,7 @@ fun MenuBoardScreen(
             }
         }
         onDispose {
-            mainViewModel.initState()
+            menuBoardViewModel.initState()
         }
     })
 
@@ -112,7 +115,7 @@ fun MenuBoardScreen(
                 val screenData = item.data
 
                 if (screenData?.isDeleted == true) {
-                    AuthScreen()
+                    AuthScreen(uuid = uuid)
                 } else if (screenData?.isExpired == true) {
                     ExpiredScreen(modifier = Modifier.fillMaxSize())
                 } else {

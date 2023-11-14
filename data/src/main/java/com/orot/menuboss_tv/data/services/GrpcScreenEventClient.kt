@@ -29,8 +29,6 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
 
     companion object {
         private const val TAG = "GrpcScreenEventClient"
-        private const val INITIAL_RETRY_DELAY = 2000L // 초기 지연 시간 2초
-        private const val MAX_RETRY_DELAY = 30000L // 최대 지연 시간 60초
     }
 
     private var connectChannel: ManagedChannel? = null
@@ -66,15 +64,14 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
 
             connectChannel?.let {
                 connectBlockingStub = ScreenEventServiceGrpc.newStub(it)
-                startConnectStream(uuid)
+                startConnectStream()
             }
         }
     }
 
 
-    private fun startConnectStream(uuid: String) {
+    private fun startConnectStream() {
         var isConnected = true  // 연결 성공 여부를 추적하는 플래그
-        var retryDelay = INITIAL_RETRY_DELAY
 
         val responseObserver = object : StreamObserver<ConnectEventResponse> {
             override fun onNext(value: ConnectEventResponse) {
@@ -88,14 +85,9 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
 
             override fun onError(t: Throwable) {
                 Log.e(TAG, "startConnectStream Error in stream", t)
+                _connectEvents.tryEmit(Pair(null, 2))
                 isConnected = false
                 closeConnectChannel()
-
-                CoroutineScope(Dispatchers.IO).launch {
-                    delay(retryDelay)  // 지연을 추가
-                    retryDelay = (retryDelay * 2).coerceAtMost(MAX_RETRY_DELAY)
-                    initConnectChannel(uuid)  // 재시도
-                }
             }
 
             override fun onCompleted() {
@@ -133,14 +125,13 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
 
             contentChannel?.let {
                 contentBlockingStub = ScreenEventServiceGrpc.newStub(it)
-                startContentStream(accessToken)
+                startContentStream()
             }
         }
     }
 
-    private fun startContentStream(accessToken: String) {
+    private fun startContentStream() {
         var isConnected = true  // 연결 성공 여부를 추적하는 플래그
-        var retryDelay = INITIAL_RETRY_DELAY
 
         val responseObserver = object : StreamObserver<ContentEventResponse> {
             override fun onNext(value: ContentEventResponse) {
@@ -155,15 +146,10 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
 
             override fun onError(t: Throwable) {
                 Log.e(TAG, "startContentStream Error in stream", t)
+                _contentEvents.tryEmit(Pair(null, 2))
                 isConnected = false
                 closeConnectChannel()
                 closeContentChannel()
-
-                CoroutineScope(Dispatchers.IO).launch {
-                    delay(retryDelay)  // 지연을 추가
-                    retryDelay = (retryDelay * 2).coerceAtMost(MAX_RETRY_DELAY)
-                    initContentChannel(accessToken)
-                }
             }
 
             override fun onCompleted() {
@@ -171,18 +157,6 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
             }
         }
         contentBlockingStub?.contentStream(Empty.getDefaultInstance(), responseObserver)
-
-        // 연결 성공 처리를 위한 지연 로직
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                if (isConnected) {
-                    delay(3000)  // 3초 대기
-                    _contentEvents.tryEmit(Pair(null, 1)) // 연결 설공 이벤트 전달
-                }
-            } catch (e: CancellationException) {
-                Log.e(TAG, "Connection check was cancelled", e)
-            }
-        }
     }
 
     fun openConnectStream(uuid: String): Flow<Pair<ConnectEventResponse.ConnectEvent?, Int>> {
@@ -190,7 +164,7 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
         return connectEvents
     }
 
-    fun openContentStream(accessToken: String): Flow<Pair<ContentEventResponse.ContentEvent?, Int>?> {
+    fun openContentStream(accessToken: String): Flow<Pair<ContentEventResponse.ContentEvent?, Int>> {
         initContentChannel(accessToken)
         return contentEvents
     }

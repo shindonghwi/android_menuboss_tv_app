@@ -49,7 +49,6 @@ import com.orot.menuboss_tv.ui.components.RiveAnimation
 import com.orot.menuboss_tv.ui.compose.modifier.tvSafeArea
 import com.orot.menuboss_tv.ui.compose.painter.rememberQrBitmapPainter
 import com.orot.menuboss_tv.ui.model.UiState
-import com.orot.menuboss_tv.ui.navigations.LocalMainViewModel
 import com.orot.menuboss_tv.ui.navigations.LocalNavController
 import com.orot.menuboss_tv.ui.navigations.RouteScreen
 import com.orot.menuboss_tv.ui.source_pack.IconPack
@@ -60,28 +59,23 @@ import com.orot.menuboss_tv.ui.theme.colorBackground
 import com.orot.menuboss_tv.ui.theme.colorLightSkyBlue
 import com.orot.menuboss_tv.ui.theme.colorWhite
 import com.orot.menuboss_tv.utils.adjustedDp
-import com.orotcode.menuboss.grpc.lib.ConnectEventResponse
 import focusableWithClick
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 
 @SuppressLint("HardwareIds")
 @Composable
 fun AuthScreen(
+    uuid: String,
     authViewModel: AuthViewModel = hiltViewModel()
 ) {
 
     val context = LocalContext.current
     val activity = context as MainActivity
     val navController = LocalNavController.current
-    val mainViewModel = LocalMainViewModel.current
-    val uuid = mainViewModel.getUUID()
 
-    val isConnectStreamConnectedState = mainViewModel.isConnectStreamConnected.collectAsState().value
-    val grpcConnectEventState = mainViewModel.grpcConnectEvent.collectAsState().value
     val doMenuScreenActionState = authViewModel.navigateToMenuState.collectAsState().value
 
     BackHandler { activity.finish() }
@@ -113,7 +107,6 @@ fun AuthScreen(
         }
     }
 
-
     /**
      * @feature: 디바이스 정보 요청 & ConnectStream 구독
      * @author: 2023/10/15 1:11 PM donghwishin
@@ -122,50 +115,21 @@ fun AuthScreen(
      * }
      */
     LaunchedEffect(key1 = Unit, block = {
-        mainViewModel.subscribeConnectStream()
+        authViewModel.startProcess(uuid)
     })
-
-    /**
-     * @feature: Connect Stream 연결 상태 - 이벤트
-     * @author: 2023/10/15 1:11 PM donghwishin
-     */
-    LaunchedEffect(key1 = grpcConnectEventState, block = {
-        if (grpcConnectEventState == ConnectEventResponse.ConnectEvent.ENTRY) {
-            authViewModel.requestGetDeviceInfo(uuid)
-        }
-    })
-
-    /**
-     * @feature: Connect Stream 연결 상태 - 코드 임시 ( 연결성공만 처리 )
-     * @author: 2023/10/15 1:11 PM donghwishin
-     */
-    LaunchedEffect(key1 = isConnectStreamConnectedState, block = {
-        if (isConnectStreamConnectedState) {
-            authViewModel.requestGetDeviceInfo(uuid = uuid)
-        }
-    }
-    )
 
     /**
      * @feature: 메뉴판 화면으로 이동하는 기능
      * @author: 2023/10/12 1:06 PM donghwishin
      */
-    LaunchedEffect(key1 = doMenuScreenActionState) {
+    DisposableEffect(key1 = doMenuScreenActionState) {
         if (doMenuScreenActionState) {
-            mainViewModel.updateAccessToken(authViewModel.accessToken)
             navController.navigate(RouteScreen.MenuBoardScreen.route) {
                 popUpTo(navController.graph.startDestinationId) {
                     inclusive = true
                 }
             }
         }
-    }
-
-    /**
-     * @feature: 화면을 벗어날때 메뉴판 화면으로 이동하는 상태를 초기화 시킨다.
-     * @author: 2023/11/11 12:16 PM donghwishin
-     */
-    DisposableEffect(key1 = doMenuScreenActionState) {
         onDispose {
             authViewModel.triggerMenuState(false)
         }
