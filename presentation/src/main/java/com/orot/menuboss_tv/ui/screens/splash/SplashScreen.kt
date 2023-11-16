@@ -45,9 +45,11 @@ import com.orot.menuboss_tv.ui.theme.colorGray700
 import com.orot.menuboss_tv.ui.theme.colorGray900
 import com.orot.menuboss_tv.ui.theme.colorWhite
 import com.orot.menuboss_tv.utils.adjustedDp
+import com.orot.menuboss_tv.utils.coroutineScopeOnMain
 import focusableWithClick
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -100,7 +102,10 @@ fun SplashScreen(
      * @author: 2023/10/15 12:52 PM donghwishin
      */
     LaunchedEffect(key1 = Unit, block = {
-        splashViewModel.requestGetDeviceInfo(uuid = uuid, appVersion = getAppVersion(context))
+        coroutineScopeOnMain {
+            delay(1000) // riv animation 최초로 끝나는 시간을 기다립니다.
+            splashViewModel.requestGetDeviceInfo(uuid = uuid, appVersion = getAppVersion(context))
+        }
     })
 
     /**
