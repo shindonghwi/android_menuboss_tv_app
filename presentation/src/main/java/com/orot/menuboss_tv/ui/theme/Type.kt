@@ -54,6 +54,10 @@ class ManropeTypo {
         val medium = baseStyle.copy(
             fontWeight = FontWeight.Medium,
         )
+
+        val semiBold = baseStyle.copy(
+            fontWeight = FontWeight.SemiBold,
+        )
     }
 }
 
@@ -89,6 +93,22 @@ fun AdjustedMediumText(
         Text(
             text = text,
             style = ManropeTypo.medium.copy(color = color, fontSize = fontSize.value.sp),
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+@Composable
+fun AdjustedSemiBoldText(
+    modifier: Modifier = Modifier,
+    text: String,
+    fontSize: Dp,
+    color: Color = colorWhite
+) {
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+        Text(
+            text = text,
+            style = ManropeTypo.semiBold.copy(color = color, fontSize = fontSize.value.sp),
             textAlign = TextAlign.Center,
         )
     }

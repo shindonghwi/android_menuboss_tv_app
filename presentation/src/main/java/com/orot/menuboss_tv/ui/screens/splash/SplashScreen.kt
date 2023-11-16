@@ -1,41 +1,73 @@
 package com.orot.menuboss_tv.ui.screens.splash
 
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Divider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import app.rive.runtime.kotlin.core.Loop
+import com.orot.menuboss_tv.domain.constants.MENUBOSS_AMAZON_STORE_URL
+import com.orot.menuboss_tv.domain.constants.MENUBOSS_GOOGLE_STORE_URL
 import com.orot.menuboss_tv.logging.datadog.DataDogLoggingUtil
 import com.orot.menuboss_tv.presentation.R
 import com.orot.menuboss_tv.ui.components.RiveAnimation
 import com.orot.menuboss_tv.ui.navigations.LocalNavController
 import com.orot.menuboss_tv.ui.navigations.RouteScreen
+import com.orot.menuboss_tv.ui.theme.AdjustedBoldText
+import com.orot.menuboss_tv.ui.theme.AdjustedSemiBoldText
 import com.orot.menuboss_tv.ui.theme.colorBackground
+import com.orot.menuboss_tv.ui.theme.colorGray700
+import com.orot.menuboss_tv.ui.theme.colorGray900
+import com.orot.menuboss_tv.ui.theme.colorWhite
+import com.orot.menuboss_tv.utils.adjustedDp
+import focusableWithClick
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.util.Locale
 
 /**
  * @description{
  *   TODO: 스플래시 화면에서 에러 처리나 로딩중일때 화면에 표시 해야 할 것들이 있음.
  * }
-*/
+ */
 
 @Composable
 fun SplashScreen(
-    uuid: String,
-    splashViewModel: SplashViewModel = hiltViewModel()
+    uuid: String, splashViewModel: SplashViewModel = hiltViewModel()
 ) {
     val navController = LocalNavController.current
+    val configuration = LocalConfiguration.current
+    val context = LocalContext.current
 
     val doAuthScreenActionState = splashViewModel.navigateToAuthState.collectAsState().value
     val doMenuScreenActionState = splashViewModel.navigateToMenuState.collectAsState().value
+    val forceUpdateState = splashViewModel.forceUpdateState.collectAsState().value
+    val resumedOnce = remember { mutableStateOf(false) }
 
     val lifecycle = LocalLifecycleOwner.current.lifecycle
 
@@ -47,6 +79,13 @@ fun SplashScreen(
                 )
             } else if (event == Lifecycle.Event.ON_PAUSE) {
                 DataDogLoggingUtil.stopView(RouteScreen.SplashScreen.route)
+            } else if (event == Lifecycle.Event.ON_RESUME && resumedOnce.value) {
+                CoroutineScope(Dispatchers.Main).launch {
+                    splashViewModel.requestGetDeviceInfo(uuid = uuid, appVersion = getAppVersion(context))
+                }
+            } else if (event == Lifecycle.Event.ON_RESUME) {
+                // 첫 번째 onResume 호출에 대해 감지하고 상태를 업데이트합니다.
+                resumedOnce.value = true
             }
         }
         lifecycle.addObserver(observer)
@@ -61,7 +100,17 @@ fun SplashScreen(
      * @author: 2023/10/15 12:52 PM donghwishin
      */
     LaunchedEffect(key1 = Unit, block = {
-        splashViewModel.requestGetDeviceInfo(uuid = uuid)
+        splashViewModel.requestGetDeviceInfo(uuid = uuid, appVersion = getAppVersion(context))
+    })
+
+    /**
+     * @feature: 디바이스 정보 요청
+     * @author: 2023/10/15 12:52 PM donghwishin
+     */
+    LaunchedEffect(key1 = forceUpdateState, block = {
+        if (forceUpdateState == FORCE_UPDATE_STATE.ERROR) {
+            Toast.makeText(context, "Failed to get update information.", Toast.LENGTH_SHORT).show()
+        }
     })
 
     /**
@@ -77,7 +126,7 @@ fun SplashScreen(
             }
         }
         onDispose {
-            splashViewModel.triggerAuthState(false)
+            splashViewModel.initState()
         }
     })
 
@@ -94,15 +143,14 @@ fun SplashScreen(
             }
         }
         onDispose {
-            splashViewModel.triggerMenuState(false)
+            splashViewModel.initState()
         }
     })
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(colorBackground),
-        contentAlignment = Alignment.Center
+            .background(colorBackground), contentAlignment = Alignment.Center
     ) {
         RiveAnimation(
             animation = R.raw.logo,
@@ -111,6 +159,119 @@ fun SplashScreen(
             },
             onAnimEnd = {},
         )
+
+        if (forceUpdateState == FORCE_UPDATE_STATE.FORCE_UPDATE) {
+            ForceUpdateUI()
+        } else if (forceUpdateState == FORCE_UPDATE_STATE.ERROR) {
+
+        }
+
     }
 }
 
+@Composable
+private fun ForceUpdateUI() {
+
+    val context = LocalContext.current
+
+    Column(
+        modifier = Modifier
+            .width(adjustedDp(640.dp))
+            .background(colorGray900),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        AdjustedBoldText(
+            modifier = Modifier
+                .padding(horizontal = adjustedDp(212.dp))
+                .padding(
+                    top = adjustedDp(24.dp), bottom = adjustedDp(16.dp)
+                ),
+            text = "Exciting Update news!", fontSize = adjustedDp(20.dp)
+        )
+
+        Divider(color = colorGray700)
+
+        AdjustedBoldText(
+            modifier = Modifier
+                .padding(horizontal = adjustedDp(76.dp))
+                .padding(
+                    top = adjustedDp(24.dp),
+                ),
+            text = "The Menu Boss Screen App has just received an awesome update", fontSize = adjustedDp(16.dp)
+        )
+
+        AdjustedBoldText(
+            modifier = Modifier
+                .padding(horizontal = adjustedDp(76.dp))
+                .padding(
+                    top = adjustedDp(4.dp), bottom = adjustedDp(24.dp)
+                ),
+            text = "Head to the app store to check out the fresh new version!", fontSize = adjustedDp(16.dp)
+        )
+
+        Box(
+            modifier = Modifier
+                .padding(horizontal = adjustedDp(160.dp))
+                .padding(
+                    top = adjustedDp(12.dp), bottom = adjustedDp(24.dp)
+                )
+                .background(colorWhite)
+                .focusableWithClick {
+                    openAmazonAppStore(context)
+                }, contentAlignment = Alignment.Center
+        ) {
+            AdjustedSemiBoldText(
+                modifier = Modifier.padding(
+                    horizontal = adjustedDp(120.dp), vertical = adjustedDp(14.dp)
+                ), text = "Update now", fontSize = adjustedDp(14.dp), color = colorGray900
+            )
+        }
+    }
+}
+
+/**
+ * @feature: 앱 버전 반환
+ * @author: 2023/11/16 3:00 PM donghwishin
+ */
+private fun getAppVersion(context: Context): String {
+    return context.packageManager.getPackageInfo(context.packageName, 0).versionName
+}
+
+/**
+ * @feature: MenuBoss TV Amazon App Store를 엽니다.
+ * @author: 2023/11/16 2:43 PM donghwishin
+ */
+private fun openAmazonAppStore(context: Context) {
+    val isFirsOs = Build.MANUFACTURER.lowercase(Locale.getDefault()).contains("amazon")
+    val storeUrl = if (isFirsOs) {
+        MENUBOSS_AMAZON_STORE_URL
+    } else {
+        MENUBOSS_GOOGLE_STORE_URL
+    }
+
+    val intent = Intent(Intent.ACTION_VIEW).apply {
+        data = Uri.parse(storeUrl)
+        setPackage("com.android.vending") // Google Play Store package
+    }
+
+    if (intent.resolveActivity(context.packageManager) != null) {
+        context.startActivity(intent)
+    } else {
+        try {
+            context.startActivity(
+                Intent(Intent.ACTION_VIEW).apply {
+                    data = Uri.parse(storeUrl)
+                    if (isFirsOs) {
+                        setPackage("com.amazon.cloud9")
+                    }
+                }
+            )
+        } catch (e: ActivityNotFoundException) {
+            val fallbackIntent = Intent(Intent.ACTION_VIEW, Uri.parse(storeUrl))
+            context.startActivity(fallbackIntent)
+        } catch (e: Exception) {
+            Toast.makeText(context, "Error: $e", Toast.LENGTH_SHORT).show()
+        }
+    }
+}
