@@ -38,74 +38,86 @@ import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun EventScreen() {
-    val menuBoardViewModel = LocalMenuBoardViewModel.current
+    // Configuration constants
+    val animationDelay = 1000
+    val animationDuration = 5000
 
-    val event = menuBoardViewModel.eventCode.collectAsState(null).value
+    // Accessing ViewModel and state
+    val menuBoardViewModel = LocalMenuBoardViewModel.current
     val eventFlow = menuBoardViewModel.eventCode
+    val event = eventFlow.collectAsState(false).value
     val screenName = menuBoardViewModel.screenName
 
-    // 이벤트마다 고유한 키를 생성합니다.
+    // State for event handling
     var eventKey by remember { mutableIntStateOf(0) }
+    var visible by remember { mutableStateOf(false) }
 
+    // Collecting latest event and updating event key
     LaunchedEffect(Unit) {
-        eventFlow.collectLatest { event ->
-            event?.let {
-                if (it == ContentEventResponse.ContentEvent.SHOW_SCREEN_NAME) {
-                    eventKey++ // 고유한 키 값 업데이트
-                }
+        eventFlow.collectLatest { currentEvent ->
+            if (currentEvent == ContentEventResponse.ContentEvent.SHOW_SCREEN_NAME) {
+                eventKey++
             }
         }
     }
 
-    var visible by remember { mutableStateOf(false) }
-
-    LaunchedEffect(key1 = eventKey) {
-        // 고유한 키가 변경될 때마다 UI 로직 실행
+    // Initial visibility handling
+    LaunchedEffect(key1 = Unit) {
         visible = true
-        delay(5000) // 5초 동안 표시
+        delay(animationDelay.toLong())
         visible = false
     }
 
-
-    event?.let {
-        when (it) {
-            ContentEventResponse.ContentEvent.SHOW_SCREEN_NAME -> {
-                AnimatedVisibility(
-                    visible = visible,
-                    enter = fadeIn(animationSpec = tween(durationMillis = 1000)), // 페이드 인
-                    exit = fadeOut(animationSpec = tween(durationMillis = 1000)) // 페이드 아웃
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .border(16.dp, colorRed500, RectangleShape)
-                            .background(colorBackground.copy(alpha = 0.8f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.icon_tv),
-                                contentDescription = "Localized description",
-                                modifier = Modifier.size(adjustedDp(80.dp)),
-                                tint = colorWhite,
-                            )
-                            AdjustedBoldText(
-                                modifier = Modifier.padding(adjustedDp(12.dp)),
-                                text = screenName,
-                                fontSize = adjustedDp(48.dp),
-                                color = colorWhite
-                            )
-                        }
-
-                    }
-                }
-            }
-
-            else -> {}
-        }
+    // Event-driven visibility handling
+    LaunchedEffect(key1 = eventKey) {
+        visible = true
+        delay(animationDuration.toLong())
+        visible = false
     }
 
+    // Display logic based on event type
+    event?.let { currentEvent ->
+        if (currentEvent == ContentEventResponse.ContentEvent.SHOW_SCREEN_NAME) {
+            DisplayScreenName(visible, screenName, animationDelay)
+        }
+    }
+}
 
+@Composable
+private fun DisplayScreenName(visible: Boolean, screenName: String, animationDelay: Int) {
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn(animationSpec = tween(durationMillis = animationDelay)),
+        exit = fadeOut(animationSpec = tween(durationMillis = animationDelay))
+    ) {
+        ScreenNameBox(screenName)
+    }
+}
+
+@Composable
+private fun ScreenNameBox(screenName: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .border(16.dp, colorRed500, RectangleShape)
+            .background(colorBackground.copy(alpha = 0.8f)),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.icon_tv),
+                contentDescription = "Localized description",
+                modifier = Modifier.size(adjustedDp(80.dp)),
+                tint = colorWhite,
+            )
+            AdjustedBoldText(
+                modifier = Modifier.padding(adjustedDp(12.dp)),
+                text = screenName,
+                fontSize = adjustedDp(48.dp),
+                color = colorWhite
+            )
+        }
+    }
 }
