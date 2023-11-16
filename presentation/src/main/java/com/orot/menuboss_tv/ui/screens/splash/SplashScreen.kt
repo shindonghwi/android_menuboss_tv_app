@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -61,7 +62,6 @@ fun SplashScreen(
     uuid: String, splashViewModel: SplashViewModel = hiltViewModel()
 ) {
     val navController = LocalNavController.current
-    val configuration = LocalConfiguration.current
     val context = LocalContext.current
 
     val doAuthScreenActionState = splashViewModel.navigateToAuthState.collectAsState().value
@@ -187,7 +187,7 @@ private fun ForceUpdateUI() {
                 .padding(
                     top = adjustedDp(24.dp), bottom = adjustedDp(16.dp)
                 ),
-            text = "Exciting Update news!", fontSize = adjustedDp(20.dp)
+            text = stringResource(id = R.string.splash_update_title), fontSize = adjustedDp(20.dp)
         )
 
         Divider(color = colorGray700)
@@ -198,7 +198,7 @@ private fun ForceUpdateUI() {
                 .padding(
                     top = adjustedDp(24.dp),
                 ),
-            text = "The Menu Boss Screen App has just received an awesome update", fontSize = adjustedDp(16.dp)
+            text = stringResource(id = R.string.splash_update_description1), fontSize = adjustedDp(16.dp)
         )
 
         AdjustedBoldText(
@@ -207,7 +207,7 @@ private fun ForceUpdateUI() {
                 .padding(
                     top = adjustedDp(4.dp), bottom = adjustedDp(24.dp)
                 ),
-            text = "Head to the app store to check out the fresh new version!", fontSize = adjustedDp(16.dp)
+            text = stringResource(id = R.string.splash_update_description2), fontSize = adjustedDp(16.dp)
         )
 
         Box(
@@ -224,7 +224,7 @@ private fun ForceUpdateUI() {
             AdjustedSemiBoldText(
                 modifier = Modifier.padding(
                     horizontal = adjustedDp(120.dp), vertical = adjustedDp(14.dp)
-                ), text = "Update now", fontSize = adjustedDp(14.dp), color = colorGray900
+                ), text = stringResource(id = R.string.splash_update_button), fontSize = adjustedDp(14.dp), color = colorGray900
             )
         }
     }

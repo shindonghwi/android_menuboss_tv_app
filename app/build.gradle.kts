@@ -38,13 +38,13 @@ android {
             dimension = "version"
             applicationIdSuffix = DebugConfig.suffixName
             versionNameSuffix = DebugConfig.versionName
-            manifestPlaceholders["appLabel"] = DebugConfig.app_label
+            manifestPlaceholders["appLabel"] = "@string/app_label_dev"
         }
         create("prod") {
             dimension = "version"
             applicationIdSuffix = ReleaseConfig.suffixName
             versionNameSuffix = ReleaseConfig.versionName
-            manifestPlaceholders["appLabel"] = ReleaseConfig.app_label
+            manifestPlaceholders["appLabel"] = "@string/app_label"
         }
     }
 

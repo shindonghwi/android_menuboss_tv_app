@@ -19,12 +19,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.orot.menuboss_tv.MainActivity
 import com.orot.menuboss_tv.logging.datadog.DataDogLoggingUtil
+import com.orot.menuboss_tv.presentation.R
 import com.orot.menuboss_tv.ui.model.UiState
 import com.orot.menuboss_tv.ui.navigations.LocalNavController
 import com.orot.menuboss_tv.ui.navigations.RouteScreen
@@ -164,13 +166,13 @@ private fun EmptyContentScreen(modifier: Modifier) {
         verticalArrangement = Arrangement.Center
     ) {
         AdjustedBoldText(
-            text = "No Content to display!",
+            text = stringResource(id = R.string.content_empty_title),
             fontSize = adjustedDp(48.dp),
         )
 
         AdjustedMediumText(
             modifier = Modifier.padding(top = adjustedDp(24.dp)),
-            text = "MenuBoss Please register your schedule and\nplaylist through the web or mobile",
+            text = stringResource(id = R.string.content_empty_subtitle),
             fontSize = adjustedDp(20.dp)
         )
     }
@@ -184,19 +186,19 @@ private fun ExpiredScreen(modifier: Modifier) {
         verticalArrangement = Arrangement.Center
     ) {
         AdjustedBoldText(
-            text = "Your subscription has expired",
+            text = stringResource(id = R.string.content_expired_title),
             fontSize = adjustedDp(48.dp),
         )
 
         AdjustedSemiBoldText(
             modifier = Modifier.padding(top = adjustedDp(12.dp)),
-            text = "You can not use it because your subscription period has expired.",
+            text = stringResource(id = R.string.content_expired_description1),
             fontSize = adjustedDp(18.dp)
         )
 
         AdjustedSemiBoldText(
             modifier = Modifier.padding(top = adjustedDp(4.dp)),
-            text = "You can use it again by subscribing to the service",
+            text = stringResource(id = R.string.content_expired_description2),
             fontSize = adjustedDp(18.dp)
         )
     }

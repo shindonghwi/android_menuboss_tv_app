@@ -1,3 +1,29 @@
 <resources>
-    <string name="app_name">MenuBossTV</string>
+    <string name="app_label">MenuBoss TV</string>
+    <string name="app_label_dev">MenuBossTV(DEV)</string>
+
+    <string name="splash_update_title">Exciting update news!</string>
+    <string name="splash_update_description1">The MenuBoss Screen App has just received an awesome update</string>
+    <string name="splash_update_description2">Head to the app store to check out the fresh new version!</string>
+    <string name="splash_update_button">Update now</string>
+
+    <string name="auth_title">Welcome to MenuBoss TV App</string>
+    <string name="auth_subtitle">MenuBoss TV can be registered in two ways as shown below</string>
+    <string name="auth_description1">Please stay connected until you register your TV</string>
+    <string name="auth_description2">If you have any questions, please contact the website</string>
+
+    <string name="auth_enter_pin_code">Enter Pin Code</string>
+    <string name="auth_enter_pin_code_description">Click the link below to register your pin code on the website</string>
+    <string name="auth_scan_qr_code">Scan Pin Code</string>
+
+    <string name="content_empty_title">No Content to display!</string>
+    <string name="content_empty_subtitle">Please apply schedule or playlist content\non "Menu Boss Mobile App" or "Menu Boss Web"!</string>
+    <string name="content_expired_title">Subscription has expired!</string>
+    <string name="content_expired_description1">You can not use it because your subscription period has expired.</string>
+    <string name="content_expired_description2">You can use it again by subscribing to the service</string>
+
+    <string name="message_error">A temporary failure has occurred</string>
+
+    <string name="common_or">OR</string>
+
 </resources>
