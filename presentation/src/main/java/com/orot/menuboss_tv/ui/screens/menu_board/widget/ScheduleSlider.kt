@@ -1,7 +1,6 @@
 package com.orot.menuboss_tv.ui.screens.menu_board.widget
 
 import android.graphics.Bitmap
-import android.util.Log
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -35,10 +34,13 @@ fun ScheduleSlider(model: DeviceScheduleModel) {
 
     var currentTimeline by remember { mutableStateOf(getCurrentTimeline(model.timeline)) }
     val currentContent = currentTimeline?.playlist?.contents
-    val isDirectionHorizontal =
-        currentTimeline?.playlist?.property?.direction?.code == "Horizontal"
-    val isScaleFit = currentTimeline?.playlist?.property?.fill?.code == "Fit"
-    val contentScale = if (isScaleFit) ContentScale.Fit else ContentScale.Crop
+    val isDirectionHorizontal = currentTimeline?.playlist?.property?.direction?.code == "Horizontal"
+    val contentScale = when (currentTimeline?.playlist?.property?.fill?.code?.lowercase(Locale.getDefault())) {
+        "fit" -> ContentScale.Fit
+        "crop" -> ContentScale.Crop
+        "stretch" -> ContentScale.FillBounds
+        else -> ContentScale.Crop
+    }
 
     LaunchedEffect(Unit) {
         while (true) {
@@ -144,7 +146,7 @@ fun ScheduleSlider(model: DeviceScheduleModel) {
                                     ExoPlayerView(
                                         modifier = Modifier.fillMaxSize(),
                                         videoUrl = content.property?.videoUrl.toString(),
-                                        isScaleFit = isScaleFit,
+                                        contentScale = contentScale,
                                         rotationDegrees = if (isDirectionHorizontal) 0f else -90f
                                     )
                                 }

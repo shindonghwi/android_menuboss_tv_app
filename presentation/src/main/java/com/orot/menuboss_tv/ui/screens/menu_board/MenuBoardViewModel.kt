@@ -102,6 +102,10 @@ class MenuBoardViewModel @Inject constructor(
                                 requestGetDeviceInfo(uuid)
                             }
 
+                            ContentEventResponse.ContentEvent.SHOW_SCREEN_NAME -> {
+                                Log.w(TAG, "subscribeContentStream: SHOW_SCREEN_NAME")
+                            }
+
                             ContentEventResponse.ContentEvent.CONTENT_EMPTY -> {
                                 showingContents = false
                                 _screenState.emit(UiState.Success(data = SimpleScreenModel(isPlaylist = null)))

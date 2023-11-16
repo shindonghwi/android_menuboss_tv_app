@@ -1,6 +1,7 @@
 package com.orot.menuboss_tv.ui.screens.menu_board.widget
 
 import android.graphics.Bitmap
+import android.util.Log
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -24,13 +25,18 @@ import coil.size.Size
 import coil.transform.Transformation
 import com.orot.menuboss_tv.domain.entities.DevicePlaylistModel
 import kotlinx.coroutines.delay
+import java.util.Locale
 
 @Composable
 fun PlaylistSlider(model: DevicePlaylistModel) {
     val contents = model.contents
     val isDirectionHorizontal = model.property?.direction?.code == "Horizontal"
-    val isScaleFit = model.property?.fill?.code == "Fit"
-    val contentScale = if (isScaleFit) ContentScale.Fit else ContentScale.Crop
+    val contentScale = when(model.property?.fill?.code?.lowercase(Locale.getDefault())){
+        "fit" -> ContentScale.Fit
+        "crop" -> ContentScale.Crop
+        "stretch" -> ContentScale.FillBounds
+        else -> ContentScale.Crop
+    }
 
     contents?.let {
         var currentIndex by remember { mutableIntStateOf(0) }
@@ -82,8 +88,7 @@ fun PlaylistSlider(model: DevicePlaylistModel) {
                                                 input: Bitmap,
                                                 size: Size
                                             ): Bitmap {
-                                                val matrix =
-                                                    android.graphics.Matrix()
+                                                val matrix = android.graphics.Matrix()
                                                 matrix.postRotate(if (isDirectionHorizontal) 0f else -90f)
                                                 return Bitmap.createBitmap(
                                                     input,
@@ -123,7 +128,7 @@ fun PlaylistSlider(model: DevicePlaylistModel) {
                                 ExoPlayerView(
                                     modifier = Modifier.fillMaxSize(),
                                     videoUrl = content.property?.videoUrl.toString(),
-                                    isScaleFit = isScaleFit,
+                                    contentScale = contentScale,
                                     rotationDegrees = if (isDirectionHorizontal) 0f else -90f
                                 )
                             }

@@ -23,8 +23,7 @@ fun Navigation(uuidValue: String) {
         LocalNavController provides navController,
     ) {
         NavHost(
-            navController = navController,
-            startDestination = RouteScreen.SplashScreen.route
+            navController = navController, startDestination = RouteScreen.SplashScreen.route
         ) {
             composable(RouteScreen.SplashScreen.route) {
                 SplashScreen(uuid = uuidValue)
@@ -38,6 +37,3 @@ fun Navigation(uuidValue: String) {
         }
     }
 }
-
-
-

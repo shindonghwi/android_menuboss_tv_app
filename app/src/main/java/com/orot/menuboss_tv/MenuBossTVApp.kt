@@ -1,16 +1,12 @@
 package com.orot.menuboss_tv
 
 import androidx.multidex.MultiDexApplication
-import androidx.navigation.NavDestination
 import com.datadog.android.Datadog
 import com.datadog.android.DatadogSite
 import com.datadog.android.core.configuration.Configuration
 import com.datadog.android.privacy.TrackingConsent
 import com.datadog.android.rum.Rum
 import com.datadog.android.rum.RumConfiguration
-import com.datadog.android.rum.tracking.ComponentPredicate
-import com.datadog.android.rum.tracking.NavigationViewTrackingStrategy
-import com.datadog.android.rum.tracking.ViewTrackingStrategy
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
@@ -20,7 +16,7 @@ class MenuBossTVApp : MultiDexApplication(){
         super.onCreate()
 
         val clientToken = "pubb8168ab481c460b707160dcebf634f0b"
-        val environmentName = "dev.env"
+        val environmentName = "${BuildConfig.FLAVOR}.env"
         val appVariantName = BuildConfig.FLAVOR
 
         val configuration = Configuration.Builder(

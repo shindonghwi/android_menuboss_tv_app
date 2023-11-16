@@ -71,8 +71,6 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
 
 
     private fun startConnectStream() {
-        var isConnected = true  // 연결 성공 여부를 추적하는 플래그
-
         val responseObserver = object : StreamObserver<ConnectEventResponse> {
             override fun onNext(value: ConnectEventResponse) {
                 Log.d(TAG, "startConnectStream Received response: ${value.event}")
@@ -86,7 +84,6 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
             override fun onError(t: Throwable) {
                 Log.e(TAG, "startConnectStream Error in stream", t)
                 _connectEvents.tryEmit(Pair(null, 2))
-                isConnected = false
                 closeConnectChannel()
             }
 
@@ -96,18 +93,6 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
         }
 
         connectBlockingStub?.connectStream(Empty.getDefaultInstance(), responseObserver)
-
-        // 연결 성공 처리를 위한 지연 로직
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                if (isConnected) {
-                    delay(3000)  // 3초 대기
-                    _connectEvents.tryEmit(Pair(null, 1)) // 연결 설공 이벤트 전달
-                }
-            } catch (e: CancellationException) {
-                Log.e(TAG, "Connection check was cancelled", e)
-            }
-        }
     }
 
     private fun initContentChannel(accessToken: String) {
@@ -131,8 +116,6 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
     }
 
     private fun startContentStream() {
-        var isConnected = true  // 연결 성공 여부를 추적하는 플래그
-
         val responseObserver = object : StreamObserver<ContentEventResponse> {
             override fun onNext(value: ContentEventResponse) {
                 Log.d(TAG, "startContentStream Received response: ${value.event}")
@@ -142,12 +125,12 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
                     closeConnectChannel()
                     closeContentChannel()
                 }
+
             }
 
             override fun onError(t: Throwable) {
                 Log.e(TAG, "startContentStream Error in stream", t)
                 _contentEvents.tryEmit(Pair(null, 2))
-                isConnected = false
                 closeConnectChannel()
                 closeContentChannel()
             }

@@ -46,6 +46,7 @@ dependencies {
         implementation(viewModel)
         implementation(bom)
         implementation(contraintLayout)
+        implementation(material3)
     }
 
     Libraries.Google.run {
