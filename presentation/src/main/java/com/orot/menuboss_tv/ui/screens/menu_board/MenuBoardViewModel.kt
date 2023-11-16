@@ -55,7 +55,7 @@ class MenuBoardViewModel @Inject constructor(
     /**
      * @feature: 스크린이 삭제되었을때 이벤트
      */
-    private var isScreenDeleted = false
+    private var lastEvent: ContentEventResponse.ContentEvent? = null
 
     suspend fun startProcess(uuid: String) {
         Log.w(TAG, "startProcess: $uuid")
@@ -114,6 +114,7 @@ class MenuBoardViewModel @Inject constructor(
                     }
 
                     response.first?.let { event ->
+                        lastEvent = event
                         when (event) {
                             ContentEventResponse.ContentEvent.SCREEN_PASSED -> {
                                 Log.w(TAG, "subscribeContentStream: 연결성공")
@@ -127,7 +128,7 @@ class MenuBoardViewModel @Inject constructor(
 
                             ContentEventResponse.ContentEvent.SHOW_SCREEN_NAME -> {
                                 Log.w(TAG, "subscribeContentStream: SHOW_SCREEN_NAME")
-                                _eventCode.emit(response.first)
+                                requestGetDeviceInfo(uuid)
                             }
 
                             ContentEventResponse.ContentEvent.CONTENT_EMPTY -> {
@@ -136,7 +137,6 @@ class MenuBoardViewModel @Inject constructor(
                             }
 
                             ContentEventResponse.ContentEvent.SCREEN_DELETED -> {
-                                isScreenDeleted = true
                                 cancel()
                                 return@collect
                             }
@@ -152,9 +152,8 @@ class MenuBoardViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 Log.w(TAG, "subscribeContentStream: 에러 수신: $e")
-                if (isScreenDeleted) {
+                if (lastEvent == ContentEventResponse.ContentEvent.SCREEN_DELETED) {
                     Log.w(TAG, "subscribeContentStream: 스크린 삭제 이벤트 수신")
-                    isScreenDeleted = false
                     _screenState.emit(UiState.Success(data = SimpleScreenModel(isPlaylist = null)))
                     isContentSteamConnected = false
                     triggerAuthState(true)
@@ -194,6 +193,7 @@ class MenuBoardViewModel @Inject constructor(
 
                     is Resource.Success -> {
                         screenName = resource.data?.property?.name.toString()
+                        _eventCode.emit(lastEvent)
 
                         if (isContentSteamConnected) {
                             handleSuccess(uuid, resource.data)
