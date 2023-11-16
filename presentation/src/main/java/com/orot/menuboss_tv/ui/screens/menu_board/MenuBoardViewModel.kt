@@ -16,9 +16,13 @@ import com.orotcode.menuboss.grpc.lib.ContentEventResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -36,6 +40,14 @@ class MenuBoardViewModel @Inject constructor(
         private const val TAG = "MenuBoardViewModel"
     }
 
+    /** 
+     * @feature: SCREEN NAME
+     * @description{
+     *    Screen 정보 조회 후 받아 올 수 있다.
+     * } 
+    */
+    var screenName = ""
+
     /**
      * @feature: 서버 연결 상태 체크. 연결되어 있으면 true, 연결되어 있지 않으면 false 입니다.
      */
@@ -52,6 +64,13 @@ class MenuBoardViewModel @Inject constructor(
 
     private val _screenState = MutableStateFlow<UiState<SimpleScreenModel>>(UiState.Idle)
     val screenState: StateFlow<UiState<SimpleScreenModel>> get() = _screenState
+
+    private val _eventCode = MutableSharedFlow<ContentEventResponse.ContentEvent?>(
+        replay = 1, extraBufferCapacity = 10,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+    val eventCode: Flow<ContentEventResponse.ContentEvent?> get() = _eventCode.asSharedFlow()
+
 
     /**
      * @feature: GRPC 컨텐츠 스트림을 구독합니다.
@@ -104,6 +123,7 @@ class MenuBoardViewModel @Inject constructor(
 
                             ContentEventResponse.ContentEvent.SHOW_SCREEN_NAME -> {
                                 Log.w(TAG, "subscribeContentStream: SHOW_SCREEN_NAME")
+                                _eventCode.emit(response.first)
                             }
 
                             ContentEventResponse.ContentEvent.CONTENT_EMPTY -> {
@@ -163,6 +183,8 @@ class MenuBoardViewModel @Inject constructor(
                     }
 
                     is Resource.Success -> {
+                        screenName = resource.data?.property?.name.toString()
+
                         if (isContentSteamConnected) {
                             handleSuccess(uuid, resource.data)
                         } else {

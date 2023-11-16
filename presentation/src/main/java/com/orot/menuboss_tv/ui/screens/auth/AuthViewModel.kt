@@ -95,9 +95,6 @@ class AuthViewModel @Inject constructor(
                             Log.w(TAG, "subscribeConnectStream: WELCOME 수신 : 연결성공")
                             isConnectSteamConnected = true
                             requestGetDeviceInfo(uuid)
-                            triggerMenuState(true)
-                            cancel()
-                            return@collect
                         }else if (it == ConnectEventResponse.ConnectEvent.ENTRY) {
                             Log.w(TAG, "subscribeConnectStream: ENTRY 수신")
                             triggerMenuState(true)

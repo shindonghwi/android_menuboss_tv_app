@@ -10,12 +10,7 @@ import android.view.WindowInsetsController
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
-import com.google.firebase.crashlytics.ktx.crashlytics
-import com.google.firebase.ktx.Firebase
 import com.orot.menuboss_tv.ui.navigations.Navigation
 import com.orot.menuboss_tv.ui.theme.MenuBossTVTheme
 import com.orot.menuboss_tv.utils.DeviceInfoUtil
@@ -41,9 +36,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MenuBossTVTheme {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    Navigation(uuidValue = getXUniqueId())
-                }
+                Navigation(uuidValue = getXUniqueId())
             }
         }
     }
