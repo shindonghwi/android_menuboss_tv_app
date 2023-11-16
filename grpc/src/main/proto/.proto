@@ -37,13 +37,14 @@ message ContentEventResponse {
 message PlayingEventRequest {
   enum PlayingEvent {
     PLAYING = 0;                // The screen is playing.
-    PAUSED = 1;                 // The screen is paused.
-    STOPPED = 2;                // The screen is stopped.
+    STOPPED = 1;                // The screen is stopped.
+    PAUSED = 2;                 // The screen is paused.
+    RESUMED = 3;                // The screen is resumed.
   }
-  uint64 scheduleId = 1;        // The schedule id.
-  uint64 playlistId = 2;        // The playlist id.
-  string mediaId = 3;           // The media id.
-  PlayingEvent event = 4;       // The playing event.
+  PlayingEvent event = 1;       // The playing event.
+  uint64 scheduleId = 2;        // The schedule id.
+  uint64 playlistId = 3;        // The playlist id.
+  string contentId = 4;         // The content id.
 }
 
 service ScreenEventService {

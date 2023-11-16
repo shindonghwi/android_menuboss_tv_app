@@ -7,11 +7,13 @@ import com.orot.menuboss_tv.domain.entities.Resource
 import com.orot.menuboss_tv.domain.usecases.GetDeviceUseCase
 import com.orot.menuboss_tv.domain.usecases.GetPlaylistUseCase
 import com.orot.menuboss_tv.domain.usecases.GetScheduleUseCase
+import com.orot.menuboss_tv.domain.usecases.SendEventPlayingStreamUseCase
 import com.orot.menuboss_tv.domain.usecases.SubscribeContentStreamUseCase
 import com.orot.menuboss_tv.ui.base.BaseViewModel
 import com.orot.menuboss_tv.ui.model.SimpleScreenModel
 import com.orot.menuboss_tv.ui.model.UiState
 import com.orotcode.menuboss.grpc.lib.ContentEventResponse
+import com.orotcode.menuboss.grpc.lib.PlayingEventRequest
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
@@ -30,6 +32,7 @@ import javax.inject.Inject
 @HiltViewModel
 class MenuBoardViewModel @Inject constructor(
     private val subscribeContentStreamUseCase: SubscribeContentStreamUseCase,
+    private val sendEventPlayingStreamUseCase: SendEventPlayingStreamUseCase,
     private val getPlaylistUseCase: GetPlaylistUseCase,
     private val getScheduleUseCase: GetScheduleUseCase,
     private val getDeviceUseCase: GetDeviceUseCase,
@@ -306,5 +309,31 @@ class MenuBoardViewModel @Inject constructor(
                 }
             }
         }.launchIn(viewModelScope)
+    }
+
+    /**
+     * @feature: Log Event 보내는 기능
+     * @author: 2023/11/16 8:53 PM donghwishin
+     */
+    suspend fun sendEvent(
+        event: PlayingEventRequest.PlayingEvent,
+        playlistId: Int,
+        contentId: String,
+        scheduleId: Int? = null,
+    ) {
+        try{
+            sendEventPlayingStreamUseCase(
+                PlayingEventRequest
+                    .newBuilder().apply {
+                        scheduleId?.let { setScheduleId(it.toLong()) }
+                        setPlaylistId(playlistId.toLong())
+                        setContentId(contentId)
+                    }
+                    .setEvent(event)
+                    .build()
+            )
+        }catch (e: Exception){
+            Log.w(TAG, "sendEvent: $e")
+        }
     }
 }

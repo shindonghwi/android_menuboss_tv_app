@@ -1,54 +1,56 @@
 package com.orot.menuboss_tv.ui.screens.menu_board
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.orot.menuboss_tv.MainActivity
 import com.orot.menuboss_tv.logging.datadog.DataDogLoggingUtil
 import com.orot.menuboss_tv.presentation.R
 import com.orot.menuboss_tv.ui.model.UiState
+import com.orot.menuboss_tv.ui.navigations.LocalMenuBoardViewModel
 import com.orot.menuboss_tv.ui.navigations.LocalNavController
 import com.orot.menuboss_tv.ui.navigations.RouteScreen
 import com.orot.menuboss_tv.ui.screens.auth.AuthScreen
 import com.orot.menuboss_tv.ui.screens.common.reload.ReloadScreen
 import com.orot.menuboss_tv.ui.screens.menu_board.widget.PlaylistSlider
 import com.orot.menuboss_tv.ui.screens.menu_board.widget.ScheduleSlider
-import com.orot.menuboss_tv.ui.source_pack.IconPack
-import com.orot.menuboss_tv.ui.source_pack.iconpack.Logo
 import com.orot.menuboss_tv.ui.theme.AdjustedBoldText
 import com.orot.menuboss_tv.ui.theme.AdjustedMediumText
 import com.orot.menuboss_tv.ui.theme.AdjustedSemiBoldText
 import com.orot.menuboss_tv.ui.theme.colorBackground
 import com.orot.menuboss_tv.utils.adjustedDp
-import java.util.UUID
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Composable
 fun MenuBoardScreen(
     uuid: String,
-    menuBoardViewModel: MenuBoardViewModel = hiltViewModel()
 ) {
+    val tag = "MenuBoardScreen"
     val activity = LocalContext.current as MainActivity
+    val menuBoardViewModel = LocalMenuBoardViewModel.current
     val navController = LocalNavController.current
     val screenState = menuBoardViewModel.screenState.collectAsState().value
     val doAuthScreenActionState = menuBoardViewModel.navigateToAuthState.collectAsState().value
@@ -56,15 +58,35 @@ fun MenuBoardScreen(
     BackHandler { activity.finish() }
 
     val lifecycle = LocalLifecycleOwner.current.lifecycle
+    val resumedOnce = remember { mutableStateOf(false) }
 
     DisposableEffect(lifecycle) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_CREATE) {
-                DataDogLoggingUtil.startView(
-                    RouteScreen.MenuBoardScreen.route, "${RouteScreen.MenuBoardScreen}"
-                )
-            } else if (event == Lifecycle.Event.ON_PAUSE) {
-                DataDogLoggingUtil.stopView(RouteScreen.MenuBoardScreen.route)
+            when (event) {
+                Lifecycle.Event.ON_CREATE -> {
+                    Log.w(tag, "MenuBoardScreen: ON_CREATE", )
+                    DataDogLoggingUtil.startView(
+                        RouteScreen.MenuBoardScreen.route, "${RouteScreen.MenuBoardScreen}"
+                    )
+                }
+                Lifecycle.Event.ON_RESUME -> {
+                    if (resumedOnce.value) {
+                        Log.w(tag, "MenuBoardScreen: ON_RESUME", )
+                    } else {
+                        resumedOnce.value = true
+                    }
+                }
+                Lifecycle.Event.ON_PAUSE -> {
+                    Log.w(tag, "MenuBoardScreen: ON_PAUSE", )
+                }
+                Lifecycle.Event.ON_STOP -> {
+                    Log.w(tag, "MenuBoardScreen: ON_STOP", )
+                    DataDogLoggingUtil.stopView(RouteScreen.MenuBoardScreen.route)
+                }
+                Lifecycle.Event.ON_DESTROY -> {
+                    Log.w(tag, "MenuBoardScreen: ON_DESTROY", )
+                }
+                else -> {}
             }
         }
         lifecycle.addObserver(observer)

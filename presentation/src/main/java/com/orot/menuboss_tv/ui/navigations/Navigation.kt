@@ -47,7 +47,7 @@ fun Navigation(uuidValue: String) {
                     AuthScreen(uuid = uuidValue)
                 }
                 composable(RouteScreen.MenuBoardScreen.route) {
-                    MenuBoardScreen(uuid = uuidValue, menuBoardViewModel = menuBoardViewModel)
+                    MenuBoardScreen(uuid = uuidValue)
                 }
             }
             EventScreen()

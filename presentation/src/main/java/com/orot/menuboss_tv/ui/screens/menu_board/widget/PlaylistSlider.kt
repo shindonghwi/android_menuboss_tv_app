@@ -13,6 +13,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,14 +25,19 @@ import coil.request.ImageRequest
 import coil.size.Size
 import coil.transform.Transformation
 import com.orot.menuboss_tv.domain.entities.DevicePlaylistModel
+import com.orot.menuboss_tv.ui.navigations.LocalMenuBoardViewModel
+import com.orotcode.menuboss.grpc.lib.PlayingEventRequest
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.util.Locale
 
 @Composable
 fun PlaylistSlider(model: DevicePlaylistModel) {
+
+    val menuBoardViewModel = LocalMenuBoardViewModel.current
     val contents = model.contents
     val isDirectionHorizontal = model.property?.direction?.code == "Horizontal"
-    val contentScale = when(model.property?.fill?.code?.lowercase(Locale.getDefault())){
+    val contentScale = when (model.property?.fill?.code?.lowercase(Locale.getDefault())) {
         "fit" -> ContentScale.Fit
         "crop" -> ContentScale.Crop
         "stretch" -> ContentScale.FillBounds
@@ -42,17 +48,13 @@ fun PlaylistSlider(model: DevicePlaylistModel) {
         var currentIndex by remember { mutableIntStateOf(0) }
 
         LaunchedEffect(currentIndex) {
-            while (true) {
-                delay(
-                    (it.getOrNull(currentIndex)?.duration?.times(1000L)) ?: 0L
-                )
+            delay((it.getOrNull(currentIndex)?.duration?.times(1000L)) ?: 0L)
 
-                // delay 이후에 currentIndex의 유효성 확인
-                currentIndex = if (currentIndex >= it.size) {
-                    0
-                } else {
-                    (currentIndex + 1) % it.size
-                }
+            // delay 이후에 currentIndex의 유효성 확인
+            currentIndex = if (currentIndex >= it.size) {
+                0
+            } else {
+                (currentIndex + 1) % it.size
             }
         }
 
