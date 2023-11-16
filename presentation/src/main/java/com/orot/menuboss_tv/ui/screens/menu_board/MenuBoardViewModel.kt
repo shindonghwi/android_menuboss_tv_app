@@ -11,7 +11,6 @@ import com.orot.menuboss_tv.domain.usecases.SubscribeContentStreamUseCase
 import com.orot.menuboss_tv.ui.base.BaseViewModel
 import com.orot.menuboss_tv.ui.model.SimpleScreenModel
 import com.orot.menuboss_tv.ui.model.UiState
-import com.orot.menuboss_tv.ui.screens.auth.AuthViewModel
 import com.orotcode.menuboss.grpc.lib.ContentEventResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -40,18 +39,23 @@ class MenuBoardViewModel @Inject constructor(
         private const val TAG = "MenuBoardViewModel"
     }
 
-    /** 
+    /**
      * @feature: SCREEN NAME
      * @description{
      *    Screen 정보 조회 후 받아 올 수 있다.
-     * } 
-    */
+     * }
+     */
     var screenName = ""
 
     /**
      * @feature: 서버 연결 상태 체크. 연결되어 있으면 true, 연결되어 있지 않으면 false 입니다.
      */
     private var isContentSteamConnected = false
+
+    /**
+     * @feature: 스크린이 삭제되었을때 이벤트
+     */
+    private var isScreenDeleted = false
 
     suspend fun startProcess(uuid: String) {
         Log.w(TAG, "startProcess: $uuid")
@@ -132,8 +136,7 @@ class MenuBoardViewModel @Inject constructor(
                             }
 
                             ContentEventResponse.ContentEvent.SCREEN_DELETED -> {
-                                _screenState.emit(UiState.Success(data = SimpleScreenModel(isPlaylist = null)))
-                                triggerAuthState(true)
+                                isScreenDeleted = true
                                 cancel()
                                 return@collect
                             }
@@ -148,8 +151,15 @@ class MenuBoardViewModel @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
-                Log.w(TAG, "subscribeContentStream: 에러 수신")
-                if (!isContentSteamConnected){
+                Log.w(TAG, "subscribeContentStream: 에러 수신: $e")
+                if (isScreenDeleted) {
+                    Log.w(TAG, "subscribeContentStream: 스크린 삭제 이벤트 수신")
+                    isScreenDeleted = false
+                    _screenState.emit(UiState.Success(data = SimpleScreenModel(isPlaylist = null)))
+                    isContentSteamConnected = false
+                    triggerAuthState(true)
+                    Log.w(TAG, "subscribeContentStream: 스크린 삭제 이벤트 수신 후 인증화면으로 이동")
+                } else if (!isContentSteamConnected) {
                     Log.w(TAG, "subscribeContentStream: 연결 재시도 준비")
                     startProcess(uuid)
                     Log.w(TAG, "subscribeContentStream: 연결 재시도 !")
