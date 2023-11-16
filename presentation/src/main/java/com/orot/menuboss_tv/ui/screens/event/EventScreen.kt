@@ -7,8 +7,11 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -19,9 +22,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.orot.menuboss_tv.presentation.R
 import com.orot.menuboss_tv.ui.navigations.LocalMenuBoardViewModel
 import com.orot.menuboss_tv.ui.theme.AdjustedBoldText
 import com.orot.menuboss_tv.ui.theme.colorBackground
@@ -74,18 +78,27 @@ fun EventScreen() {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .border(10.dp, colorRed500, RectangleShape)
-                            .background(colorWhite.copy(alpha = 0.2f)),
+                            .border(16.dp, colorRed500, RectangleShape)
+                            .background(colorBackground.copy(alpha = 0.8f)),
                         contentAlignment = Alignment.Center
                     ) {
-                        AdjustedBoldText(
-                            modifier = Modifier
-                                .background(colorBackground)
-                                .padding(adjustedDp(24.dp)),
-                            text = screenName,
-                            fontSize = adjustedDp(60.dp),
-                            color = colorWhite
-                        )
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.icon_tv),
+                                contentDescription = "Localized description",
+                                modifier = Modifier.size(adjustedDp(80.dp)),
+                                tint = colorWhite,
+                            )
+                            AdjustedBoldText(
+                                modifier = Modifier.padding(adjustedDp(12.dp)),
+                                text = screenName,
+                                fontSize = adjustedDp(48.dp),
+                                color = colorWhite
+                            )
+                        }
+
                     }
                 }
             }
