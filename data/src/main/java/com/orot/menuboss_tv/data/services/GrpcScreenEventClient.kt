@@ -13,15 +13,10 @@ import io.grpc.ManagedChannelBuilder
 import io.grpc.Metadata
 import io.grpc.stub.MetadataUtils
 import io.grpc.stub.StreamObserver
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.launch
 
 
 class GrpcScreenEventClient : SafeGrpcRequest() {
@@ -89,14 +84,14 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
 
             contentChannel?.let {
                 contentBlockingStub = ScreenEventServiceGrpc.newStub(it)
-                startContentStream()
+                startContentStream(accessToken)
             }
         }
     }
 
     private fun initPlayingChannel(accessToken: String) {
         if (playingChannel == null) {
-            Log.w(TAG, "initPlayingChannel")
+            Log.w(TAG, "initPlayingChannel : $accessToken")
 
             playingChannel = ManagedChannelBuilder.forAddress(GRPC_BASE_URL, 443)
                 .useTransportSecurity()
@@ -138,13 +133,15 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
         connectBlockingStub?.connectStream(Empty.getDefaultInstance(), responseObserver)
     }
 
-    private fun startContentStream() {
+    private fun startContentStream(accessToken: String) {
         val responseObserver = object : StreamObserver<ContentEventResponse> {
             override fun onNext(value: ContentEventResponse) {
                 Log.d(TAG, "startContentStream Received response: ${value.event}")
                 _contentEvents.tryEmit(Pair(value.event, value.eventValue))
 
-                if (value.event == ContentEventResponse.ContentEvent.SCREEN_DELETED) {
+                if (value.event == ContentEventResponse.ContentEvent.SCREEN_PASSED) {
+                    initPlayingChannel(accessToken)
+                } else if (value.event == ContentEventResponse.ContentEvent.SCREEN_DELETED) {
                     closeConnectChannel()
                     closePlayingChannel()
                     closeContentChannel()
@@ -190,7 +187,6 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
 
     fun openContentStream(accessToken: String): Flow<Pair<ContentEventResponse.ContentEvent?, Int>> {
         initContentChannel(accessToken)
-        initPlayingChannel(accessToken)
         return contentEvents
     }
 
@@ -204,21 +200,21 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
 
 
     fun closeConnectChannel() {
-        Log.w(TAG, "closeConnectChannel: ", )
+        Log.w(TAG, "closeConnectChannel: ")
         connectChannel?.shutdown()
         connectChannel = null
         connectBlockingStub = null
     }
 
     fun closeContentChannel() {
-        Log.w(TAG, "closeContentChannel: ", )
+        Log.w(TAG, "closeContentChannel: ")
         contentChannel?.shutdown()
         contentChannel = null
         contentBlockingStub = null
     }
 
     fun closePlayingChannel() {
-        Log.w(TAG, "closePlayingChannel: ", )
+        Log.w(TAG, "closePlayingChannel: ")
         playingStreamObserver?.onCompleted()
         playingChannel?.shutdown()
         playingChannel = null

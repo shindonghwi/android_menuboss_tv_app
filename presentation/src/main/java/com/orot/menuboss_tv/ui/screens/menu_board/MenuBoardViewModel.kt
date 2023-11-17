@@ -49,6 +49,17 @@ class MenuBoardViewModel @Inject constructor(
      * }
      */
     var screenName = ""
+    private var _uuid = ""
+    private var _isForeground = false
+    private var _currentScheduleId: Int? = null
+    private var _currentPlaylistId: Int? = null
+    private var _currentContentId: String? = null
+
+    fun updateUUID(uuid: String) = kotlin.run { _uuid = uuid }
+    fun updateForeground(isForeground: Boolean) = kotlin.run { _isForeground = isForeground }
+    fun updateCurrentScheduleId(scheduleId: Int?) = kotlin.run { _currentScheduleId = scheduleId }
+    fun updateCurrentPlaylistId(playlistId: Int?) = kotlin.run { _currentPlaylistId = playlistId }
+    fun updateCurrentContentId(contentId: String?) = kotlin.run { _currentContentId = contentId }
 
     /**
      * @feature: 서버 연결 상태 체크. 연결되어 있으면 true, 연결되어 있지 않으면 false 입니다.
@@ -60,10 +71,10 @@ class MenuBoardViewModel @Inject constructor(
      */
     private var lastEvent: ContentEventResponse.ContentEvent? = null
 
-    suspend fun startProcess(uuid: String) {
-        Log.w(TAG, "startProcess: $uuid")
+    suspend fun startProcess() {
+        Log.w(TAG, "startProcess: $_uuid")
         _screenState.emit(UiState.Loading)
-        requestGetDeviceInfo(uuid)
+        requestGetDeviceInfo()
     }
 
     private var currentContentStreamJob: Job? = null
@@ -87,7 +98,6 @@ class MenuBoardViewModel @Inject constructor(
     private var showingContents = false
 
     private suspend fun subscribeContentStream(
-        uuid: String,
         accessToken: String,
         handleSuccess: suspend () -> Unit
     ) {
@@ -126,12 +136,12 @@ class MenuBoardViewModel @Inject constructor(
                             }
 
                             ContentEventResponse.ContentEvent.CONTENT_CHANGED -> {
-                                requestGetDeviceInfo(uuid)
+                                requestGetDeviceInfo()
                             }
 
                             ContentEventResponse.ContentEvent.SHOW_SCREEN_NAME -> {
                                 Log.w(TAG, "subscribeContentStream: SHOW_SCREEN_NAME")
-                                requestGetDeviceInfo(uuid)
+                                requestGetDeviceInfo()
                             }
 
                             ContentEventResponse.ContentEvent.CONTENT_EMPTY -> {
@@ -163,7 +173,7 @@ class MenuBoardViewModel @Inject constructor(
                     Log.w(TAG, "subscribeContentStream: 스크린 삭제 이벤트 수신 후 인증화면으로 이동")
                 } else if (!isContentSteamConnected) {
                     Log.w(TAG, "subscribeContentStream: 연결 재시도 준비")
-                    startProcess(uuid)
+                    startProcess()
                     Log.w(TAG, "subscribeContentStream: 연결 재시도 !")
                 }
             }
@@ -174,13 +184,11 @@ class MenuBoardViewModel @Inject constructor(
      * @feature: 디바이스 정보를 조회합니다.
      * @author: 2023/10/03 11:39 AM donghwishin
      */
-    private suspend fun requestGetDeviceInfo(
-        uuid: String,
-    ) {
+    private suspend fun requestGetDeviceInfo() {
         deviceApiJob?.cancel()
-        Log.w(TAG, "requestGetDeviceInfo: $uuid")
+        Log.w(TAG, "requestGetDeviceInfo: $_uuid")
         deviceApiJob = viewModelScope.launch {
-            getDeviceUseCase(uuid).collect { resource ->
+            getDeviceUseCase(_uuid).collect { resource ->
                 when (resource) {
                     is Resource.Loading -> {
                         if (!showingContents) {
@@ -191,7 +199,7 @@ class MenuBoardViewModel @Inject constructor(
                     is Resource.Error -> {
                         _screenState.emit(UiState.Error(resource.message.toString()))
                         delay(3000)
-                        startProcess(uuid)
+                        startProcess()
                     }
 
                     is Resource.Success -> {
@@ -199,13 +207,12 @@ class MenuBoardViewModel @Inject constructor(
                         _eventCode.emit(lastEvent)
 
                         if (isContentSteamConnected) {
-                            handleSuccess(uuid, resource.data)
+                            handleSuccess(resource.data)
                         } else {
                             subscribeContentStream(
-                                uuid,
                                 resource.data?.property?.accessToken.toString()
                             ) {
-                                handleSuccess(uuid, resource.data)
+                                handleSuccess(resource.data)
                             }
                         }
                     }
@@ -215,7 +222,6 @@ class MenuBoardViewModel @Inject constructor(
     }
 
     private suspend fun handleSuccess(
-        uuid: String,
         data: DeviceModel?
     ) {
         when (data?.status) {
@@ -223,14 +229,12 @@ class MenuBoardViewModel @Inject constructor(
                 when (data.playing?.contentType) {
                     "Playlist" -> {
                         requestGetDevicePlaylist(
-                            uuid,
                             data.property?.accessToken.toString()
                         )
                     }
 
                     "Schedule" -> {
                         requestGetDeviceSchedule(
-                            uuid,
                             data.property?.accessToken.toString()
                         )
                     }
@@ -255,10 +259,9 @@ class MenuBoardViewModel @Inject constructor(
      * @author: 2023/10/03 11:39 AM donghwishin
      */
     private suspend fun requestGetDeviceSchedule(
-        uuid: String,
         accessToken: String
     ) {
-        getScheduleUseCase(uuid, accessToken).onEach {
+        getScheduleUseCase(_uuid, accessToken).onEach {
             when (it) {
                 is Resource.Loading -> {}
                 is Resource.Error -> {
@@ -286,10 +289,9 @@ class MenuBoardViewModel @Inject constructor(
      * @author: 2023/10/03 11:39 AM donghwishin
      */
     private suspend fun requestGetDevicePlaylist(
-        uuid: String,
         accessToken: String
     ) {
-        getPlaylistUseCase(uuid, accessToken).onEach {
+        getPlaylistUseCase(_uuid, accessToken).onEach {
             when (it) {
                 is Resource.Loading -> {}
                 is Resource.Error -> {
@@ -312,28 +314,41 @@ class MenuBoardViewModel @Inject constructor(
     }
 
     /**
-     * @feature: Log Event 보내는 기능
+     * @feature: DLog Event 보내는 기능
      * @author: 2023/11/16 8:53 PM donghwishin
      */
-    suspend fun sendEvent(
-        event: PlayingEventRequest.PlayingEvent,
-        playlistId: Int,
-        contentId: String,
-        scheduleId: Int? = null,
-    ) {
-        try{
+    suspend fun sendEvent(event: PlayingEventRequest.PlayingEvent) {
+        if (event == PlayingEventRequest.PlayingEvent.PLAYING) {
+            if (!_isForeground) // 화면이 Foreground 상태가 아니면 play 이벤트를 보내지 않습니다.
+                return
+        }
+        try {
             sendEventPlayingStreamUseCase(
                 PlayingEventRequest
                     .newBuilder().apply {
-                        scheduleId?.let { setScheduleId(it.toLong()) }
-                        setPlaylistId(playlistId.toLong())
-                        setContentId(contentId)
+                        uuid = _uuid
+                        _currentScheduleId?.let { setScheduleId(it.toLong()) }
+                        _currentPlaylistId?.let { setPlaylistId(it.toLong()) }
+                        _currentContentId?.let { contentId = it }
                     }
                     .setEvent(event)
                     .build()
             )
-        }catch (e: Exception){
+//            Log.w(
+//                TAG,
+//                "sendEvent: event: $event, " +
+//                        "scheduleId : $_currentScheduleId , " +
+//                        "playlistId: $_currentPlaylistId , " +
+//                        "contentId: $_currentContentId"
+//            )
+        } catch (e: Exception) {
             Log.w(TAG, "sendEvent: $e")
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        currentContentStreamJob?.cancel()
+        deviceApiJob?.cancel()
     }
 }

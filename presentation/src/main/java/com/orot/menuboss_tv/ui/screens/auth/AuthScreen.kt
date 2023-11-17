@@ -42,9 +42,7 @@ import androidx.constraintlayout.compose.ConstraintSet
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import com.orot.menuboss_tv.MainActivity
 import com.orot.menuboss_tv.domain.constants.WEB_LOGIN_URL
-import com.orot.menuboss_tv.logging.datadog.DataDogLoggingUtil
 import com.orot.menuboss_tv.presentation.R
 import com.orot.menuboss_tv.ui.components.RiveAnimation
 import com.orot.menuboss_tv.ui.compose.modifier.tvSafeArea
@@ -74,12 +72,9 @@ fun AuthScreen(
 ) {
 
     val context = LocalContext.current
-    val activity = context as MainActivity
     val navController = LocalNavController.current
 
     val doMenuScreenActionState = authViewModel.navigateToMenuState.collectAsState().value
-
-    BackHandler { activity.finish() }
 
     val resumedOnce = remember { mutableStateOf(false) }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
@@ -87,9 +82,6 @@ fun AuthScreen(
     DisposableEffect(lifecycle) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_CREATE) {
-                DataDogLoggingUtil.startView(
-                    RouteScreen.AuthScreen.route, "${RouteScreen.AuthScreen}"
-                )
             } else if (event == Lifecycle.Event.ON_RESUME && resumedOnce.value) {
                 CoroutineScope(Dispatchers.Main).launch {
                     authViewModel.requestGetDeviceInfo(uuid = uuid)
@@ -98,7 +90,6 @@ fun AuthScreen(
                 // 첫 번째 onResume 호출에 대해 감지하고 상태를 업데이트합니다.
                 resumedOnce.value = true
             } else if (event == Lifecycle.Event.ON_PAUSE) {
-                DataDogLoggingUtil.stopView(RouteScreen.AuthScreen.route)
             }
         }
         lifecycle.addObserver(observer)

@@ -41,10 +41,11 @@ message PlayingEventRequest {
     PAUSED = 2;                 // The screen is paused.
     RESUMED = 3;                // The screen is resumed.
   }
-  PlayingEvent event = 1;       // The playing event.
-  uint64 scheduleId = 2;        // The schedule id.
-  uint64 playlistId = 3;        // The playlist id.
-  string contentId = 4;         // The content id.
+  string uuid = 1;              // The screen uuid.
+  PlayingEvent event = 2;       // The playing event.
+  uint64 scheduleId = 3;        // The schedule id.
+  uint64 playlistId = 4;        // The playlist id.
+  string contentId = 5;         // The content id.
 }
 
 service ScreenEventService {

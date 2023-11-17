@@ -22,7 +22,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
@@ -33,7 +32,6 @@ import androidx.lifecycle.LifecycleEventObserver
 import app.rive.runtime.kotlin.core.Loop
 import com.orot.menuboss_tv.domain.constants.MENUBOSS_AMAZON_STORE_URL
 import com.orot.menuboss_tv.domain.constants.MENUBOSS_GOOGLE_STORE_URL
-import com.orot.menuboss_tv.logging.datadog.DataDogLoggingUtil
 import com.orot.menuboss_tv.presentation.R
 import com.orot.menuboss_tv.ui.components.RiveAnimation
 import com.orot.menuboss_tv.ui.navigations.LocalNavController
@@ -76,11 +74,7 @@ fun SplashScreen(
     DisposableEffect(lifecycle) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_CREATE) {
-                DataDogLoggingUtil.startView(
-                    RouteScreen.SplashScreen.route, "${RouteScreen.SplashScreen}"
-                )
             } else if (event == Lifecycle.Event.ON_PAUSE) {
-                DataDogLoggingUtil.stopView(RouteScreen.SplashScreen.route)
             } else if (event == Lifecycle.Event.ON_RESUME && resumedOnce.value) {
                 CoroutineScope(Dispatchers.Main).launch {
                     splashViewModel.requestGetDeviceInfo(uuid = uuid, appVersion = getAppVersion(context))

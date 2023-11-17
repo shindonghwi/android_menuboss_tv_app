@@ -1,7 +1,6 @@
 package com.orot.menuboss_tv.ui.screens.menu_board.widget
 
 import android.graphics.Bitmap
-import android.util.Log
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -35,6 +34,7 @@ import java.util.Locale
 fun PlaylistSlider(model: DevicePlaylistModel) {
 
     val menuBoardViewModel = LocalMenuBoardViewModel.current
+    val scope = rememberCoroutineScope()
     val contents = model.contents
     val isDirectionHorizontal = model.property?.direction?.code == "Horizontal"
     val contentScale = when (model.property?.fill?.code?.lowercase(Locale.getDefault())) {
@@ -48,6 +48,14 @@ fun PlaylistSlider(model: DevicePlaylistModel) {
         var currentIndex by remember { mutableIntStateOf(0) }
 
         LaunchedEffect(currentIndex) {
+            menuBoardViewModel.run {
+                scope.launch {
+                    updateCurrentScheduleId(null)
+                    updateCurrentPlaylistId(model.playlistId)
+                    updateCurrentContentId(contents[currentIndex].contentId)
+                    sendEvent(PlayingEventRequest.PlayingEvent.PLAYING)
+                }
+            }
             delay((it.getOrNull(currentIndex)?.duration?.times(1000L)) ?: 0L)
 
             // delay 이후에 currentIndex의 유효성 확인

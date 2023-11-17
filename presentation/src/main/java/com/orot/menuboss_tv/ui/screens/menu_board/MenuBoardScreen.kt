@@ -1,7 +1,6 @@
 package com.orot.menuboss_tv.ui.screens.menu_board
 
 import android.util.Log
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -16,16 +15,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import com.orot.menuboss_tv.MainActivity
-import com.orot.menuboss_tv.logging.datadog.DataDogLoggingUtil
 import com.orot.menuboss_tv.presentation.R
 import com.orot.menuboss_tv.ui.model.UiState
 import com.orot.menuboss_tv.ui.navigations.LocalMenuBoardViewModel
@@ -40,8 +37,7 @@ import com.orot.menuboss_tv.ui.theme.AdjustedMediumText
 import com.orot.menuboss_tv.ui.theme.AdjustedSemiBoldText
 import com.orot.menuboss_tv.ui.theme.colorBackground
 import com.orot.menuboss_tv.utils.adjustedDp
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import com.orotcode.menuboss.grpc.lib.PlayingEventRequest
 import kotlinx.coroutines.launch
 
 @Composable
@@ -49,43 +45,47 @@ fun MenuBoardScreen(
     uuid: String,
 ) {
     val tag = "MenuBoardScreen"
-    val activity = LocalContext.current as MainActivity
     val menuBoardViewModel = LocalMenuBoardViewModel.current
     val navController = LocalNavController.current
     val screenState = menuBoardViewModel.screenState.collectAsState().value
     val doAuthScreenActionState = menuBoardViewModel.navigateToAuthState.collectAsState().value
 
-    BackHandler { activity.finish() }
-
     val lifecycle = LocalLifecycleOwner.current.lifecycle
+    val scope = rememberCoroutineScope()
     val resumedOnce = remember { mutableStateOf(false) }
 
     DisposableEffect(lifecycle) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_CREATE -> {
-                    Log.w(tag, "MenuBoardScreen: ON_CREATE", )
-                    DataDogLoggingUtil.startView(
-                        RouteScreen.MenuBoardScreen.route, "${RouteScreen.MenuBoardScreen}"
-                    )
+                    Log.w(tag, "MenuBoardScreen: ON_CREATE")
                 }
+
                 Lifecycle.Event.ON_RESUME -> {
+                    menuBoardViewModel.updateForeground(isForeground = true)
                     if (resumedOnce.value) {
-                        Log.w(tag, "MenuBoardScreen: ON_RESUME", )
+                        scope.launch { menuBoardViewModel.sendEvent(PlayingEventRequest.PlayingEvent.RESUMED) }
+                        Log.w(tag, "MenuBoardScreen: ON_RESUME")
                     } else {
                         resumedOnce.value = true
                     }
                 }
+
                 Lifecycle.Event.ON_PAUSE -> {
-                    Log.w(tag, "MenuBoardScreen: ON_PAUSE", )
+                    scope.launch { menuBoardViewModel.sendEvent(PlayingEventRequest.PlayingEvent.PAUSED) }
+                    Log.w(tag, "MenuBoardScreen: ON_PAUSE")
                 }
+
                 Lifecycle.Event.ON_STOP -> {
-                    Log.w(tag, "MenuBoardScreen: ON_STOP", )
-                    DataDogLoggingUtil.stopView(RouteScreen.MenuBoardScreen.route)
+                    menuBoardViewModel.updateForeground(isForeground = false)
+                    scope.launch { menuBoardViewModel.sendEvent(PlayingEventRequest.PlayingEvent.STOPPED) }
+                    Log.w(tag, "MenuBoardScreen: ON_STOP")
                 }
+
                 Lifecycle.Event.ON_DESTROY -> {
-                    Log.w(tag, "MenuBoardScreen: ON_DESTROY", )
+                    Log.w(tag, "MenuBoardScreen: ON_DESTROY")
                 }
+
                 else -> {}
             }
         }
@@ -98,7 +98,10 @@ fun MenuBoardScreen(
 
 
     LaunchedEffect(key1 = Unit, block = {
-        menuBoardViewModel.startProcess(uuid = uuid)
+        menuBoardViewModel.run {
+            updateUUID(uuid)
+            startProcess()
+        }
     })
 
     DisposableEffect(key1 = doAuthScreenActionState, effect = {

@@ -24,6 +24,8 @@ import coil.request.ImageRequest
 import coil.size.Size
 import coil.transform.Transformation
 import com.orot.menuboss_tv.domain.entities.DeviceScheduleModel
+import com.orot.menuboss_tv.ui.navigations.LocalMenuBoardViewModel
+import com.orotcode.menuboss.grpc.lib.PlayingEventRequest
 import kotlinx.coroutines.delay
 import java.util.Calendar
 import java.util.Locale
@@ -32,6 +34,8 @@ import java.util.TimeZone
 @Composable
 fun ScheduleSlider(model: DeviceScheduleModel) {
 
+    val menuBoardViewModel = LocalMenuBoardViewModel.current
+    val context = LocalContext.current
     var currentTimeline by remember { mutableStateOf(getCurrentTimeline(model.timeline)) }
     val currentContent = currentTimeline?.playlist?.contents
     val isDirectionHorizontal = currentTimeline?.playlist?.property?.direction?.code == "Horizontal"
@@ -53,15 +57,21 @@ fun ScheduleSlider(model: DeviceScheduleModel) {
         var currentIndex by remember { mutableIntStateOf(0) }
 
         LaunchedEffect(currentContent, currentIndex) {
-            while (true) {
-                delay((it.getOrNull(currentIndex)?.duration?.times(1000L)) ?: 0L)
-
-                // delay 이후에 currentIndex의 유효성 확인
-                currentIndex = if (currentIndex >= it.size) {
-                    0
-                } else {
-                    (currentIndex + 1) % it.size
+            menuBoardViewModel.run {
+                currentTimeline?.playlist?.contents?.getOrNull(currentIndex)?.contentId?.let {
+                    updateCurrentScheduleId(model.scheduleId)
+                    updateCurrentPlaylistId(currentTimeline?.playlist?.playlistId)
+                    updateCurrentContentId(it)
+                    sendEvent(PlayingEventRequest.PlayingEvent.PLAYING)
                 }
+            }
+            delay((it.getOrNull(currentIndex)?.duration?.times(1000L)) ?: 0L)
+
+            // delay 이후에 currentIndex의 유효성 확인
+            currentIndex = if (currentIndex >= it.size) {
+                0
+            } else {
+                (currentIndex + 1) % it.size
             }
         }
 
@@ -105,8 +115,7 @@ fun ScheduleSlider(model: DeviceScheduleModel) {
                                                     input: Bitmap,
                                                     size: Size
                                                 ): Bitmap {
-                                                    val matrix =
-                                                        android.graphics.Matrix()
+                                                    val matrix = android.graphics.Matrix()
                                                     matrix.postRotate(if (isDirectionHorizontal) 0f else -90f)
                                                     return Bitmap.createBitmap(
                                                         input,

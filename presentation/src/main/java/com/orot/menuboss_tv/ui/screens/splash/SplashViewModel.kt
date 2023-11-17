@@ -38,12 +38,6 @@ class SplashViewModel @Inject constructor(
     val forceUpdateState: StateFlow<FORCE_UPDATE_STATE> get() = _forceUpdateState
 
     /**
-     * @feature: accessToken 정보를 관리합니다.
-     * @author: 2023/10/03 11:38 AM donghwishin
-     */
-    var accessToken: String = ""
-
-    /**
      * @feature: 디바이스 정보를 관리합니다.
      * @author: 2023/10/03 11:38 AM donghwishin
      */
@@ -67,7 +61,6 @@ class SplashViewModel @Inject constructor(
 
         viewModelScope.launch {
             while (isCollectRunning) {
-                accessToken = ""
                 getDeviceUseCase(uuid).collect { resource ->
                     Log.w(TAG, "requestGetDeviceInfo - response: $resource")
                     when (resource) {
@@ -112,7 +105,6 @@ class SplashViewModel @Inject constructor(
 
             "Linked" -> {
                 isCollectRunning = false
-                accessToken = data.property?.accessToken.toString()
                 triggerMenuState(true)
                 _deviceState.emit(UiState.Success(data = data))
             }

@@ -34,6 +34,7 @@ android {
 
 dependencies {
     implementation(project(":domain"))
+    implementation(project(mapOf("path" to ":presentation")))
 
     Libraries.Coroutine.apply {
         implementation(core)
