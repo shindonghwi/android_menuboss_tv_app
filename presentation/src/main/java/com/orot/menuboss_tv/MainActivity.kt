@@ -10,12 +10,7 @@ import android.view.WindowInsetsController
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
-import com.google.firebase.crashlytics.ktx.crashlytics
-import com.google.firebase.ktx.Firebase
 import com.orot.menuboss_tv.ui.navigations.Navigation
 import com.orot.menuboss_tv.ui.theme.MenuBossTVTheme
 import com.orot.menuboss_tv.utils.DeviceInfoUtil
@@ -41,9 +36,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MenuBossTVTheme {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    Navigation(uuidValue = getXUniqueId())
-                }
+                Navigation(uuidValue = getXUniqueId())
             }
         }
     }
@@ -88,17 +81,21 @@ class MainActivity : ComponentActivity() {
      * @author: 2023/10/03 11:39 AM donghwishin
      */
     private fun getXUniqueId(): String {
+
+        val uniqueId = deviceInfoUtil.getAndroidUniqueId(applicationContext)
+        val macAddress = deviceInfoUtil.getMacAddress()
+        val uniqueValue = macAddress.ifEmpty { uniqueId }
+
         return deviceInfoUtil.run {
             val uuid1 = generateUniqueUUID(
-                getMacAddress(),
+                uniqueValue,
                 "${Build.PRODUCT}${Build.BRAND}${Build.HARDWARE}"
             )
             val uuid2 = generateUniqueUUID(
-                getMacAddress(),
+                uniqueValue,
                 "${Build.MANUFACTURER}${Build.MODEL}${Build.DEVICE}"
             )
-            val uuid3 =
-                generateUniqueUUID(getMacAddress(), Build.FINGERPRINT)
+            val uuid3 = generateUniqueUUID(uniqueValue, Build.FINGERPRINT)
             val uuid = generateUniqueUUID(
                 uuid1.toString(),
                 "$uuid2$uuid3"

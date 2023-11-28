@@ -5,3 +5,6 @@ import androidx.compose.ui.graphics.Color
 val colorBackground = Color(0xFF000000)
 val colorWhite = Color(0xFFFFFFFF)
 val colorLightSkyBlue = Color(0xFF87CEEB)
+val colorRed500 = Color(0xFFEB5757)
+val colorGray700 = Color(0xFF5C5C5C)
+val colorGray900 = Color(0xFF212121)

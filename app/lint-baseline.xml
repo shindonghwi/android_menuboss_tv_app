@@ -3,7 +3,7 @@
 
     <issue
         id="DuplicatePlatformClasses"
-        message="`commons-logging` defines classes that conflict with classes now provided by Android. Solutions include finding newer versions or alternative libraries that don&apos;t have the same problem (for example, for `httpclient` use `HttpUrlConnection` or `okhttp` instead), or repackaging the library using something like `jarjar`.">
+        message="`commons-DLog` defines classes that conflict with classes now provided by Android. Solutions include finding newer versions or alternative libraries that don&apos;t have the same problem (for example, for `httpclient` use `HttpUrlConnection` or `okhttp` instead), or repackaging the library using something like `jarjar`.">
         <location
             file="build.gradle"/>
     </issue>

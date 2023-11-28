@@ -76,12 +76,6 @@ class AuthViewModel @Inject constructor(
 
                     response.second.let {
                         when (it) {
-                            1 -> {
-                                Log.w(TAG, "subscribeConnectStream: 연결성공")
-                                isConnectSteamConnected = true
-                                requestGetDeviceInfo(uuid)
-                            }
-
                             2 -> {
                                 Log.w(TAG, "subscribeConnectStream: 연결실패")
                                 isConnectSteamConnected = false
@@ -97,7 +91,11 @@ class AuthViewModel @Inject constructor(
                     }
 
                     response.first?.let {
-                        if (it == ConnectEventResponse.ConnectEvent.ENTRY) {
+                        if (it == ConnectEventResponse.ConnectEvent.WELCOME) {
+                            Log.w(TAG, "subscribeConnectStream: WELCOME 수신 : 연결성공")
+                            isConnectSteamConnected = true
+                            requestGetDeviceInfo(uuid)
+                        } else if (it == ConnectEventResponse.ConnectEvent.ENTRY) {
                             Log.w(TAG, "subscribeConnectStream: ENTRY 수신")
                             triggerMenuState(true)
                             cancel()
@@ -107,7 +105,7 @@ class AuthViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 Log.w(TAG, "subscribeConnectStream: 에러 수신")
-                if (!isConnectSteamConnected){
+                if (!isConnectSteamConnected) {
                     Log.w(TAG, "subscribeConnectStream: 연결 재시도 준비")
                     startProcess(uuid)
                     Log.w(TAG, "subscribeConnectStream: 연결 재시도 !")

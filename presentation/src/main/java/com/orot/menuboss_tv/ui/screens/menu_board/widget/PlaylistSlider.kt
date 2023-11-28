@@ -12,6 +12,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,30 +24,45 @@ import coil.request.ImageRequest
 import coil.size.Size
 import coil.transform.Transformation
 import com.orot.menuboss_tv.domain.entities.DevicePlaylistModel
+import com.orot.menuboss_tv.ui.navigations.LocalMenuBoardViewModel
+import com.orotcode.menuboss.grpc.lib.PlayingEventRequest
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import java.util.Locale
 
 @Composable
 fun PlaylistSlider(model: DevicePlaylistModel) {
+
+    val menuBoardViewModel = LocalMenuBoardViewModel.current
+    val scope = rememberCoroutineScope()
     val contents = model.contents
     val isDirectionHorizontal = model.property?.direction?.code == "Horizontal"
-    val isScaleFit = model.property?.fill?.code == "Fit"
-    val contentScale = if (isScaleFit) ContentScale.Fit else ContentScale.Crop
+    val contentScale = when (model.property?.fill?.code?.lowercase(Locale.getDefault())) {
+        "fit" -> ContentScale.Fit
+        "crop" -> ContentScale.Crop
+        "stretch" -> ContentScale.FillBounds
+        else -> ContentScale.Crop
+    }
 
     contents?.let {
         var currentIndex by remember { mutableIntStateOf(0) }
 
         LaunchedEffect(currentIndex) {
-            while (true) {
-                delay(
-                    (it.getOrNull(currentIndex)?.duration?.times(1000L)) ?: 0L
-                )
-
-                // delay 이후에 currentIndex의 유효성 확인
-                currentIndex = if (currentIndex >= it.size) {
-                    0
-                } else {
-                    (currentIndex + 1) % it.size
+            menuBoardViewModel.run {
+                scope.launch {
+                    updateCurrentScheduleId(null)
+                    updateCurrentPlaylistId(model.playlistId)
+                    updateCurrentContentId(contents[currentIndex].contentId)
+                    sendEvent(PlayingEventRequest.PlayingEvent.PLAYING)
                 }
+            }
+            delay((it.getOrNull(currentIndex)?.duration?.times(1000L)) ?: 0L)
+
+            // delay 이후에 currentIndex의 유효성 확인
+            currentIndex = if (currentIndex >= it.size) {
+                0
+            } else {
+                (currentIndex + 1) % it.size
             }
         }
 
@@ -82,8 +98,7 @@ fun PlaylistSlider(model: DevicePlaylistModel) {
                                                 input: Bitmap,
                                                 size: Size
                                             ): Bitmap {
-                                                val matrix =
-                                                    android.graphics.Matrix()
+                                                val matrix = android.graphics.Matrix()
                                                 matrix.postRotate(if (isDirectionHorizontal) 0f else -90f)
                                                 return Bitmap.createBitmap(
                                                     input,
@@ -123,7 +138,7 @@ fun PlaylistSlider(model: DevicePlaylistModel) {
                                 ExoPlayerView(
                                     modifier = Modifier.fillMaxSize(),
                                     videoUrl = content.property?.videoUrl.toString(),
-                                    isScaleFit = isScaleFit,
+                                    contentScale = contentScale,
                                     rotationDegrees = if (isDirectionHorizontal) 0f else -90f
                                 )
                             }

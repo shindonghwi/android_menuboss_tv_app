@@ -6,21 +6,17 @@ import com.orot.menuboss_tv.data.utils.SafeGrpcRequest
 import com.orot.menuboss_tv.domain.constants.GRPC_BASE_URL
 import com.orotcode.menuboss.grpc.lib.ConnectEventResponse
 import com.orotcode.menuboss.grpc.lib.ContentEventResponse
+import com.orotcode.menuboss.grpc.lib.PlayingEventRequest
 import com.orotcode.menuboss.grpc.lib.ScreenEventServiceGrpc
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
 import io.grpc.Metadata
 import io.grpc.stub.MetadataUtils
 import io.grpc.stub.StreamObserver
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.launch
 
 
 class GrpcScreenEventClient : SafeGrpcRequest() {
@@ -33,9 +29,11 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
 
     private var connectChannel: ManagedChannel? = null
     private var contentChannel: ManagedChannel? = null
+    private var playingChannel: ManagedChannel? = null
 
     private var connectBlockingStub: ScreenEventServiceGrpc.ScreenEventServiceStub? = null
     private var contentBlockingStub: ScreenEventServiceGrpc.ScreenEventServiceStub? = null
+    private var playingNonBlockingStub: ScreenEventServiceGrpc.ScreenEventServiceStub? = null
 
     private val _connectEvents = MutableSharedFlow<Pair<ConnectEventResponse.ConnectEvent?, Int>>(
         replay = 1, extraBufferCapacity = 10,
@@ -48,6 +46,8 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
     private val contentEvents: Flow<Pair<ContentEventResponse.ContentEvent?, Int>> get() = _contentEvents.asSharedFlow()
+
+    private var playingStreamObserver: StreamObserver<PlayingEventRequest>? = null
 
     private fun initConnectChannel(uuid: String) {
         if (connectChannel == null) {
@@ -69,47 +69,6 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
         }
     }
 
-
-    private fun startConnectStream() {
-        var isConnected = true  // 연결 성공 여부를 추적하는 플래그
-
-        val responseObserver = object : StreamObserver<ConnectEventResponse> {
-            override fun onNext(value: ConnectEventResponse) {
-                Log.d(TAG, "startConnectStream Received response: ${value.event}")
-                _connectEvents.tryEmit(Pair(value.event, 3))
-
-                if (value.event == ConnectEventResponse.ConnectEvent.ENTRY) {
-                    closeConnectChannel()
-                }
-            }
-
-            override fun onError(t: Throwable) {
-                Log.e(TAG, "startConnectStream Error in stream", t)
-                _connectEvents.tryEmit(Pair(null, 2))
-                isConnected = false
-                closeConnectChannel()
-            }
-
-            override fun onCompleted() {
-                Log.d(TAG, "startConnectStream Stream completed")
-            }
-        }
-
-        connectBlockingStub?.connectStream(Empty.getDefaultInstance(), responseObserver)
-
-        // 연결 성공 처리를 위한 지연 로직
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                if (isConnected) {
-                    delay(3000)  // 3초 대기
-                    _connectEvents.tryEmit(Pair(null, 1)) // 연결 설공 이벤트 전달
-                }
-            } catch (e: CancellationException) {
-                Log.e(TAG, "Connection check was cancelled", e)
-            }
-        }
-    }
-
     private fun initContentChannel(accessToken: String) {
         if (contentChannel == null) {
             _contentEvents.tryEmit(Pair(null, 0))
@@ -125,30 +84,76 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
 
             contentChannel?.let {
                 contentBlockingStub = ScreenEventServiceGrpc.newStub(it)
-                startContentStream()
+                startContentStream(accessToken)
             }
         }
     }
 
-    private fun startContentStream() {
-        var isConnected = true  // 연결 성공 여부를 추적하는 플래그
+    private fun initPlayingChannel(accessToken: String) {
+        if (playingChannel == null) {
+            Log.w(TAG, "initPlayingChannel : $accessToken")
 
+            playingChannel = ManagedChannelBuilder.forAddress(GRPC_BASE_URL, 443)
+                .useTransportSecurity()
+                .intercept(MetadataUtils.newAttachHeadersInterceptor(
+                    Metadata().apply {
+                        put(Metadata.Key.of("Authorization", Metadata.ASCII_STRING_MARSHALLER), accessToken)
+                    }
+                )).build()
+
+            playingChannel?.let {
+                playingNonBlockingStub = ScreenEventServiceGrpc.newStub(it)
+                startPlayingStream()
+            }
+        }
+    }
+
+    private fun startConnectStream() {
+        val responseObserver = object : StreamObserver<ConnectEventResponse> {
+            override fun onNext(value: ConnectEventResponse) {
+                Log.d(TAG, "startConnectStream Received response: ${value.event}")
+                _connectEvents.tryEmit(Pair(value.event, 3))
+
+                if (value.event == ConnectEventResponse.ConnectEvent.ENTRY) {
+                    closeConnectChannel()
+                }
+            }
+
+            override fun onError(t: Throwable) {
+                Log.e(TAG, "startConnectStream Error in stream", t)
+                _connectEvents.tryEmit(Pair(null, 2))
+                closeConnectChannel()
+            }
+
+            override fun onCompleted() {
+                Log.d(TAG, "startConnectStream Stream completed")
+            }
+        }
+
+        connectBlockingStub?.connectStream(Empty.getDefaultInstance(), responseObserver)
+    }
+
+    private fun startContentStream(accessToken: String) {
         val responseObserver = object : StreamObserver<ContentEventResponse> {
             override fun onNext(value: ContentEventResponse) {
                 Log.d(TAG, "startContentStream Received response: ${value.event}")
                 _contentEvents.tryEmit(Pair(value.event, value.eventValue))
 
-                if (value.event == ContentEventResponse.ContentEvent.SCREEN_DELETED) {
+                if (value.event == ContentEventResponse.ContentEvent.SCREEN_PASSED) {
+                    initPlayingChannel(accessToken)
+                } else if (value.event == ContentEventResponse.ContentEvent.SCREEN_DELETED) {
                     closeConnectChannel()
+                    closePlayingChannel()
                     closeContentChannel()
                 }
+
             }
 
             override fun onError(t: Throwable) {
                 Log.e(TAG, "startContentStream Error in stream", t)
                 _contentEvents.tryEmit(Pair(null, 2))
-                isConnected = false
                 closeConnectChannel()
+                closePlayingChannel()
                 closeContentChannel()
             }
 
@@ -157,6 +162,22 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
             }
         }
         contentBlockingStub?.contentStream(Empty.getDefaultInstance(), responseObserver)
+    }
+
+    private fun startPlayingStream() {
+        playingStreamObserver = playingNonBlockingStub?.playingStream(object : StreamObserver<Empty> {
+            override fun onNext(value: Empty) {
+                Log.d(TAG, "startPlayingStream Received response: $value")
+            }
+
+            override fun onError(t: Throwable) {
+                Log.e(TAG, "Error in playing stream", t)
+            }
+
+            override fun onCompleted() {
+                Log.d(TAG, "Playing stream completed")
+            }
+        })
     }
 
     fun openConnectStream(uuid: String): Flow<Pair<ConnectEventResponse.ConnectEvent?, Int>> {
@@ -169,17 +190,36 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
         return contentEvents
     }
 
+    fun sendPlayingEvent(playingEvent: PlayingEventRequest) {
+        if (playingStreamObserver == null) {
+            Log.w(TAG, "Playing stream not initialized")
+            return
+        }
+        playingStreamObserver?.onNext(playingEvent)
+    }
+
 
     fun closeConnectChannel() {
+        Log.w(TAG, "closeConnectChannel: ")
         connectChannel?.shutdown()
         connectChannel = null
         connectBlockingStub = null
     }
 
     fun closeContentChannel() {
+        Log.w(TAG, "closeContentChannel: ")
         contentChannel?.shutdown()
         contentChannel = null
         contentBlockingStub = null
+    }
+
+    fun closePlayingChannel() {
+        Log.w(TAG, "closePlayingChannel: ")
+        playingStreamObserver?.onCompleted()
+        playingChannel?.shutdown()
+        playingChannel = null
+        playingNonBlockingStub = null
+        playingStreamObserver = null
     }
 
 }

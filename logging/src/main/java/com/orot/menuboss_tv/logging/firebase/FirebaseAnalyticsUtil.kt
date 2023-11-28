@@ -1,13 +1,12 @@
 package com.orot.menuboss_tv.logging.firebase
 
 import android.os.Bundle
-import android.util.Log
 import com.google.firebase.analytics.FirebaseAnalytics
 import javax.inject.Inject
 
 class FirebaseAnalyticsUtil @Inject constructor(private val analytics: FirebaseAnalytics) {
 
-    companion object{
+    companion object {
         private const val TAG = "FirebaseAnalyticsUtil"
     }
 
@@ -20,7 +19,7 @@ class FirebaseAnalyticsUtil @Inject constructor(private val analytics: FirebaseA
 
     fun recordEvent(event: Event, message: HashMap<String, String>) {
         try {
-            if (event == Event.GET_DEVICE_INFO){
+            if (event == Event.GET_DEVICE_INFO) {
                 analytics.setUserId(message["uuid"])
             }
 
@@ -33,11 +32,10 @@ class FirebaseAnalyticsUtil @Inject constructor(private val analytics: FirebaseA
                     putString(key, value)
                 }
             })
-
-            Log.w(TAG, "recordEvent: $event Success", )
+//            DLog.w(TAG, "recordEvent: $event Success")
         } catch (e: Exception) {
             e.printStackTrace()
-            Log.w(TAG, "recordEvent: $event Fail", )
+//            DLog.w(TAG, "recordEvent: $event Fail")
         }
     }
 }

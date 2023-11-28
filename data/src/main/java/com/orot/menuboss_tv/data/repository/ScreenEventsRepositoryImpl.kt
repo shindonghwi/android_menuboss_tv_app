@@ -4,6 +4,7 @@ import com.orot.menuboss_tv.data.services.GrpcScreenEventClient
 import com.orot.menuboss_tv.domain.repository.ScreenEventsRepository
 import com.orotcode.menuboss.grpc.lib.ConnectEventResponse
 import com.orotcode.menuboss.grpc.lib.ContentEventResponse
+import com.orotcode.menuboss.grpc.lib.PlayingEventRequest
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
@@ -15,4 +16,8 @@ class ScreenEventsRepositoryImpl @Inject constructor(private val grpcClient: Grp
 
     override suspend fun openContentStream(accessToken: String): Flow<Pair<ContentEventResponse.ContentEvent?, Int>> =
         grpcClient.openContentStream(accessToken)
+
+    override suspend fun sendPlayingEvent(playingEvent: PlayingEventRequest) {
+        grpcClient.sendPlayingEvent(playingEvent)
+    }
 }

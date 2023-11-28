@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.orot.menuboss_tv.logging"
+    namespace = "com.orot.menuboss_tv.DLog"
     compileSdk = AppConfig.compileSdk
 
     defaultConfig {

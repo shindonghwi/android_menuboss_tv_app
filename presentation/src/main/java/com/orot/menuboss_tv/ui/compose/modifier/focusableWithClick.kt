@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -25,6 +26,7 @@ fun Modifier.focusableWithClick(
 ): Modifier {
     val focusRequester = rememberUpdatedState(FocusRequester())
     val isFocused = interactionSource.collectIsFocusedAsState().value
+    val isPressed = interactionSource.collectIsPressedAsState().value
 
     return this
         .focusRequester(focusRequester.value)
@@ -38,7 +40,7 @@ fun Modifier.focusableWithClick(
             }
         }
         .background(Color.Transparent)
-        .border(1.dp, if (isFocused) isFocusedColor else notFocusedColor, shape = RoundedCornerShape(8.dp))
+        .border(2.dp, if (isFocused || isPressed) isFocusedColor else notFocusedColor, shape = RoundedCornerShape(0.dp))
         .clickable(interactionSource = interactionSource, indication = null) {
             onClick()
         }

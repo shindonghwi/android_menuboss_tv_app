@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.orot.menuboss_tv.domain.entities.DeviceModel
 import com.orot.menuboss_tv.domain.entities.Resource
 import com.orot.menuboss_tv.domain.usecases.GetDeviceUseCase
-import com.orot.menuboss_tv.logging.firebase.FirebaseAnalyticsUtil
 import com.orot.menuboss_tv.ui.base.BaseViewModel
 import com.orot.menuboss_tv.ui.model.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -14,8 +13,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.math.min
-import kotlin.math.pow
+
+enum class FORCE_UPDATE_STATE {
+    IDLE,
+    FORCE_UPDATE,
+    NOT_FORCE_UPDATE,
+    ERROR
+}
 
 @HiltViewModel
 class SplashViewModel @Inject constructor(
@@ -27,10 +31,11 @@ class SplashViewModel @Inject constructor(
     }
 
     /**
-     * @feature: accessToken 정보를 관리합니다.
-     * @author: 2023/10/03 11:38 AM donghwishin
+     * @feature: 강제 업데이트 여부를 관리합니다.
+     * @author: 2023/11/16 1:41 PM donghwishin
      */
-    var accessToken: String = ""
+    private val _forceUpdateState = MutableStateFlow<FORCE_UPDATE_STATE>(FORCE_UPDATE_STATE.IDLE)
+    val forceUpdateState: StateFlow<FORCE_UPDATE_STATE> get() = _forceUpdateState
 
     /**
      * @feature: 디바이스 정보를 관리합니다.
@@ -49,14 +54,13 @@ class SplashViewModel @Inject constructor(
      * @feature: 디바이스 정보를 조회합니다.
      * @author: 2023/10/03 11:39 AM donghwishin
      */
-    suspend fun requestGetDeviceInfo(uuid: String) {
+    suspend fun requestGetDeviceInfo(uuid: String, appVersion: String) {
         Log.w(TAG, "requestGetDeviceInfo: $uuid")
         var attempt = 0
         isCollectRunning = true
 
         viewModelScope.launch {
             while (isCollectRunning) {
-                accessToken = ""
                 getDeviceUseCase(uuid).collect { resource ->
                     Log.w(TAG, "requestGetDeviceInfo - response: $resource")
                     when (resource) {
@@ -66,7 +70,24 @@ class SplashViewModel @Inject constructor(
                             delay(calculateDelay(attempt))
                             return@collect
                         }
-                        is Resource.Success -> handleSuccess(resource.data)
+
+                        is Resource.Success -> {
+                            val latestVersion = extractNumbers(resource.data?.property?.version.toString())
+                            val currentVersion = extractNumbers(appVersion)
+
+                            if (appVersion.isEmpty()) { // 앱 버전을 찾을 수 없는 경우
+                                _forceUpdateState.emit(FORCE_UPDATE_STATE.ERROR)
+                                isCollectRunning = false
+                                return@collect
+                            } else if (latestVersion > currentVersion) { // 업데이트가 필요한 경우
+                                _forceUpdateState.emit(FORCE_UPDATE_STATE.FORCE_UPDATE)
+                                isCollectRunning = false
+                                return@collect
+                            } else { // 업데이트가 필요하지 않은 경우
+                                _forceUpdateState.emit(FORCE_UPDATE_STATE.NOT_FORCE_UPDATE)
+                                handleSuccess(resource.data)
+                            }
+                        }
                     }
                 }
                 attempt++
@@ -84,7 +105,6 @@ class SplashViewModel @Inject constructor(
 
             "Linked" -> {
                 isCollectRunning = false
-                accessToken = data.property?.accessToken.toString()
                 triggerMenuState(true)
                 _deviceState.emit(UiState.Success(data = data))
             }
@@ -93,8 +113,14 @@ class SplashViewModel @Inject constructor(
         }
     }
 
+    fun extractNumbers(str: String): String {
+        val regex = "\\d+".toRegex() // 숫자만 찾는 정규식
+        return regex.findAll(str).joinToString(separator = "") { it.value } // 숫자를 연결하여 반환
+    }
+
     override fun initState() {
         super.initState()
+        _forceUpdateState.value = FORCE_UPDATE_STATE.IDLE
         _deviceState.value = UiState.Idle
         Log.w(TAG, "initState")
     }

@@ -17,11 +17,9 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.logging.HttpLoggingInterceptor
-import okio.BufferedSource
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.io.IOException
-import java.nio.charset.Charset
 import java.util.Locale
 import java.util.TimeZone
 import java.util.concurrent.TimeUnit

@@ -38,7 +38,7 @@ open class BaseViewModel : ViewModel() {
     /**
      * @feature: 지수 백오프 알고리즘을 사용하여 재시도 지연 시간을 계산합니다.
      * @author: 2023/11/11 2:44 PM donghwishin
-    */
+     */
     fun calculateDelay(attempt: Int): Long {
         val maxDelay = 10000L  // 최대 지연 시간 (예: 30초)
         val delay = (1.3.pow(attempt.toDouble()) * 1000L).toLong() // 지수 백오프

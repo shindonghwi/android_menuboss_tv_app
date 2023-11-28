@@ -1,67 +1,92 @@
 package com.orot.menuboss_tv.ui.screens.menu_board
 
-import androidx.activity.compose.BackHandler
+import android.util.Log
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import com.orot.menuboss_tv.MainActivity
-import com.orot.menuboss_tv.logging.datadog.DataDogLoggingUtil
+import com.orot.menuboss_tv.presentation.R
 import com.orot.menuboss_tv.ui.model.UiState
+import com.orot.menuboss_tv.ui.navigations.LocalMenuBoardViewModel
 import com.orot.menuboss_tv.ui.navigations.LocalNavController
 import com.orot.menuboss_tv.ui.navigations.RouteScreen
 import com.orot.menuboss_tv.ui.screens.auth.AuthScreen
 import com.orot.menuboss_tv.ui.screens.common.reload.ReloadScreen
 import com.orot.menuboss_tv.ui.screens.menu_board.widget.PlaylistSlider
 import com.orot.menuboss_tv.ui.screens.menu_board.widget.ScheduleSlider
-import com.orot.menuboss_tv.ui.source_pack.IconPack
-import com.orot.menuboss_tv.ui.source_pack.iconpack.Logo
 import com.orot.menuboss_tv.ui.theme.AdjustedBoldText
 import com.orot.menuboss_tv.ui.theme.AdjustedMediumText
+import com.orot.menuboss_tv.ui.theme.AdjustedSemiBoldText
 import com.orot.menuboss_tv.ui.theme.colorBackground
 import com.orot.menuboss_tv.utils.adjustedDp
-import java.util.UUID
+import com.orotcode.menuboss.grpc.lib.PlayingEventRequest
+import kotlinx.coroutines.launch
 
 @Composable
 fun MenuBoardScreen(
     uuid: String,
-    menuBoardViewModel: MenuBoardViewModel = hiltViewModel()
 ) {
-    val activity = LocalContext.current as MainActivity
+    val tag = "MenuBoardScreen"
+    val menuBoardViewModel = LocalMenuBoardViewModel.current
     val navController = LocalNavController.current
     val screenState = menuBoardViewModel.screenState.collectAsState().value
     val doAuthScreenActionState = menuBoardViewModel.navigateToAuthState.collectAsState().value
 
-    BackHandler { activity.finish() }
-
     val lifecycle = LocalLifecycleOwner.current.lifecycle
+    val scope = rememberCoroutineScope()
+    val resumedOnce = remember { mutableStateOf(false) }
 
     DisposableEffect(lifecycle) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_CREATE) {
-                DataDogLoggingUtil.startView(
-                    RouteScreen.MenuBoardScreen.route, "${RouteScreen.MenuBoardScreen}"
-                )
-            } else if (event == Lifecycle.Event.ON_PAUSE) {
-                DataDogLoggingUtil.stopView(RouteScreen.MenuBoardScreen.route)
+            when (event) {
+                Lifecycle.Event.ON_CREATE -> {
+                    Log.w(tag, "MenuBoardScreen: ON_CREATE")
+                }
+
+                Lifecycle.Event.ON_RESUME -> {
+                    menuBoardViewModel.updateForeground(isForeground = true)
+                    if (resumedOnce.value) {
+                        scope.launch { menuBoardViewModel.sendEvent(PlayingEventRequest.PlayingEvent.RESUMED) }
+                        Log.w(tag, "MenuBoardScreen: ON_RESUME")
+                    } else {
+                        resumedOnce.value = true
+                    }
+                }
+
+                Lifecycle.Event.ON_PAUSE -> {
+                    scope.launch { menuBoardViewModel.sendEvent(PlayingEventRequest.PlayingEvent.PAUSED) }
+                    Log.w(tag, "MenuBoardScreen: ON_PAUSE")
+                }
+
+                Lifecycle.Event.ON_STOP -> {
+                    menuBoardViewModel.updateForeground(isForeground = false)
+                    scope.launch { menuBoardViewModel.sendEvent(PlayingEventRequest.PlayingEvent.STOPPED) }
+                    Log.w(tag, "MenuBoardScreen: ON_STOP")
+                }
+
+                Lifecycle.Event.ON_DESTROY -> {
+                    Log.w(tag, "MenuBoardScreen: ON_DESTROY")
+                }
+
+                else -> {}
             }
         }
         lifecycle.addObserver(observer)
@@ -73,7 +98,10 @@ fun MenuBoardScreen(
 
 
     LaunchedEffect(key1 = Unit, block = {
-        menuBoardViewModel.startProcess(uuid = uuid)
+        menuBoardViewModel.run {
+            updateUUID(uuid)
+            startProcess()
+        }
     })
 
     DisposableEffect(key1 = doAuthScreenActionState, effect = {
@@ -162,22 +190,15 @@ private fun EmptyContentScreen(modifier: Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Image(
-            modifier = Modifier.size(
-                width = adjustedDp(150.dp),
-                height = adjustedDp(75.dp),
-            ), imageVector = IconPack.Logo, contentDescription = ""
-        )
         AdjustedBoldText(
-            modifier = Modifier.padding(top = adjustedDp(40.dp)),
-            text = "No Content to display",
-            fontSize = adjustedDp(24.dp),
+            text = stringResource(id = R.string.content_empty_title),
+            fontSize = adjustedDp(48.dp),
         )
 
         AdjustedMediumText(
-            modifier = Modifier.padding(top = adjustedDp(12.dp)),
-            text = "MenuBoss Please register your schedule and playlist through the web or mobile",
-            fontSize = adjustedDp(16.dp)
+            modifier = Modifier.padding(top = adjustedDp(24.dp)),
+            text = stringResource(id = R.string.content_empty_subtitle),
+            fontSize = adjustedDp(20.dp)
         )
     }
 }
@@ -189,29 +210,21 @@ private fun ExpiredScreen(modifier: Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Image(
-            modifier = Modifier.size(
-                width = adjustedDp(150.dp),
-                height = adjustedDp(75.dp),
-            ), imageVector = IconPack.Logo, contentDescription = ""
-        )
-
         AdjustedBoldText(
-            modifier = Modifier.padding(top = adjustedDp(40.dp)),
-            text = "Your subscription has expired",
-            fontSize = adjustedDp(24.dp),
+            text = stringResource(id = R.string.content_expired_title),
+            fontSize = adjustedDp(48.dp),
         )
 
-        AdjustedMediumText(
+        AdjustedSemiBoldText(
             modifier = Modifier.padding(top = adjustedDp(12.dp)),
-            text = "You cannot use it because your subscription period has expired.",
-            fontSize = adjustedDp(16.dp)
+            text = stringResource(id = R.string.content_expired_description1),
+            fontSize = adjustedDp(18.dp)
         )
 
-        AdjustedMediumText(
+        AdjustedSemiBoldText(
             modifier = Modifier.padding(top = adjustedDp(4.dp)),
-            text = "You can use it again by subscribing to the service",
-            fontSize = adjustedDp(16.dp)
+            text = stringResource(id = R.string.content_expired_description2),
+            fontSize = adjustedDp(18.dp)
         )
     }
 }

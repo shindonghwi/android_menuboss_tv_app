@@ -35,15 +35,14 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import com.orot.menuboss_tv.MainActivity
 import com.orot.menuboss_tv.domain.constants.WEB_LOGIN_URL
-import com.orot.menuboss_tv.logging.datadog.DataDogLoggingUtil
 import com.orot.menuboss_tv.presentation.R
 import com.orot.menuboss_tv.ui.components.RiveAnimation
 import com.orot.menuboss_tv.ui.compose.modifier.tvSafeArea
@@ -73,12 +72,9 @@ fun AuthScreen(
 ) {
 
     val context = LocalContext.current
-    val activity = context as MainActivity
     val navController = LocalNavController.current
 
     val doMenuScreenActionState = authViewModel.navigateToMenuState.collectAsState().value
-
-    BackHandler { activity.finish() }
 
     val resumedOnce = remember { mutableStateOf(false) }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
@@ -86,9 +82,6 @@ fun AuthScreen(
     DisposableEffect(lifecycle) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_CREATE) {
-                DataDogLoggingUtil.startView(
-                    RouteScreen.AuthScreen.route, "${RouteScreen.AuthScreen}"
-                )
             } else if (event == Lifecycle.Event.ON_RESUME && resumedOnce.value) {
                 CoroutineScope(Dispatchers.Main).launch {
                     authViewModel.requestGetDeviceInfo(uuid = uuid)
@@ -97,7 +90,6 @@ fun AuthScreen(
                 // 첫 번째 onResume 호출에 대해 감지하고 상태를 업데이트합니다.
                 resumedOnce.value = true
             } else if (event == Lifecycle.Event.ON_PAUSE) {
-                DataDogLoggingUtil.stopView(RouteScreen.AuthScreen.route)
             }
         }
         lifecycle.addObserver(observer)
@@ -209,11 +201,11 @@ private fun HeaderContent(modifier: Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         AdjustedBoldText(
-            text = "Welcome to the MenuBoss Smart TV APP", fontSize = adjustedDp(32.dp)
+            text = stringResource(id = R.string.auth_title), fontSize = adjustedDp(32.dp)
         )
         AdjustedMediumText(
             modifier = Modifier.padding(top = adjustedDp(8.dp)),
-            text = "To run the Menu Boss Tv app  Register your TV screen in two ways",
+            text = stringResource(id = R.string.auth_subtitle),
             fontSize = adjustedDp(16.dp)
         )
     }
@@ -247,7 +239,7 @@ private fun BodyContent(
 private fun FooterContent(modifier: Modifier) {
     AdjustedMediumText(
         modifier = modifier,
-        text = "Do not turn off the TV screen until you connect it. \n" + "If you have any questions, please contact the website",
+        text = "${stringResource(id = R.string.auth_description1)}\n${stringResource(id = R.string.auth_description2)}",
         fontSize = adjustedDp(14.dp),
         color = colorWhite.copy(alpha = 0.8f),
     )
@@ -270,7 +262,7 @@ private fun PinCode(
         verticalArrangement = Arrangement.Center,
     ) {
 
-        AdjustedBoldText(text = "Enter Pin Code", fontSize = adjustedDp(24.dp))
+        AdjustedBoldText(text = stringResource(id = R.string.auth_enter_pin_code), fontSize = adjustedDp(24.dp))
 
         AdjustedBoldText(
             modifier = Modifier
@@ -281,7 +273,7 @@ private fun PinCode(
 
         AdjustedMediumText(
             modifier = Modifier.padding(top = adjustedDp(30.dp)),
-            text = "Click the link below to register your pin code on the website",
+            text = stringResource(id = R.string.auth_enter_pin_code_description),
             fontSize = adjustedDp(14.dp),
             color = colorWhite.copy(alpha = 0.5f),
         )
@@ -301,7 +293,7 @@ private fun PinCode(
                         context.startActivity(fallbackIntent)
                     } catch (e: Exception) {
                         Toast
-                            .makeText(context, "Error: $e", Toast.LENGTH_SHORT)
+                            .makeText(context, context.getString(R.string.message_error), Toast.LENGTH_SHORT)
                             .show()
                     }
                 }
@@ -328,7 +320,7 @@ private fun OrDivider() {
 
         AdjustedBoldText(
             modifier = Modifier.padding(vertical = adjustedDp(12.dp)),
-            text = "OR",
+            text = stringResource(id = R.string.common_or),
             fontSize = adjustedDp(16.dp),
         )
 
@@ -355,7 +347,7 @@ private fun QRCode(modifier: Modifier, qrUrl: String?) {
     ) {
 
         AdjustedBoldText(
-            text = "Scan QR Code",
+            text = stringResource(id = R.string.auth_scan_qr_code),
             fontSize = adjustedDp(24.dp),
         )
 

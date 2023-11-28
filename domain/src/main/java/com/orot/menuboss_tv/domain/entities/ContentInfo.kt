@@ -3,6 +3,7 @@ data class ContentInfo(
     val type: Type?,
     val duration: Int?,
     val property: Property?,
+    val contentId: String?
 ){
     data class Type(
         val code: String,

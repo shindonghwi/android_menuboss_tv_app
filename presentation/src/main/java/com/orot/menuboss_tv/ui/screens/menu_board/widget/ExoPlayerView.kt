@@ -10,16 +10,18 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
+import java.lang.Float.max
 
 @Composable
 fun ExoPlayerView(
     modifier: Modifier = Modifier,
     videoUrl: String,
-    isScaleFit: Boolean,
+    contentScale: ContentScale,
     rotationDegrees: Float
 ) {
     val context = LocalContext.current
@@ -50,7 +52,7 @@ fun ExoPlayerView(
                                 this@apply,
                                 width,
                                 height,
-                                isScaleFit,
+                                contentScale,
                                 rotationDegrees
                             )
                         }
@@ -71,7 +73,7 @@ fun ExoPlayerView(
                                 this@apply,
                                 width,
                                 height,
-                                isScaleFit,
+                                contentScale,
                                 rotationDegrees
                             )
                         }
@@ -92,46 +94,55 @@ fun ExoPlayerView(
     }
 }
 
-
 private fun adjustTextureViewSize(
     textureView: TextureView,
     screenW: Int,
     screenH: Int,
-    isScaleFit: Boolean,
+    contentScale: ContentScale,
     rotationDegrees: Float
 ) {
     val videoW = textureView.width
     val videoH = textureView.height
 
+    // Determine the aspect ratios considering rotation
     val isVertical = rotationDegrees != 0f
-
     val videoAspectRatio = if (isVertical) videoH.toFloat() / videoW else videoW.toFloat() / videoH
-    val screenAspectRatio = screenW.toFloat() / screenH
 
-    val scaleX: Float
-    val scaleY: Float
+    var scaleX = 1.0f
+    var scaleY = 1.0f
 
-    if (isScaleFit) {
-        if (isVertical) {  // 세로형
-            val scaleFactor = screenW.toFloat() / videoW
-            scaleX = scaleFactor
-            scaleY = scaleFactor * videoAspectRatio
-        } else {  // 가로형
-            val scaleFactor = screenH.toFloat() / videoH
-            scaleY = scaleFactor
-            scaleX = videoW * scaleFactor / videoH
+    when (contentScale) {
+        ContentScale.FillBounds -> {
+            if (isVertical) {
+                // For vertical video, fill vertically
+                scaleY = screenH.toFloat() / videoH
+                scaleX = scaleY * (videoW.toFloat() / videoH)
+            } else {
+                // For horizontal video, fill horizontally
+                scaleX = screenW.toFloat() / videoW
+                scaleY = scaleX * (videoH.toFloat() / videoW)
+            }
         }
-    } else {
-        if (videoAspectRatio > screenAspectRatio) {
-            scaleY = screenH.toFloat() / videoH
-            scaleX = scaleY * (videoH.toFloat() / videoW)
-        } else {
-            scaleX = screenW.toFloat() / videoW
-            scaleY = scaleX * (videoW.toFloat() / videoH)
+        ContentScale.Crop -> {
+            val aspectRatio = max(screenH.toFloat() / videoH, screenW.toFloat() / videoW)
+            scaleX = aspectRatio / (screenW.toFloat() / videoW)
+            scaleY = aspectRatio / (screenH.toFloat() / videoH)
+        }
+        ContentScale.Fit -> {
+            if (videoAspectRatio > screenW.toFloat() / screenH) {
+                // Fit vertically
+                scaleY = screenH.toFloat() / videoH
+                scaleX = scaleY * (videoW.toFloat() / videoH)
+            } else {
+                // Fit horizontally
+                scaleX = screenW.toFloat() / videoW
+                scaleY = scaleX * (videoH.toFloat() / videoW)
+            }
         }
     }
 
     val matrix = Matrix()
-    matrix.setScale(scaleX, scaleY, videoW / 2f, videoH / 2f)
+    matrix.setScale(scaleX, scaleY, screenW / 2f, screenH / 2f)
+
     textureView.setTransform(matrix)
 }
