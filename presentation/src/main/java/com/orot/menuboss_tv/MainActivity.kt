@@ -81,17 +81,21 @@ class MainActivity : ComponentActivity() {
      * @author: 2023/10/03 11:39 AM donghwishin
      */
     private fun getXUniqueId(): String {
+
+        val uniqueId = deviceInfoUtil.getAndroidUniqueId(applicationContext)
+        val macAddress = deviceInfoUtil.getMacAddress()
+        val uniqueValue = macAddress.ifEmpty { uniqueId }
+
         return deviceInfoUtil.run {
             val uuid1 = generateUniqueUUID(
-                getMacAddress(),
+                uniqueValue,
                 "${Build.PRODUCT}${Build.BRAND}${Build.HARDWARE}"
             )
             val uuid2 = generateUniqueUUID(
-                getMacAddress(),
+                uniqueValue,
                 "${Build.MANUFACTURER}${Build.MODEL}${Build.DEVICE}"
             )
-            val uuid3 =
-                generateUniqueUUID(getMacAddress(), Build.FINGERPRINT)
+            val uuid3 = generateUniqueUUID(uniqueValue, Build.FINGERPRINT)
             val uuid = generateUniqueUUID(
                 uuid1.toString(),
                 "$uuid2$uuid3"

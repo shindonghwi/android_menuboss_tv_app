@@ -1,5 +1,8 @@
 package com.orot.menuboss_tv.utils
 
+import android.annotation.SuppressLint
+import android.content.Context
+import android.provider.Settings
 import com.orot.menuboss_tv.logging.firebase.FirebaseAnalyticsUtil
 import java.net.NetworkInterface
 import java.nio.ByteBuffer
@@ -12,6 +15,12 @@ import javax.inject.Inject
 class DeviceInfoUtil @Inject constructor(
     private val firebaseAnalyticsUtil: FirebaseAnalyticsUtil
 ) {
+
+    /** ssaid 값 추출 기능: 공장 초기화전까지 고유한 값 */
+    @SuppressLint("HardwareIds")
+    fun getAndroidUniqueId(context: Context): String {
+        return Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID).toString()
+    }
 
     /** wlan0을 검색 대상으로 잡고 MAC Address 조회. */
     fun getMacAddress(): String {
@@ -73,8 +82,8 @@ class DeviceInfoUtil @Inject constructor(
      * @feature: MAC 주소에 기반한 고유한 UUID 생성하기
      * @author: 2023/08/09 4:16 PM donghwishin
      */
-    fun generateUniqueUUID(macAddress: String, data: String): UUID {
-        val combinedString = macAddress + data
+    fun generateUniqueUUID(uniqueValue: String, data: String): UUID {
+        val combinedString = uniqueValue + data
         val sha256 = MessageDigest.getInstance("SHA-256")
         val hash = sha256.digest(combinedString.toByteArray())
 
