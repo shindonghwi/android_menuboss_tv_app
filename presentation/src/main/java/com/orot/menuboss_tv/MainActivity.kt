@@ -1,6 +1,8 @@
 package com.orot.menuboss_tv
 
 
+import android.app.LauncherActivity
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -8,12 +10,15 @@ import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.view.WindowManager
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.core.view.WindowCompat
+import com.orot.menuboss_tv.domain.usecases.UnSubscribeStreamUseCase
 import com.orot.menuboss_tv.ui.navigations.Navigation
 import com.orot.menuboss_tv.ui.theme.MenuBossTVTheme
 import com.orot.menuboss_tv.utils.DeviceInfoUtil
+import com.orot.menuboss_tv.utils.coroutineScopeOnDefault
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -23,6 +28,9 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var deviceInfoUtil: DeviceInfoUtil
+
+    @Inject
+    lateinit var unSubscribeStreamUseCase: UnSubscribeStreamUseCase
 
     companion object {
         private const val TAG = "MainActivity"
@@ -71,36 +79,6 @@ class MainActivity : ComponentActivity() {
                     hideSystemUI()
                 }
             }
-        }
-    }
-
-
-//    /**
-//     * @feature: 디바이스의 고유한 식별자를 생성합니다.
-//     * @author: 2023/10/03 11:39 AM donghwishin
-//     */
-    private fun getXUniqueId(): String {
-
-        val uniqueId = deviceInfoUtil.getAndroidUniqueId(applicationContext)
-        val macAddress = deviceInfoUtil.getMacAddress()
-        val uniqueValue = macAddress
-
-        return deviceInfoUtil.run {
-            val uuid1 = generateUniqueUUID(
-                uniqueValue,
-                "${Build.PRODUCT}${Build.BRAND}${Build.HARDWARE}"
-            )
-            val uuid2 = generateUniqueUUID(
-                uniqueValue,
-                "${Build.MANUFACTURER}${Build.MODEL}${Build.DEVICE}"
-            )
-            val uuid3 = generateUniqueUUID(uniqueValue, Build.FINGERPRINT)
-            val uuid = generateUniqueUUID(
-                uuid1.toString(),
-                "$uuid2$uuid3"
-            ).toString()
-            Log.w(TAG, "getXUniqueId: $uuid")
-            return@run uuid
         }
     }
 }

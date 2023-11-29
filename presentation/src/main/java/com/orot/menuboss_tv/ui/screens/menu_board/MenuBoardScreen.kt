@@ -1,6 +1,8 @@
 package com.orot.menuboss_tv.ui.screens.menu_board
 
+import android.os.Build
 import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -18,11 +20,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import com.orot.menuboss_tv.MainActivity
 import com.orot.menuboss_tv.presentation.R
 import com.orot.menuboss_tv.ui.model.UiState
 import com.orot.menuboss_tv.ui.navigations.LocalMenuBoardViewModel
@@ -43,6 +47,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun MenuBoardScreen() {
     val tag = "MenuBoardScreen"
+    val activity = LocalContext.current as MainActivity
     val menuBoardViewModel = LocalMenuBoardViewModel.current
     val navController = LocalNavController.current
     val screenState = menuBoardViewModel.screenState.collectAsState().value

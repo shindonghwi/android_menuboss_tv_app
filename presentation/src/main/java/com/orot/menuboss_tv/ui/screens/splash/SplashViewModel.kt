@@ -7,6 +7,8 @@ import androidx.lifecycle.viewModelScope
 import com.orot.menuboss_tv.domain.entities.DeviceModel
 import com.orot.menuboss_tv.domain.entities.Resource
 import com.orot.menuboss_tv.domain.usecases.GetDeviceUseCase
+import com.orot.menuboss_tv.domain.usecases.GetUpdatedByUuidUseCase
+import com.orot.menuboss_tv.domain.usecases.PatchUpdatedByUuidUseCase
 import com.orot.menuboss_tv.domain.usecases.UpdateUuidUseCase
 import com.orot.menuboss_tv.ui.base.BaseViewModel
 import com.orot.menuboss_tv.ui.model.UiState
@@ -31,7 +33,9 @@ enum class FORCE_UPDATE_STATE {
 class SplashViewModel @Inject constructor(
     private val getDeviceUseCase: GetDeviceUseCase,
     private val updateUuidUseCase: UpdateUuidUseCase,
-    private val deviceInfoUtil: DeviceInfoUtil
+    private val deviceInfoUtil: DeviceInfoUtil,
+    private val patchUpdatedByUuidUseCase: PatchUpdatedByUuidUseCase,
+    private val getUpdatedByUuidUseCase: GetUpdatedByUuidUseCase
 ) : BaseViewModel() {
 
     companion object {
@@ -64,37 +68,46 @@ class SplashViewModel @Inject constructor(
 
         val oldUuid = getOldUuid()
         val newUuid = getAndroidUniqueId(context)
-        Log.w(TAG, "requestUpdateUUID: ${extractNumbers(appVersion)}", )
+        Log.w(TAG, "requestUpdateUUID: ${extractNumbers(appVersion)}")
 
 
         val uuidChangeRequiredVersion = "1.1.2"
 
-        Log.w(TAG, "requestUpdateUUID: ${extractNumbers(appVersion)} || ${extractNumbers(uuidChangeRequiredVersion)}", )
+        Log.w(TAG, "requestUpdateUUID: ${extractNumbers(appVersion)} || ${extractNumbers(uuidChangeRequiredVersion)}")
 
-        if (extractNumbers(appVersion) >= extractNumbers(uuidChangeRequiredVersion)) {
-            Log.w(TAG, "requestUpdateUUID: ${getOldUuid()} -> $newUuid")
-            var attempt = 0
-            viewModelScope.launch {
-                while (isUuidCollectRunning) {
-                    updateUuidUseCase(oldUuid, newUuid).collect { resource ->
-                        Log.w(TAG, "requestUpdateUUID: ${resource.message} ${resource.data}")
-                        when (resource) {
-                            is Resource.Loading -> {}
-                            is Resource.Error -> {
-                                delay(calculateDelay(attempt))
-                                return@collect
-                            }
+        if (
+            extractNumbers(appVersion) >= extractNumbers(uuidChangeRequiredVersion)
+        ) {
+            // uuid 변경에 성공한 경우
+            if (getUpdatedByUuidUseCase.invoke()) {
+                updateCurrentUUID(newUuid)
+            } else {
+                Log.w(TAG, "requestUpdateUUID: ${getOldUuid()} -> $newUuid")
+                var attempt = 0
+                viewModelScope.launch {
+                    while (isUuidCollectRunning) {
+                        updateUuidUseCase(oldUuid, newUuid).collect { resource ->
+                            Log.w(TAG, "requestUpdateUUID: ${resource.message} ${resource.data}")
+                            when (resource) {
+                                is Resource.Loading -> {}
+                                is Resource.Error -> {
+                                    delay(calculateDelay(attempt))
+                                    return@collect
+                                }
 
-                            is Resource.Success -> {
-                                isUuidCollectRunning = false
-                                updateCurrentUUID(newUuid)
-                                cancel()
+                                is Resource.Success -> {
+                                    isUuidCollectRunning = false
+                                    patchUpdatedByUuidUseCase.invoke(true)
+                                    updateCurrentUUID(newUuid)
+                                    cancel()
+                                }
                             }
                         }
+                        attempt++
                     }
-                    attempt++
                 }
             }
+
         } else {
             updateCurrentUUID(oldUuid)
         }
@@ -190,7 +203,7 @@ class SplashViewModel @Inject constructor(
 
     private fun getAndroidUniqueId(context: Context): String {
         val newUuid = deviceInfoUtil.getAndroidUniqueId(context)
-        val domain = if (deviceInfoUtil.isAmazonDevice()){
+        val domain = if (deviceInfoUtil.isAmazonDevice()) {
             Brand.AMAZON.domain
         } else {
             Brand.GOOGLE.domain
@@ -198,7 +211,7 @@ class SplashViewModel @Inject constructor(
         return "${domain}${creativeUUID(newUuid)}"
     }
 
-    private fun creativeUUID(value: String): String{
+    private fun creativeUUID(value: String): String {
         return deviceInfoUtil.run {
             val uuid1 = generateUniqueUUID(
                 value,

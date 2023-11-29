@@ -20,4 +20,12 @@ class ScreenEventsRepositoryImpl @Inject constructor(private val grpcClient: Grp
     override suspend fun sendPlayingEvent(playingEvent: PlayingEventRequest) {
         grpcClient.sendPlayingEvent(playingEvent)
     }
+
+    override suspend fun closeStream() {
+        grpcClient.run {
+            closeConnectChannel()
+            closeContentChannel()
+            closePlayingChannel()
+        }
+    }
 }
