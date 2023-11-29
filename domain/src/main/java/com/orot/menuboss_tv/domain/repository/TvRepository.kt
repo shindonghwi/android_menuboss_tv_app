@@ -13,4 +13,5 @@ interface TvRepository {
 
     suspend fun getDeviceSchedule(uuid: String, accessToken: String): ApiResponse<DeviceScheduleModel>
 
+    suspend fun updateUuid(oldUuid: String, newUuid: String): ApiResponse<Unit?>
 }

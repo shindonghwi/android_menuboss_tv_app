@@ -44,4 +44,15 @@ interface TvApi {
         @Header("Authorization") authorization: String? = null
     ): Response<ApiResponse<DeviceScheduleModel>>
 
+    /**
+     * @feature: 스케줄 정보 조회
+     *
+     * @author: 2023/11/29 9:38 AM donghwishin
+     */
+    @GET("$API_VERSION/screens/connect/{oldUuid}/to/{newUuid}")
+    suspend fun updateUuid(
+        @Path(value = "oldUuid") oldUuid: String,
+        @Path(value = "newUuid") newUuid: String,
+    ): Response<ApiResponse<Unit?>>
+
 }

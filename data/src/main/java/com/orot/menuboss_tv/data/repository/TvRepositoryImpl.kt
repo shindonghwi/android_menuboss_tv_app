@@ -38,4 +38,13 @@ class TvRepositoryImpl @Inject constructor(
             data = response.data
         )
     }
+
+    override suspend fun updateUuid(oldUuid: String, newUuid: String): ApiResponse<Unit?> {
+        val response = safeApiRequest { tvApi.updateUuid(oldUuid, newUuid) }
+        return ApiResponse(
+            status = response.status,
+            message = response.message,
+            data = response.data
+        )
+    }
 }

@@ -32,10 +32,8 @@ class FirebaseAnalyticsUtil @Inject constructor(private val analytics: FirebaseA
                     putString(key, value)
                 }
             })
-//            DLog.w(TAG, "recordEvent: $event Success")
         } catch (e: Exception) {
             e.printStackTrace()
-//            DLog.w(TAG, "recordEvent: $event Fail")
         }
     }
 }

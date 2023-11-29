@@ -314,7 +314,7 @@ class MenuBoardViewModel @Inject constructor(
     }
 
     /**
-     * @feature: DLog Event 보내는 기능
+     * @feature: Log Event 보내는 기능
      * @author: 2023/11/16 8:53 PM donghwishin
      */
     suspend fun sendEvent(event: PlayingEventRequest.PlayingEvent) {

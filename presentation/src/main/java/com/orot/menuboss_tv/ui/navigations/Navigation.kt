@@ -1,6 +1,5 @@
 package com.orot.menuboss_tv.ui.navigations
 
-import android.os.Build
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -12,7 +11,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.datadog.android.Datadog
 import com.orot.menuboss_tv.ui.screens.auth.AuthScreen
 import com.orot.menuboss_tv.ui.screens.event.EventScreen
 import com.orot.menuboss_tv.ui.screens.menu_board.MenuBoardScreen

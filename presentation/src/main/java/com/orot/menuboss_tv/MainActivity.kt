@@ -66,7 +66,6 @@ class MainActivity : ComponentActivity() {
                             or View.SYSTEM_UI_FLAG_FULLSCREEN
                     )
 
-            // For older versions, you'll have to use the deprecated method
             window.decorView.setOnSystemUiVisibilityChangeListener { visibility ->
                 if (visibility and View.SYSTEM_UI_FLAG_FULLSCREEN == 0) {
                     hideSystemUI()

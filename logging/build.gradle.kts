@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.orot.menuboss_tv.DLog"
+    namespace = "com.orot.menuboss_tv.logging"
     compileSdk = AppConfig.compileSdk
 
     defaultConfig {
@@ -50,11 +50,6 @@ dependencies {
         kapt(daggerHiltAndroidCompiler)
         kapt(daggerHiltAndroid)
     }
-
-    api("com.datadoghq:dd-sdk-android-rum:2.2.0")
-    api("com.datadoghq:dd-sdk-android-okhttp:2.2.0")
-
-
 }
 
 kapt {
