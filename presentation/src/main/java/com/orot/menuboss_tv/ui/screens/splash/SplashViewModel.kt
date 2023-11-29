@@ -1,13 +1,21 @@
 package com.orot.menuboss_tv.ui.screens.splash
 
+import android.content.Context
+import android.os.Build
 import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.orot.menuboss_tv.domain.entities.DeviceModel
 import com.orot.menuboss_tv.domain.entities.Resource
 import com.orot.menuboss_tv.domain.usecases.GetDeviceUseCase
+import com.orot.menuboss_tv.domain.usecases.GetUpdatedByUuidUseCase
+import com.orot.menuboss_tv.domain.usecases.PatchUpdatedByUuidUseCase
+import com.orot.menuboss_tv.domain.usecases.UpdateUuidUseCase
 import com.orot.menuboss_tv.ui.base.BaseViewModel
 import com.orot.menuboss_tv.ui.model.UiState
+import com.orot.menuboss_tv.utils.Brand
+import com.orot.menuboss_tv.utils.DeviceInfoUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,6 +32,10 @@ enum class FORCE_UPDATE_STATE {
 @HiltViewModel
 class SplashViewModel @Inject constructor(
     private val getDeviceUseCase: GetDeviceUseCase,
+    private val updateUuidUseCase: UpdateUuidUseCase,
+    private val deviceInfoUtil: DeviceInfoUtil,
+    private val patchUpdatedByUuidUseCase: PatchUpdatedByUuidUseCase,
+    private val getUpdatedByUuidUseCase: GetUpdatedByUuidUseCase
 ) : BaseViewModel() {
 
     companion object {
@@ -44,24 +56,83 @@ class SplashViewModel @Inject constructor(
     private val _deviceState = MutableStateFlow<UiState<DeviceModel>>(UiState.Idle)
     val deviceState: StateFlow<UiState<DeviceModel>> get() = _deviceState
 
+    private var _currentUUID: String = ""
+    fun getCurrentUUID(): String = _currentUUID
+    private fun updateCurrentUUID(newUuid: String) = kotlin.run { _currentUUID = newUuid }
+
     /**
      * @feature: 디바이스 정보 수집을 계속 시도할지 여부를 관리합니다.
      */
-    private var isCollectRunning = true
+    private var isUuidCollectRunning = true
+    suspend fun requestUpdateUUID(context: Context, appVersion: String) {
+
+        val oldUuid = getOldUuid()
+        val newUuid = getAndroidUniqueId(context)
+        Log.w(TAG, "requestUpdateUUID: ${extractNumbers(appVersion)}")
+
+
+        val uuidChangeRequiredVersion = "1.1.2"
+
+        Log.w(TAG, "requestUpdateUUID: ${extractNumbers(appVersion)} || ${extractNumbers(uuidChangeRequiredVersion)}")
+
+        if (
+            extractNumbers(appVersion) >= extractNumbers(uuidChangeRequiredVersion)
+        ) {
+            // uuid 변경에 성공한 경우
+            if (getUpdatedByUuidUseCase.invoke()) {
+                updateCurrentUUID(newUuid)
+            } else {
+                Log.w(TAG, "requestUpdateUUID: ${getOldUuid()} -> $newUuid")
+                var attempt = 0
+                viewModelScope.launch {
+                    while (isUuidCollectRunning) {
+                        updateUuidUseCase(oldUuid, newUuid).collect { resource ->
+                            Log.w(TAG, "requestUpdateUUID: ${resource.message} ${resource.data}")
+                            when (resource) {
+                                is Resource.Loading -> {}
+                                is Resource.Error -> {
+                                    delay(calculateDelay(attempt))
+                                    return@collect
+                                }
+
+                                is Resource.Success -> {
+                                    isUuidCollectRunning = false
+                                    patchUpdatedByUuidUseCase.invoke(true)
+                                    updateCurrentUUID(newUuid)
+                                    cancel()
+                                }
+                            }
+                        }
+                        attempt++
+                    }
+                }
+            }
+
+        } else {
+            updateCurrentUUID(oldUuid)
+        }
+
+
+    }
+
+    /**
+     * @feature: 디바이스 정보 수집을 계속 시도할지 여부를 관리합니다.
+     */
+    private var isDeviceCollectRunning = true
 
 
     /**
      * @feature: 디바이스 정보를 조회합니다.
      * @author: 2023/10/03 11:39 AM donghwishin
      */
-    suspend fun requestGetDeviceInfo(uuid: String, appVersion: String) {
-        Log.w(TAG, "requestGetDeviceInfo: $uuid")
+    suspend fun requestGetDeviceInfo(appVersion: String) {
+        Log.w(TAG, "requestGetDeviceInfo: $_currentUUID")
         var attempt = 0
-        isCollectRunning = true
+        isDeviceCollectRunning = true
 
         viewModelScope.launch {
-            while (isCollectRunning) {
-                getDeviceUseCase(uuid).collect { resource ->
+            while (isDeviceCollectRunning) {
+                getDeviceUseCase(_currentUUID).collect { resource ->
                     Log.w(TAG, "requestGetDeviceInfo - response: $resource")
                     when (resource) {
                         is Resource.Loading -> _deviceState.emit(UiState.Loading)
@@ -77,11 +148,11 @@ class SplashViewModel @Inject constructor(
 
                             if (appVersion.isEmpty()) { // 앱 버전을 찾을 수 없는 경우
                                 _forceUpdateState.emit(FORCE_UPDATE_STATE.ERROR)
-                                isCollectRunning = false
+                                isDeviceCollectRunning = false
                                 return@collect
                             } else if (latestVersion > currentVersion) { // 업데이트가 필요한 경우
                                 _forceUpdateState.emit(FORCE_UPDATE_STATE.FORCE_UPDATE)
-                                isCollectRunning = false
+                                isDeviceCollectRunning = false
                                 return@collect
                             } else { // 업데이트가 필요하지 않은 경우
                                 _forceUpdateState.emit(FORCE_UPDATE_STATE.NOT_FORCE_UPDATE)
@@ -98,13 +169,13 @@ class SplashViewModel @Inject constructor(
     private suspend fun handleSuccess(data: DeviceModel?) {
         when (data?.status) {
             "Unlinked" -> {
-                isCollectRunning = false
+                isDeviceCollectRunning = false
                 triggerAuthState(true)
                 _deviceState.emit(UiState.Success(data = data))
             }
 
             "Linked" -> {
-                isCollectRunning = false
+                isDeviceCollectRunning = false
                 triggerMenuState(true)
                 _deviceState.emit(UiState.Success(data = data))
             }
@@ -113,7 +184,7 @@ class SplashViewModel @Inject constructor(
         }
     }
 
-    fun extractNumbers(str: String): String {
+    private fun extractNumbers(str: String): String {
         val regex = "\\d+".toRegex() // 숫자만 찾는 정규식
         return regex.findAll(str).joinToString(separator = "") { it.value } // 숫자를 연결하여 반환
     }
@@ -123,5 +194,37 @@ class SplashViewModel @Inject constructor(
         _forceUpdateState.value = FORCE_UPDATE_STATE.IDLE
         _deviceState.value = UiState.Idle
         Log.w(TAG, "initState")
+    }
+
+    private fun getOldUuid(): String {
+        val macAddress = deviceInfoUtil.getMacAddress()
+        return creativeUUID(macAddress)
+    }
+
+    private fun getAndroidUniqueId(context: Context): String {
+        val newUuid = deviceInfoUtil.getAndroidUniqueId(context)
+        val domain = if (deviceInfoUtil.isAmazonDevice()) {
+            Brand.AMAZON.domain
+        } else {
+            Brand.GOOGLE.domain
+        }
+        return "${domain}${creativeUUID(newUuid)}"
+    }
+
+    private fun creativeUUID(value: String): String {
+        return deviceInfoUtil.run {
+            val uuid1 = generateUniqueUUID(
+                value,
+                "${Build.PRODUCT}${Build.BRAND}${Build.HARDWARE}"
+            )
+            val uuid2 = generateUniqueUUID(
+                value,
+                "${Build.MANUFACTURER}${Build.MODEL}${Build.DEVICE}"
+            )
+            val uuid3 = generateUniqueUUID(value, Build.FINGERPRINT)
+            val uuid = generateUniqueUUID("$uuid1", "$uuid2$uuid3").toString()
+            Log.w(TAG, "getOldUuid: $uuid")
+            return@run uuid
+        }
     }
 }

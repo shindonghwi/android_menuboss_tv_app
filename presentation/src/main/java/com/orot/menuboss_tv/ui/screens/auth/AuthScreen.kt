@@ -48,6 +48,7 @@ import com.orot.menuboss_tv.ui.components.RiveAnimation
 import com.orot.menuboss_tv.ui.compose.modifier.tvSafeArea
 import com.orot.menuboss_tv.ui.compose.painter.rememberQrBitmapPainter
 import com.orot.menuboss_tv.ui.model.UiState
+import com.orot.menuboss_tv.ui.navigations.LocalMenuBoardViewModel
 import com.orot.menuboss_tv.ui.navigations.LocalNavController
 import com.orot.menuboss_tv.ui.navigations.RouteScreen
 import com.orot.menuboss_tv.ui.source_pack.IconPack
@@ -67,12 +68,13 @@ import kotlinx.coroutines.launch
 @SuppressLint("HardwareIds")
 @Composable
 fun AuthScreen(
-    uuid: String,
     authViewModel: AuthViewModel = hiltViewModel()
 ) {
 
     val context = LocalContext.current
     val navController = LocalNavController.current
+
+    val menuBoardViewModel = LocalMenuBoardViewModel.current
 
     val doMenuScreenActionState = authViewModel.navigateToMenuState.collectAsState().value
 
@@ -84,7 +86,7 @@ fun AuthScreen(
             if (event == Lifecycle.Event.ON_CREATE) {
             } else if (event == Lifecycle.Event.ON_RESUME && resumedOnce.value) {
                 CoroutineScope(Dispatchers.Main).launch {
-                    authViewModel.requestGetDeviceInfo(uuid = uuid)
+                    authViewModel.requestGetDeviceInfo(uuid = menuBoardViewModel.getUUID())
                 }
             } else if (event == Lifecycle.Event.ON_RESUME) {
                 // 첫 번째 onResume 호출에 대해 감지하고 상태를 업데이트합니다.
@@ -107,7 +109,7 @@ fun AuthScreen(
      * }
      */
     LaunchedEffect(key1 = Unit, block = {
-        authViewModel.startProcess(uuid)
+        authViewModel.startProcess(menuBoardViewModel.getUUID())
     })
 
     /**

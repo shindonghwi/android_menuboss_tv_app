@@ -8,6 +8,7 @@ import com.orot.menuboss_tv.domain.entities.DeviceScheduleModel
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Header
+import retrofit2.http.POST
 import retrofit2.http.Path
 
 interface TvApi {
@@ -43,5 +44,16 @@ interface TvApi {
         @Path(value = "uuid") uuid: String,
         @Header("Authorization") authorization: String? = null
     ): Response<ApiResponse<DeviceScheduleModel>>
+
+    /**
+     * @feature: 스케줄 정보 조회
+     *
+     * @author: 2023/11/29 9:38 AM donghwishin
+     */
+    @POST("$API_VERSION/screens/connect/{oldUuid}/to/{newUuid}")
+    suspend fun updateUuid(
+        @Path(value = "oldUuid") oldUuid: String,
+        @Path(value = "newUuid") newUuid: String,
+    ): Response<ApiResponse<Unit?>>
 
 }

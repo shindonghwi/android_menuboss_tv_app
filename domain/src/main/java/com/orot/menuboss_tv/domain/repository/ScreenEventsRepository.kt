@@ -7,7 +7,10 @@ import kotlinx.coroutines.flow.Flow
 
 interface ScreenEventsRepository {
     suspend fun openConnectStream(uuid: String): Flow<Pair<ConnectEventResponse.ConnectEvent?, Int>>
+
     suspend fun openContentStream(accessToken: String): Flow<Pair<ContentEventResponse.ContentEvent?, Int>>
 
     suspend fun sendPlayingEvent(playingEvent: PlayingEventRequest)
+
+    suspend fun closeStream()
 }

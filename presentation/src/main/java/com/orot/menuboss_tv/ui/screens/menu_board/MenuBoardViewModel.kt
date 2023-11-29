@@ -9,9 +9,11 @@ import com.orot.menuboss_tv.domain.usecases.GetPlaylistUseCase
 import com.orot.menuboss_tv.domain.usecases.GetScheduleUseCase
 import com.orot.menuboss_tv.domain.usecases.SendEventPlayingStreamUseCase
 import com.orot.menuboss_tv.domain.usecases.SubscribeContentStreamUseCase
+import com.orot.menuboss_tv.domain.usecases.UnSubscribeStreamUseCase
 import com.orot.menuboss_tv.ui.base.BaseViewModel
 import com.orot.menuboss_tv.ui.model.SimpleScreenModel
 import com.orot.menuboss_tv.ui.model.UiState
+import com.orot.menuboss_tv.utils.coroutineScopeOnDefault
 import com.orotcode.menuboss.grpc.lib.ContentEventResponse
 import com.orotcode.menuboss.grpc.lib.PlayingEventRequest
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -33,6 +35,7 @@ import javax.inject.Inject
 class MenuBoardViewModel @Inject constructor(
     private val subscribeContentStreamUseCase: SubscribeContentStreamUseCase,
     private val sendEventPlayingStreamUseCase: SendEventPlayingStreamUseCase,
+    private val unSubscribeStreamUseCase: UnSubscribeStreamUseCase,
     private val getPlaylistUseCase: GetPlaylistUseCase,
     private val getScheduleUseCase: GetScheduleUseCase,
     private val getDeviceUseCase: GetDeviceUseCase,
@@ -55,6 +58,7 @@ class MenuBoardViewModel @Inject constructor(
     private var _currentPlaylistId: Int? = null
     private var _currentContentId: String? = null
 
+    fun getUUID(): String = _uuid
     fun updateUUID(uuid: String) = kotlin.run { _uuid = uuid }
     fun updateForeground(isForeground: Boolean) = kotlin.run { _isForeground = isForeground }
     fun updateCurrentScheduleId(scheduleId: Int?) = kotlin.run { _currentScheduleId = scheduleId }
@@ -141,7 +145,7 @@ class MenuBoardViewModel @Inject constructor(
 
                             ContentEventResponse.ContentEvent.SHOW_SCREEN_NAME -> {
                                 Log.w(TAG, "subscribeContentStream: SHOW_SCREEN_NAME")
-                                requestGetDeviceInfo()
+                                requestGetDeviceInfo(enableEventMode = true)
                             }
 
                             ContentEventResponse.ContentEvent.CONTENT_EMPTY -> {
@@ -165,13 +169,13 @@ class MenuBoardViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 Log.w(TAG, "subscribeContentStream: 에러 수신: $e")
+                isContentSteamConnected = false
                 if (lastEvent == ContentEventResponse.ContentEvent.SCREEN_DELETED) {
                     Log.w(TAG, "subscribeContentStream: 스크린 삭제 이벤트 수신")
                     _screenState.emit(UiState.Success(data = SimpleScreenModel(isPlaylist = null)))
-                    isContentSteamConnected = false
                     triggerAuthState(true)
                     Log.w(TAG, "subscribeContentStream: 스크린 삭제 이벤트 수신 후 인증화면으로 이동")
-                } else if (!isContentSteamConnected) {
+                } else {
                     Log.w(TAG, "subscribeContentStream: 연결 재시도 준비")
                     startProcess()
                     Log.w(TAG, "subscribeContentStream: 연결 재시도 !")
@@ -184,7 +188,7 @@ class MenuBoardViewModel @Inject constructor(
      * @feature: 디바이스 정보를 조회합니다.
      * @author: 2023/10/03 11:39 AM donghwishin
      */
-    private suspend fun requestGetDeviceInfo() {
+    private suspend fun requestGetDeviceInfo(enableEventMode: Boolean = false) {
         deviceApiJob?.cancel()
         Log.w(TAG, "requestGetDeviceInfo: $_uuid")
         deviceApiJob = viewModelScope.launch {
@@ -204,7 +208,11 @@ class MenuBoardViewModel @Inject constructor(
 
                     is Resource.Success -> {
                         screenName = resource.data?.property?.name.toString()
-                        _eventCode.emit(lastEvent)
+                        if (enableEventMode) {
+                            _eventCode.emit(lastEvent)
+                        } else {
+                            _eventCode.emit(null)
+                        }
 
                         if (isContentSteamConnected) {
                             handleSuccess(resource.data)
@@ -314,7 +322,7 @@ class MenuBoardViewModel @Inject constructor(
     }
 
     /**
-     * @feature: DLog Event 보내는 기능
+     * @feature: Log Event 보내는 기능
      * @author: 2023/11/16 8:53 PM donghwishin
      */
     suspend fun sendEvent(event: PlayingEventRequest.PlayingEvent) {
@@ -334,20 +342,15 @@ class MenuBoardViewModel @Inject constructor(
                     .setEvent(event)
                     .build()
             )
-//            Log.w(
-//                TAG,
-//                "sendEvent: event: $event, " +
-//                        "scheduleId : $_currentScheduleId , " +
-//                        "playlistId: $_currentPlaylistId , " +
-//                        "contentId: $_currentContentId"
-//            )
         } catch (e: Exception) {
             Log.w(TAG, "sendEvent: $e")
         }
     }
 
     override fun onCleared() {
+        Log.w(TAG, "onCleared: ")
         super.onCleared()
+        coroutineScopeOnDefault { unSubscribeStreamUseCase.invoke() }
         currentContentStreamJob?.cancel()
         deviceApiJob?.cancel()
     }

@@ -1,5 +1,6 @@
 package com.orot.menuboss_tv.data.repository
 
+import android.util.Log
 import com.orot.menuboss_tv.data.services.TvApi
 import com.orot.menuboss_tv.data.utils.SafeApiRequest
 import com.orot.menuboss_tv.domain.entities.ApiResponse
@@ -32,6 +33,15 @@ class TvRepositoryImpl @Inject constructor(
 
     override suspend fun getDeviceSchedule(uuid: String, accessToken: String): ApiResponse<DeviceScheduleModel> {
         val response = safeApiRequest { tvApi.getDeviceSchedule(uuid, "Bearer $accessToken") }
+        return ApiResponse(
+            status = response.status,
+            message = response.message,
+            data = response.data
+        )
+    }
+
+    override suspend fun updateUuid(oldUuid: String, newUuid: String): ApiResponse<Unit?> {
+        val response = safeApiRequest { tvApi.updateUuid(oldUuid, newUuid) }
         return ApiResponse(
             status = response.status,
             message = response.message,

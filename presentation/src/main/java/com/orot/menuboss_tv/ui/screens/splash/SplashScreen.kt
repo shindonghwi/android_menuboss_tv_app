@@ -34,6 +34,7 @@ import com.orot.menuboss_tv.domain.constants.MENUBOSS_AMAZON_STORE_URL
 import com.orot.menuboss_tv.domain.constants.MENUBOSS_GOOGLE_STORE_URL
 import com.orot.menuboss_tv.presentation.R
 import com.orot.menuboss_tv.ui.components.RiveAnimation
+import com.orot.menuboss_tv.ui.navigations.LocalMenuBoardViewModel
 import com.orot.menuboss_tv.ui.navigations.LocalNavController
 import com.orot.menuboss_tv.ui.navigations.RouteScreen
 import com.orot.menuboss_tv.ui.theme.AdjustedBoldText
@@ -43,7 +44,6 @@ import com.orot.menuboss_tv.ui.theme.colorGray700
 import com.orot.menuboss_tv.ui.theme.colorGray900
 import com.orot.menuboss_tv.ui.theme.colorWhite
 import com.orot.menuboss_tv.utils.adjustedDp
-import com.orot.menuboss_tv.utils.coroutineScopeOnMain
 import focusableWithClick
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -59,11 +59,12 @@ import java.util.Locale
 
 @Composable
 fun SplashScreen(
-    uuid: String, splashViewModel: SplashViewModel = hiltViewModel()
+    splashViewModel: SplashViewModel = hiltViewModel()
 ) {
     val navController = LocalNavController.current
     val context = LocalContext.current
 
+    val menuBoardViewModel = LocalMenuBoardViewModel.current
     val doAuthScreenActionState = splashViewModel.navigateToAuthState.collectAsState().value
     val doMenuScreenActionState = splashViewModel.navigateToMenuState.collectAsState().value
     val forceUpdateState = splashViewModel.forceUpdateState.collectAsState().value
@@ -77,7 +78,7 @@ fun SplashScreen(
             } else if (event == Lifecycle.Event.ON_PAUSE) {
             } else if (event == Lifecycle.Event.ON_RESUME && resumedOnce.value) {
                 CoroutineScope(Dispatchers.Main).launch {
-                    splashViewModel.requestGetDeviceInfo(uuid = uuid, appVersion = getAppVersion(context))
+//                    splashViewModel.requestGetDeviceInfo(uuid = uuid, appVersion = getAppVersion(context))
                 }
             } else if (event == Lifecycle.Event.ON_RESUME) {
                 // 첫 번째 onResume 호출에 대해 감지하고 상태를 업데이트합니다.
@@ -96,9 +97,12 @@ fun SplashScreen(
      * @author: 2023/10/15 12:52 PM donghwishin
      */
     LaunchedEffect(key1 = Unit, block = {
-        coroutineScopeOnMain {
-            delay(1000) // riv animation 최초로 끝나는 시간을 기다립니다.
-            splashViewModel.requestGetDeviceInfo(uuid = uuid, appVersion = getAppVersion(context))
+        getAppVersion(context).let { appVersion ->
+            splashViewModel.run {
+                requestUpdateUUID(context = context, appVersion = appVersion)
+                delay(1000) // riv animation 최초로 끝나는 시간을 기다립니다.
+                requestGetDeviceInfo(appVersion = appVersion)
+            }
         }
     })
 
@@ -118,6 +122,7 @@ fun SplashScreen(
      */
     DisposableEffect(key1 = doAuthScreenActionState, effect = {
         if (doAuthScreenActionState) {
+            menuBoardViewModel.updateUUID(splashViewModel.getCurrentUUID())
             navController.navigate(RouteScreen.AuthScreen.route) {
                 popUpTo(navController.graph.startDestinationId) {
                     inclusive = true
@@ -135,6 +140,7 @@ fun SplashScreen(
      */
     DisposableEffect(key1 = doMenuScreenActionState, effect = {
         if (doMenuScreenActionState) {
+            menuBoardViewModel.updateUUID(splashViewModel.getCurrentUUID())
             navController.navigate(RouteScreen.MenuBoardScreen.route) {
                 popUpTo(navController.graph.startDestinationId) {
                     inclusive = true
@@ -223,7 +229,10 @@ private fun ForceUpdateUI() {
             AdjustedSemiBoldText(
                 modifier = Modifier.padding(
                     horizontal = adjustedDp(120.dp), vertical = adjustedDp(14.dp)
-                ), text = stringResource(id = R.string.splash_update_button), fontSize = adjustedDp(14.dp), color = colorGray900
+                ),
+                text = stringResource(id = R.string.splash_update_button),
+                fontSize = adjustedDp(14.dp),
+                color = colorGray900
             )
         }
     }

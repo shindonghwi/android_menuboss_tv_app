@@ -2,7 +2,9 @@ package com.orot.menuboss_tv.utils
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.os.Build
 import android.provider.Settings
+import android.util.Log
 import com.orot.menuboss_tv.logging.firebase.FirebaseAnalyticsUtil
 import java.net.NetworkInterface
 import java.nio.ByteBuffer
@@ -11,15 +13,22 @@ import java.util.Collections
 import java.util.UUID
 import javax.inject.Inject
 
+enum class Brand(val domain: String) {
+    AMAZON("fire-"),
+    GOOGLE("ggl-"),
+}
 
 class DeviceInfoUtil @Inject constructor(
     private val firebaseAnalyticsUtil: FirebaseAnalyticsUtil
 ) {
+    fun isAmazonDevice(): Boolean {
+        return Build.MANUFACTURER.equals("Amazon", ignoreCase = true)
+    }
 
     /** ssaid 값 추출 기능: 공장 초기화전까지 고유한 값 */
     @SuppressLint("HardwareIds")
     fun getAndroidUniqueId(context: Context): String {
-        return Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID).toString()
+        return Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
     }
 
     /** wlan0을 검색 대상으로 잡고 MAC Address 조회. */

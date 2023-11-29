@@ -1,20 +1,20 @@
 package com.orot.menuboss_tv.data.di
 
-import com.datadog.android.okhttp.DatadogEventListener
-import com.datadog.android.okhttp.DatadogInterceptor
-import com.datadog.android.rum.RumResourceAttributesProvider
+import android.content.Context
+import com.orot.menuboss_tv.data.repository.LocalRepositoryImpl
 import com.orot.menuboss_tv.data.repository.ScreenEventsRepositoryImpl
 import com.orot.menuboss_tv.data.services.GrpcScreenEventClient
 import com.orot.menuboss_tv.data.services.TvApi
 import com.orot.menuboss_tv.domain.constants.BASE_URL
+import com.orot.menuboss_tv.domain.repository.LocalRepository
 import com.orot.menuboss_tv.domain.repository.ScreenEventsRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
-import okhttp3.Request
 import okhttp3.Response
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -56,10 +56,6 @@ object DataModule {
 
     private fun provideOkHttpClient(): OkHttpClient =
         OkHttpClient.Builder().run {
-            addInterceptor(DatadogInterceptor(
-                rumResourceAttributesProvider = CustomRumResourceAttributesProvider()
-            ))
-            eventListenerFactory(DatadogEventListener.Factory())
             addInterceptor(AppInterceptor())
             addInterceptor(HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY
@@ -75,24 +71,16 @@ object DataModule {
 
     @Provides
     @Singleton
-    fun provideGrpcScreenEventClient(): GrpcScreenEventClient {
-        return GrpcScreenEventClient()
-    }
+    fun provideGrpcScreenEventClient() = GrpcScreenEventClient()
 
     @Provides
     fun provideScreenEventsRepository(grpcClient: GrpcScreenEventClient): ScreenEventsRepository =
         ScreenEventsRepositoryImpl(grpcClient)
-}
 
-class CustomRumResourceAttributesProvider : RumResourceAttributesProvider {
-    override fun onProvideAttributes(
-        request: Request,
-        response: Response?,
-        throwable: Throwable?
-    ): Map<String, Any?> {
-        val headers = request.headers
-        return headers.names().associate {
-            "headers.${it.lowercase(Locale.US)}" to headers.values(it).first()
-        }
+    @Provides
+    @Singleton
+    fun provideLocalRepository(@ApplicationContext context: Context): LocalRepository {
+        return LocalRepositoryImpl(context)
     }
+
 }
