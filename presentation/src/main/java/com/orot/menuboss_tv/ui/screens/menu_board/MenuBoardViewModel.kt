@@ -55,6 +55,7 @@ class MenuBoardViewModel @Inject constructor(
     private var _currentPlaylistId: Int? = null
     private var _currentContentId: String? = null
 
+    fun getUUID(): String = _uuid
     fun updateUUID(uuid: String) = kotlin.run { _uuid = uuid }
     fun updateForeground(isForeground: Boolean) = kotlin.run { _isForeground = isForeground }
     fun updateCurrentScheduleId(scheduleId: Int?) = kotlin.run { _currentScheduleId = scheduleId }

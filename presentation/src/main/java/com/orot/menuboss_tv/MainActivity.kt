@@ -36,7 +36,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MenuBossTVTheme {
-                Navigation(uuidValue = getXUniqueId())
+                Navigation()
             }
         }
     }
@@ -75,15 +75,15 @@ class MainActivity : ComponentActivity() {
     }
 
 
-    /**
-     * @feature: 디바이스의 고유한 식별자를 생성합니다.
-     * @author: 2023/10/03 11:39 AM donghwishin
-     */
+//    /**
+//     * @feature: 디바이스의 고유한 식별자를 생성합니다.
+//     * @author: 2023/10/03 11:39 AM donghwishin
+//     */
     private fun getXUniqueId(): String {
 
         val uniqueId = deviceInfoUtil.getAndroidUniqueId(applicationContext)
         val macAddress = deviceInfoUtil.getMacAddress()
-        val uniqueValue = macAddress.ifEmpty { uniqueId }
+        val uniqueValue = macAddress
 
         return deviceInfoUtil.run {
             val uuid1 = generateUniqueUUID(

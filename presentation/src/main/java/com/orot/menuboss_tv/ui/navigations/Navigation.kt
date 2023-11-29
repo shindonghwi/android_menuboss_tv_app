@@ -26,7 +26,7 @@ val LocalMenuBoardViewModel = compositionLocalOf<MenuBoardViewModel> {
 }
 
 @Composable
-fun Navigation(uuidValue: String) {
+fun Navigation() {
     val navController = rememberNavController()
     val menuBoardViewModel = hiltViewModel<MenuBoardViewModel>()
 
@@ -39,13 +39,13 @@ fun Navigation(uuidValue: String) {
                 navController = navController, startDestination = RouteScreen.SplashScreen.route
             ) {
                 composable(RouteScreen.SplashScreen.route) {
-                    SplashScreen(uuid = uuidValue)
+                    SplashScreen()
                 }
                 composable(RouteScreen.AuthScreen.route) {
-                    AuthScreen(uuid = uuidValue)
+                    AuthScreen()
                 }
                 composable(RouteScreen.MenuBoardScreen.route) {
-                    MenuBoardScreen(uuid = uuidValue)
+                    MenuBoardScreen()
                 }
             }
             EventScreen()

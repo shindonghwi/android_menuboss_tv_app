@@ -12,11 +12,7 @@ class UpdateUuidUseCase @Inject constructor(private val tvRepository: TvReposito
             emit(Resource.Loading())
             try {
                 val response = tvRepository.updateUuid(oldUuid, newUuid)
-                if (response.status == 200) {
-                    emit(Resource.Success(response.message, response.data))
-                } else {
-                    emit(Resource.Error(response.message))
-                }
+                emit(Resource.Success(response.message, response.data))
             } catch (e: Exception) {
                 emit(Resource.Error(message = e.toString()))
             }

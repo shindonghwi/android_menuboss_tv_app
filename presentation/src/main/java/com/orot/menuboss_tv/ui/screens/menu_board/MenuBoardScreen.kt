@@ -41,9 +41,7 @@ import com.orotcode.menuboss.grpc.lib.PlayingEventRequest
 import kotlinx.coroutines.launch
 
 @Composable
-fun MenuBoardScreen(
-    uuid: String,
-) {
+fun MenuBoardScreen() {
     val tag = "MenuBoardScreen"
     val menuBoardViewModel = LocalMenuBoardViewModel.current
     val navController = LocalNavController.current
@@ -98,10 +96,7 @@ fun MenuBoardScreen(
 
 
     LaunchedEffect(key1 = Unit, block = {
-        menuBoardViewModel.run {
-            updateUUID(uuid)
-            startProcess()
-        }
+        menuBoardViewModel.startProcess()
     })
 
     DisposableEffect(key1 = doAuthScreenActionState, effect = {
@@ -143,7 +138,7 @@ fun MenuBoardScreen(
                 val screenData = item.data
 
                 if (screenData?.isDeleted == true) {
-                    AuthScreen(uuid = uuid)
+                    AuthScreen()
                 } else if (screenData?.isExpired == true) {
                     ExpiredScreen(modifier = Modifier.fillMaxSize())
                 } else {
