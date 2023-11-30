@@ -1,6 +1,5 @@
 package com.orot.menuboss_tv.ui.screens.menu_board
 
-import android.os.Build
 import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.Crossfade
@@ -48,6 +47,9 @@ import kotlinx.coroutines.launch
 fun MenuBoardScreen() {
     val tag = "MenuBoardScreen"
     val activity = LocalContext.current as MainActivity
+
+    BackHandler { activity.finish()}
+
     val menuBoardViewModel = LocalMenuBoardViewModel.current
     val navController = LocalNavController.current
     val screenState = menuBoardViewModel.screenState.collectAsState().value
