@@ -17,7 +17,7 @@
     <string name="auth_scan_qr_code">Scan QR Code</string>
 
     <string name="content_empty_title">No Content to display!</string>
-    <string name="content_empty_subtitle">Please apply schedule or playlist content\non "Menu Boss Mobile App" or "Menu Boss Web"!</string>
+    <string name="content_empty_subtitle">Please apply schedule or playlist content\non "MenuBoss Mobile App" or "MenuBoss Web"!</string>
     <string name="content_expired_title">Subscription has expired!</string>
     <string name="content_expired_description1">You can not use it because your subscription period has expired.</string>
     <string name="content_expired_description2">You can use it again by subscribing to the service</string>

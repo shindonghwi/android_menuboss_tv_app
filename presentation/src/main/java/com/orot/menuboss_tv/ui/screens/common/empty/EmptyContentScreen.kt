@@ -10,7 +10,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.orot.menuboss_tv.presentation.R
 import com.orot.menuboss_tv.ui.theme.AdjustedBoldText
-import com.orot.menuboss_tv.ui.theme.AdjustedMediumText
 import com.orot.menuboss_tv.ui.theme.AdjustedRegularText
 import com.orot.menuboss_tv.ui.theme.colorGray100
 import com.orot.menuboss_tv.utils.adjustedDp
@@ -31,7 +30,8 @@ fun EmptyContentScreen(modifier: Modifier) {
         AdjustedRegularText(
             modifier = Modifier.padding(top = adjustedDp(24.dp)),
             text = stringResource(id = R.string.content_empty_subtitle),
-            fontSize = adjustedDp(20.dp), color = colorGray100
+            fontSize = adjustedDp(20.dp),
+            color = colorGray100
         )
     }
 }
