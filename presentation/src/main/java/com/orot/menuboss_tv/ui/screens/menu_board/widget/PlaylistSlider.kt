@@ -73,7 +73,7 @@ fun PlaylistSlider(model: DevicePlaylistModel) {
         ) {
             it.forEachIndexed { index, content ->
                 when (content.type?.code) {
-                    "Image" -> {
+                    "Canvas", "Image" -> {
                         Crossfade(
                             targetState = currentIndex == index,
                             animationSpec = tween(

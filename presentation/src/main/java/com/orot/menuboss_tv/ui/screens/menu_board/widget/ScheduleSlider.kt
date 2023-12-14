@@ -90,7 +90,7 @@ fun ScheduleSlider(model: DeviceScheduleModel) {
             ) {
                 it.first.forEachIndexed { index, content ->
                     when (content.type?.code) {
-                        "Image" -> {
+                        "Canvas", "Image" -> {
                             Crossfade(
                                 targetState = currentIndex == index,
                                 animationSpec = tween(
