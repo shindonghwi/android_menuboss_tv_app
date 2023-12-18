@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -55,7 +54,11 @@ import com.orot.menuboss_tv.ui.source_pack.IconPack
 import com.orot.menuboss_tv.ui.source_pack.iconpack.Logo
 import com.orot.menuboss_tv.ui.theme.AdjustedBoldText
 import com.orot.menuboss_tv.ui.theme.AdjustedMediumText
+import com.orot.menuboss_tv.ui.theme.AdjustedRegularText
+import com.orot.menuboss_tv.ui.theme.AdjustedSemiBoldText
 import com.orot.menuboss_tv.ui.theme.colorBackground
+import com.orot.menuboss_tv.ui.theme.colorGray100
+import com.orot.menuboss_tv.ui.theme.colorGray400
 import com.orot.menuboss_tv.ui.theme.colorLightSkyBlue
 import com.orot.menuboss_tv.ui.theme.colorWhite
 import com.orot.menuboss_tv.utils.adjustedDp
@@ -205,10 +208,11 @@ private fun HeaderContent(modifier: Modifier) {
         AdjustedBoldText(
             text = stringResource(id = R.string.auth_title), fontSize = adjustedDp(32.dp)
         )
-        AdjustedMediumText(
+        AdjustedRegularText(
             modifier = Modifier.padding(top = adjustedDp(8.dp)),
             text = stringResource(id = R.string.auth_subtitle),
-            fontSize = adjustedDp(16.dp)
+            fontSize = adjustedDp(16.dp),
+            color = colorGray100
         )
     }
 }
@@ -238,16 +242,6 @@ private fun BodyContent(
 }
 
 @Composable
-private fun FooterContent(modifier: Modifier) {
-    AdjustedMediumText(
-        modifier = modifier,
-        text = "${stringResource(id = R.string.auth_description1)}\n${stringResource(id = R.string.auth_description2)}",
-        fontSize = adjustedDp(14.dp),
-        color = colorWhite.copy(alpha = 0.8f),
-    )
-}
-
-@Composable
 private fun PinCode(
     modifier: Modifier, code: String?,
 ) {
@@ -264,25 +258,28 @@ private fun PinCode(
         verticalArrangement = Arrangement.Center,
     ) {
 
-        AdjustedBoldText(text = stringResource(id = R.string.auth_enter_pin_code), fontSize = adjustedDp(24.dp))
+        AdjustedSemiBoldText(
+            text = stringResource(id = R.string.auth_enter_pin_code),
+            fontSize = adjustedDp(24.dp)
+        )
 
         AdjustedBoldText(
             modifier = Modifier
                 .padding(top = adjustedDp(20.dp))
                 .fillMaxWidth(), // 48.dp
-            text = code.toString(), letterSpacing = 0.5, fontSize = adjustedDp(140.dp) // 24.dp
+            text = code.toString(), letterSpacing = 0.5, fontSize = adjustedDp(100.dp) // 24.dp
+        )
+
+        AdjustedRegularText(
+            modifier = Modifier.padding(top = adjustedDp(20.dp)),
+            text = stringResource(id = R.string.auth_enter_pin_code_description),
+            fontSize = adjustedDp(14.dp),
+            color = colorGray400
         )
 
         AdjustedMediumText(
-            modifier = Modifier.padding(top = adjustedDp(30.dp)),
-            text = stringResource(id = R.string.auth_enter_pin_code_description),
-            fontSize = adjustedDp(14.dp),
-            color = colorWhite.copy(alpha = 0.5f),
-        )
-
-        AdjustedBoldText(
             modifier = Modifier
-                .padding(top = adjustedDp(12.dp))
+                .padding(top = adjustedDp(4.dp))
                 .focusableWithClick {
                     try {
                         val intent = Intent(Intent.ACTION_VIEW).apply {
@@ -301,7 +298,7 @@ private fun PinCode(
                 }
                 .padding(vertical = adjustedDp(8.dp), horizontal = adjustedDp(12.dp)),
             text = WEB_LOGIN_URL,
-            fontSize = adjustedDp(20.dp),
+            fontSize = adjustedDp(16.dp),
             color = colorLightSkyBlue,
         )
     }
@@ -320,7 +317,7 @@ private fun OrDivider() {
                 .background(colorWhite)
         )
 
-        AdjustedBoldText(
+        AdjustedSemiBoldText(
             modifier = Modifier.padding(vertical = adjustedDp(12.dp)),
             text = stringResource(id = R.string.common_or),
             fontSize = adjustedDp(16.dp),
@@ -348,7 +345,7 @@ private fun QRCode(modifier: Modifier, qrUrl: String?) {
         verticalArrangement = Arrangement.Center,
     ) {
 
-        AdjustedBoldText(
+        AdjustedSemiBoldText(
             text = stringResource(id = R.string.auth_scan_qr_code),
             fontSize = adjustedDp(24.dp),
         )
@@ -356,8 +353,8 @@ private fun QRCode(modifier: Modifier, qrUrl: String?) {
         qrUrl?.let {
             Image(
                 modifier = Modifier
-                    .padding(top = adjustedDp(60.dp))
-                    .size(adjustedDp(260.dp)),
+                    .padding(top = adjustedDp(40.dp))
+                    .size(adjustedDp(184.dp)),
                 painter = rememberQrBitmapPainter(it),
                 contentDescription = "QR Code",
                 contentScale = ContentScale.FillBounds,
@@ -365,6 +362,17 @@ private fun QRCode(modifier: Modifier, qrUrl: String?) {
         }
     }
 }
+
+@Composable
+private fun FooterContent(modifier: Modifier) {
+    AdjustedMediumText(
+        modifier = modifier,
+        text = "${stringResource(id = R.string.auth_description1)}\n${stringResource(id = R.string.auth_description2)}",
+        fontSize = adjustedDp(14.dp),
+        color = colorGray100
+    )
+}
+
 
 @Composable
 private fun Loading() {

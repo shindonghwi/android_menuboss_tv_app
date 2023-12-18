@@ -32,6 +32,8 @@ import com.orot.menuboss_tv.ui.navigations.LocalMenuBoardViewModel
 import com.orot.menuboss_tv.ui.navigations.LocalNavController
 import com.orot.menuboss_tv.ui.navigations.RouteScreen
 import com.orot.menuboss_tv.ui.screens.auth.AuthScreen
+import com.orot.menuboss_tv.ui.screens.common.empty.EmptyContentScreen
+import com.orot.menuboss_tv.ui.screens.common.expired.ExpiredScreen
 import com.orot.menuboss_tv.ui.screens.common.reload.ReloadScreen
 import com.orot.menuboss_tv.ui.screens.menu_board.widget.PlaylistSlider
 import com.orot.menuboss_tv.ui.screens.menu_board.widget.ScheduleSlider
@@ -185,48 +187,4 @@ fun MenuBoardScreen() {
     }
 }
 
-@Composable
-private fun EmptyContentScreen(modifier: Modifier) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        AdjustedBoldText(
-            text = stringResource(id = R.string.content_empty_title),
-            fontSize = adjustedDp(48.dp),
-        )
 
-        AdjustedMediumText(
-            modifier = Modifier.padding(top = adjustedDp(24.dp)),
-            text = stringResource(id = R.string.content_empty_subtitle),
-            fontSize = adjustedDp(20.dp)
-        )
-    }
-}
-
-@Composable
-private fun ExpiredScreen(modifier: Modifier) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        AdjustedBoldText(
-            text = stringResource(id = R.string.content_expired_title),
-            fontSize = adjustedDp(48.dp),
-        )
-
-        AdjustedSemiBoldText(
-            modifier = Modifier.padding(top = adjustedDp(12.dp)),
-            text = stringResource(id = R.string.content_expired_description1),
-            fontSize = adjustedDp(18.dp)
-        )
-
-        AdjustedSemiBoldText(
-            modifier = Modifier.padding(top = adjustedDp(4.dp)),
-            text = stringResource(id = R.string.content_expired_description2),
-            fontSize = adjustedDp(18.dp)
-        )
-    }
-}

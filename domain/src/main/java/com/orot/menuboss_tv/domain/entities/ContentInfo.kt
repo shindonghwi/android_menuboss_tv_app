@@ -10,14 +10,14 @@ data class ContentInfo(
         val name: String,
     )
     data class Property(
-        val width: Int,
-        val height: Int,
-        val size: Int,
+        val width: Int?,
+        val height: Int?,
+        val size: Int?,
         val duration: Int?,
         val rotation: Int?,
-        val contentType: String,
+        val contentType: String?,
         val codec: String?,
-        val imageUrl: String,
+        val imageUrl: String?,
         val videoUrl: String?,
     )
 }

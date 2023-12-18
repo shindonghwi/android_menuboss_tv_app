@@ -19,33 +19,28 @@ import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Text
 import com.orot.menuboss_tv.presentation.R
 
-val Manrope = FontFamily(
-    Font(R.font.manrope_extralight, FontWeight.W200),
-    Font(R.font.manrope_light, FontWeight.W300),
-    Font(R.font.manrope_regular, FontWeight.W400),
-    Font(R.font.manrope_medium, FontWeight.W500),
-    Font(R.font.manrope_semibold, FontWeight.W600),
-    Font(R.font.manrope_bold, FontWeight.W700),
-    Font(R.font.manrope_extrabold, FontWeight.W800),
+val Pretendard = FontFamily(
+    Font(R.font.pretendard_thin, FontWeight.W100),
+    Font(R.font.pretendard_extralight, FontWeight.W200),
+    Font(R.font.pretendard_light, FontWeight.W300),
+    Font(R.font.pretendard_regular, FontWeight.W400),
+    Font(R.font.pretendard_medium, FontWeight.W500),
+    Font(R.font.pretendard_semibold, FontWeight.W600),
+    Font(R.font.pretendard_bold, FontWeight.W700),
+    Font(R.font.pretendard_extrabold, FontWeight.W800),
+    Font(R.font.pretendard_black, FontWeight.W900),
 )
 
-class ManropeTypo {
+class PretendardTypo {
 
     companion object {
         private val baseStyle = TextStyle(
-            fontFamily = Manrope,
+            fontFamily = Pretendard,
             textAlign = TextAlign.Center,
             platformStyle = PlatformTextStyle(
                 includeFontPadding = false
             )
         )
-
-        @Composable
-        fun getAdjustSize(fontSize: Float): Float {
-            val resources = LocalContext.current.resources
-            val density = resources.displayMetrics.density
-            return fontSize / density
-        }
 
         val bold = baseStyle.copy(
             fontWeight = FontWeight.Bold,
@@ -57,6 +52,10 @@ class ManropeTypo {
 
         val semiBold = baseStyle.copy(
             fontWeight = FontWeight.SemiBold,
+        )
+
+        val regular = baseStyle.copy(
+            fontWeight = FontWeight.Normal,
         )
     }
 }
@@ -72,7 +71,7 @@ fun AdjustedBoldText(
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         Text(
             text = text,
-            style = ManropeTypo.bold.copy(
+            style = PretendardTypo.bold.copy(
                 color = color,
                 fontSize = fontSize.value.sp,
                 letterSpacing = letterSpacing.em,
@@ -92,7 +91,29 @@ fun AdjustedMediumText(
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         Text(
             text = text,
-            style = ManropeTypo.medium.copy(color = color, fontSize = fontSize.value.sp),
+            style = PretendardTypo.medium.copy(
+                color = color,
+                fontSize = fontSize.value.sp
+            ),
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+@Composable
+fun AdjustedRegularText(
+    modifier: Modifier = Modifier,
+    text: String,
+    fontSize: Dp,
+    color: Color = colorWhite
+) {
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+        Text(
+            text = text,
+            style = PretendardTypo.regular.copy(
+                color = color,
+                fontSize = fontSize.value.sp
+            ),
             textAlign = TextAlign.Center,
         )
     }
@@ -108,7 +129,10 @@ fun AdjustedSemiBoldText(
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         Text(
             text = text,
-            style = ManropeTypo.semiBold.copy(color = color, fontSize = fontSize.value.sp),
+            style = PretendardTypo.semiBold.copy(
+                color = color,
+                fontSize = fontSize.value.sp
+            ),
             textAlign = TextAlign.Center,
         )
     }

@@ -22,6 +22,8 @@ import com.orot.menuboss_tv.ui.source_pack.IconPack
 import com.orot.menuboss_tv.ui.source_pack.iconpack.Logo
 import com.orot.menuboss_tv.ui.theme.AdjustedBoldText
 import com.orot.menuboss_tv.ui.theme.AdjustedMediumText
+import com.orot.menuboss_tv.ui.theme.AdjustedRegularText
+import com.orot.menuboss_tv.ui.theme.colorGray100
 import com.orot.menuboss_tv.ui.theme.colorWhite
 import com.orot.menuboss_tv.utils.adjustedDp
 
@@ -44,8 +46,6 @@ fun ReloadScreen() {
             HeaderContent(modifier = Modifier.layoutId("header"))
 
             BodyContent(modifier = Modifier.layoutId("body"))
-
-            FooterContent(modifier = Modifier.layoutId("footer"))
         }
     }
 
@@ -106,10 +106,11 @@ private fun HeaderContent(modifier: Modifier) {
         AdjustedBoldText(
             text = "Changing MenuBoss TV App settings", fontSize = adjustedDp(32.dp)
         )
-        AdjustedMediumText(
+        AdjustedRegularText(
             modifier = Modifier.padding(top = adjustedDp(8.dp)),
             text = "Please don't turn off the screen until the setting is done",
-            fontSize = adjustedDp(16.dp)
+            fontSize = adjustedDp(16.dp),
+            color = colorGray100
         )
     }
 }
@@ -123,16 +124,5 @@ private fun BodyContent(modifier: Modifier) {
             it.play()
         },
         onAnimEnd = {},
-    )
-}
-
-
-@Composable
-private fun FooterContent(modifier: Modifier) {
-    AdjustedMediumText(
-        modifier = modifier,
-        text = "TV Name : 109230948",
-        fontSize = adjustedDp(14.dp),
-        color = colorWhite.copy(alpha = 0.8f)
     )
 }

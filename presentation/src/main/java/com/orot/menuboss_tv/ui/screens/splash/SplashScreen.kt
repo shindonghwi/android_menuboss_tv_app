@@ -38,11 +38,13 @@ import com.orot.menuboss_tv.ui.navigations.LocalMenuBoardViewModel
 import com.orot.menuboss_tv.ui.navigations.LocalNavController
 import com.orot.menuboss_tv.ui.navigations.RouteScreen
 import com.orot.menuboss_tv.ui.theme.AdjustedBoldText
+import com.orot.menuboss_tv.ui.theme.AdjustedMediumText
+import com.orot.menuboss_tv.ui.theme.AdjustedRegularText
 import com.orot.menuboss_tv.ui.theme.AdjustedSemiBoldText
 import com.orot.menuboss_tv.ui.theme.colorBackground
+import com.orot.menuboss_tv.ui.theme.colorGray300
 import com.orot.menuboss_tv.ui.theme.colorGray700
 import com.orot.menuboss_tv.ui.theme.colorGray900
-import com.orot.menuboss_tv.ui.theme.colorWhite
 import com.orot.menuboss_tv.utils.adjustedDp
 import focusableWithClick
 import kotlinx.coroutines.CoroutineScope
@@ -186,7 +188,7 @@ private fun ForceUpdateUI() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        AdjustedBoldText(
+        AdjustedSemiBoldText(
             modifier = Modifier
                 .padding(horizontal = adjustedDp(212.dp))
                 .padding(
@@ -197,13 +199,14 @@ private fun ForceUpdateUI() {
 
         Divider(color = colorGray700)
 
-        AdjustedBoldText(
+        AdjustedRegularText(
             modifier = Modifier
-                .padding(horizontal = adjustedDp(76.dp))
+                .padding(horizontal = adjustedDp(84.dp))
                 .padding(
                     top = adjustedDp(24.dp),
                 ),
-            text = stringResource(id = R.string.splash_update_description1), fontSize = adjustedDp(16.dp)
+            text = stringResource(id = R.string.splash_update_description1),
+            fontSize = adjustedDp(16.dp)
         )
 
         AdjustedBoldText(
@@ -212,7 +215,8 @@ private fun ForceUpdateUI() {
                 .padding(
                     top = adjustedDp(4.dp), bottom = adjustedDp(24.dp)
                 ),
-            text = stringResource(id = R.string.splash_update_description2), fontSize = adjustedDp(16.dp)
+            text = stringResource(id = R.string.splash_update_description2),
+            fontSize = adjustedDp(16.dp)
         )
 
         Box(
@@ -221,14 +225,15 @@ private fun ForceUpdateUI() {
                 .padding(
                     top = adjustedDp(12.dp), bottom = adjustedDp(24.dp)
                 )
-                .background(colorWhite)
+                .background(colorGray300)
                 .focusableWithClick {
                     openAmazonAppStore(context)
                 }, contentAlignment = Alignment.Center
         ) {
-            AdjustedSemiBoldText(
+            AdjustedMediumText(
                 modifier = Modifier.padding(
-                    horizontal = adjustedDp(120.dp), vertical = adjustedDp(14.dp)
+                    horizontal = adjustedDp(120.dp),
+                    vertical = adjustedDp(14.dp)
                 ),
                 text = stringResource(id = R.string.splash_update_button),
                 fontSize = adjustedDp(14.dp),
