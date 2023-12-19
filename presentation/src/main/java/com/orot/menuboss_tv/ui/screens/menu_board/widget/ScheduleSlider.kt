@@ -17,6 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.tv.material3.Text
 import coil.compose.rememberAsyncImagePainter
@@ -37,6 +38,7 @@ fun ScheduleSlider(model: DeviceScheduleModel) {
     val menuBoardViewModel = LocalMenuBoardViewModel.current
     val context = LocalContext.current
     var currentTimeline by remember { mutableStateOf(getCurrentTimeline(model.timeline)) }
+    val configuration = LocalConfiguration.current
     val currentContent = currentTimeline?.playlist?.contents
     val isDirectionHorizontal = currentTimeline?.playlist?.property?.direction?.code == "Horizontal"
     val contentScale = when (currentTimeline?.playlist?.property?.fill?.code?.lowercase(Locale.getDefault())) {
@@ -106,7 +108,7 @@ fun ScheduleSlider(model: DeviceScheduleModel) {
                                     val painter = rememberAsyncImagePainter(
                                         model = ImageRequest.Builder(LocalContext.current)
                                             .data(imageUrl)
-                                            .size(Size.ORIGINAL)
+                                            .size(Size(configuration.screenWidthDp, configuration.screenHeightDp))
                                             .transformations(object :
                                                 Transformation {
                                                 override val cacheKey: String get() = "$imageUrl$isDirectionHorizontal"

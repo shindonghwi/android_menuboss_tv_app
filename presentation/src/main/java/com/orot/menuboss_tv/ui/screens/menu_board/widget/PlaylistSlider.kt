@@ -17,6 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.tv.material3.Text
 import coil.compose.rememberAsyncImagePainter
@@ -36,6 +37,7 @@ fun PlaylistSlider(model: DevicePlaylistModel) {
     val menuBoardViewModel = LocalMenuBoardViewModel.current
     val scope = rememberCoroutineScope()
     val contents = model.contents
+    val configuration = LocalConfiguration.current
     val isDirectionHorizontal = model.property?.direction?.code == "Horizontal"
     val contentScale = when (model.property?.fill?.code?.lowercase(Locale.getDefault())) {
         "fit" -> ContentScale.Fit
@@ -89,7 +91,7 @@ fun PlaylistSlider(model: DevicePlaylistModel) {
                                 val painter = rememberAsyncImagePainter(
                                     model = ImageRequest.Builder(LocalContext.current)
                                         .data(imageUrl)
-                                        .size(Size.ORIGINAL)
+                                        .size(Size(configuration.screenWidthDp, configuration.screenHeightDp))
                                         .transformations(object :
                                             Transformation {
                                             override val cacheKey: String get() = "$imageUrl$isDirectionHorizontal"
