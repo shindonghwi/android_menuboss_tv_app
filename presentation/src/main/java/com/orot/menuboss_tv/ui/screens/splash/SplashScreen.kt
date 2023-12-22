@@ -275,9 +275,6 @@ private fun openAmazonAppStore(context: Context) {
             context.startActivity(
                 Intent(Intent.ACTION_VIEW).apply {
                     data = Uri.parse(storeUrl)
-                    if (isFirsOs) {
-                        setPackage("com.amazon.cloud9")
-                    }
                 }
             )
         } catch (e: ActivityNotFoundException) {
