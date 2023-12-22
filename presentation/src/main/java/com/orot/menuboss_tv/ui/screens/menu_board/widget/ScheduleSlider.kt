@@ -1,6 +1,7 @@
 package com.orot.menuboss_tv.ui.screens.menu_board.widget
 
 import android.graphics.Bitmap
+import android.graphics.Matrix
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -20,8 +21,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.tv.material3.Text
+import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
+import coil.size.Scale
 import coil.size.Size
 import coil.transform.Transformation
 import com.orot.menuboss_tv.domain.entities.DeviceScheduleModel
@@ -105,10 +108,11 @@ fun ScheduleSlider(model: DeviceScheduleModel) {
                                 if (isCurrent) {
                                     val imageUrl = content.property?.imageUrl
 
-                                    val painter = rememberAsyncImagePainter(
+                                    AsyncImage(
+                                        modifier = Modifier.fillMaxSize(),
                                         model = ImageRequest.Builder(LocalContext.current)
                                             .data(imageUrl)
-                                            .size(Size(configuration.screenWidthDp, configuration.screenHeightDp))
+                                            .scale(Scale.FILL)
                                             .transformations(object :
                                                 Transformation {
                                                 override val cacheKey: String get() = "$imageUrl$isDirectionHorizontal"
@@ -117,7 +121,7 @@ fun ScheduleSlider(model: DeviceScheduleModel) {
                                                     input: Bitmap,
                                                     size: Size
                                                 ): Bitmap {
-                                                    val matrix = android.graphics.Matrix()
+                                                    val matrix = Matrix()
                                                     matrix.postRotate(if (isDirectionHorizontal) 0f else -90f)
                                                     return Bitmap.createBitmap(
                                                         input,
@@ -131,13 +135,8 @@ fun ScheduleSlider(model: DeviceScheduleModel) {
                                                 }
                                             })
                                             .build(),
-                                    )
-
-                                    Image(
-                                        modifier = Modifier.fillMaxSize(),
-                                        painter = painter,
                                         contentDescription = null,
-                                        contentScale = contentScale
+                                        contentScale = contentScale,
                                     )
                                 }
                             }

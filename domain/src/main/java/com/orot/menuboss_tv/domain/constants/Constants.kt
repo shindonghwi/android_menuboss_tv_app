@@ -21,7 +21,7 @@ val WEB_LOGIN_URL = if (BuildConfig.DEBUG) {
     "https://www.themenuboss.com/login"
 }
 
-val MENUBOSS_AMAZON_STORE_URL = "http://www.amazon.com/gp/mas/dl/android?p=com.orot.menuboss_tv"
-val MENUBOSS_GOOGLE_STORE_URL = "https://play.google.com/store/apps/details?id=com.orot.menuboss_tv"
+val MENUBOSS_AMAZON_STORE_URL = "amzn://apps/android?p=com.orot.menuboss_tv"
+val MENUBOSS_GOOGLE_STORE_URL = "market://details?id=com.orot.menuboss_tv"
 
 const val API_VERSION = "v1"
