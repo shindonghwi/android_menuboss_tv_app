@@ -4,7 +4,6 @@ import android.graphics.Bitmap
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -20,8 +19,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.tv.material3.Text
-import coil.compose.rememberAsyncImagePainter
+import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import coil.size.Scale
 import coil.size.Size
 import coil.transform.Transformation
 import com.orot.menuboss_tv.domain.entities.DevicePlaylistModel
@@ -88,10 +88,11 @@ fun PlaylistSlider(model: DevicePlaylistModel) {
                             if (isCurrent) {
                                 val imageUrl = content.property?.imageUrl
 
-                                val painter = rememberAsyncImagePainter(
+                                AsyncImage(
+                                    modifier = Modifier.fillMaxSize(),
                                     model = ImageRequest.Builder(LocalContext.current)
                                         .data(imageUrl)
-                                        .size(Size(configuration.screenWidthDp, configuration.screenHeightDp))
+                                        .scale(Scale.FILL)
                                         .transformations(object :
                                             Transformation {
                                             override val cacheKey: String get() = "$imageUrl$isDirectionHorizontal"
@@ -114,13 +115,8 @@ fun PlaylistSlider(model: DevicePlaylistModel) {
                                             }
                                         })
                                         .build(),
-                                )
-
-                                Image(
-                                    modifier = Modifier.fillMaxSize(),
-                                    painter = painter,
                                     contentDescription = null,
-                                    contentScale = contentScale
+                                    contentScale = contentScale,
                                 )
                             }
                         }
