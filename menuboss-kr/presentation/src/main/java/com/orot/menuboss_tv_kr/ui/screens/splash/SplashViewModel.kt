@@ -9,7 +9,6 @@ import com.orot.menuboss_tv_kr.domain.entities.Resource
 import com.orot.menuboss_tv_kr.domain.usecases.GetDeviceUseCase
 import com.orot.menuboss_tv_kr.domain.usecases.GetUpdatedByUuidUseCase
 import com.orot.menuboss_tv_kr.domain.usecases.PatchUpdatedByUuidUseCase
-import com.orot.menuboss_tv_kr.domain.usecases.UpdateUuidUseCase
 import com.orot.menuboss_tv_kr.ui.base.BaseViewModel
 import com.orot.menuboss_tv_kr.ui.model.UiState
 import com.orot.menuboss_tv_kr.utils.Brand
@@ -32,7 +31,6 @@ enum class FORCE_UPDATE_STATE {
 @HiltViewModel
 class SplashViewModel @Inject constructor(
     private val getDeviceUseCase: GetDeviceUseCase,
-    private val updateUuidUseCase: UpdateUuidUseCase,
     private val deviceInfoUtil: DeviceInfoUtil,
     private val patchUpdatedByUuidUseCase: PatchUpdatedByUuidUseCase,
     private val getUpdatedByUuidUseCase: GetUpdatedByUuidUseCase
@@ -64,55 +62,9 @@ class SplashViewModel @Inject constructor(
      * @feature: 디바이스 정보 수집을 계속 시도할지 여부를 관리합니다.
      */
     private var isUuidCollectRunning = true
-    suspend fun requestUpdateUUID(context: Context, appVersion: String) {
-
+    suspend fun requestUpdateUUID() {
         val oldUuid = getOldUuid()
-        val newUuid = getAndroidUniqueId(context)
-        Log.w(TAG, "requestUpdateUUID: ${extractNumbers(appVersion)}")
-
-
-        val uuidChangeRequiredVersion = "1.1.2"
-
-        Log.w(TAG, "requestUpdateUUID: ${extractNumbers(appVersion)} || ${extractNumbers(uuidChangeRequiredVersion)}")
-
-        if (
-            extractNumbers(appVersion) >= extractNumbers(uuidChangeRequiredVersion)
-        ) {
-            // uuid 변경에 성공한 경우
-            if (getUpdatedByUuidUseCase.invoke()) {
-                updateCurrentUUID(newUuid)
-            } else {
-                Log.w(TAG, "requestUpdateUUID: ${getOldUuid()} -> $newUuid")
-                var attempt = 0
-                viewModelScope.launch {
-                    while (isUuidCollectRunning) {
-                        updateUuidUseCase(oldUuid, newUuid).collect { resource ->
-                            Log.w(TAG, "requestUpdateUUID: ${resource.message} ${resource.data}")
-                            when (resource) {
-                                is Resource.Loading -> {}
-                                is Resource.Error -> {
-                                    delay(calculateDelay(attempt))
-                                    return@collect
-                                }
-
-                                is Resource.Success -> {
-                                    isUuidCollectRunning = false
-                                    patchUpdatedByUuidUseCase.invoke(true)
-                                    updateCurrentUUID(newUuid)
-                                    cancel()
-                                }
-                            }
-                        }
-                        attempt++
-                    }
-                }
-            }
-
-        } else {
-            updateCurrentUUID(oldUuid)
-        }
-
-
+        updateCurrentUUID(oldUuid)
     }
 
     /**

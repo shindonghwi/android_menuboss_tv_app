@@ -11,13 +11,13 @@ object AppConfig {
 }
 
 object DebugConfig {
-    const val app_label = "MenuBossTV(DEV)"
+    const val app_label = "메뉴보스(DEV)"
     const val suffixName = ".dev"
     const val versionName = "-dev"
 }
 
 object ReleaseConfig {
-    const val app_label = "MenuBossTV"
+    const val app_label = "메뉴보스TV"
     const val suffixName = ""
     const val versionName = ""
 }

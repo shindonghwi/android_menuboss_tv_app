@@ -101,7 +101,7 @@ fun SplashScreen(
     LaunchedEffect(key1 = Unit, block = {
         getAppVersion(context).let { appVersion ->
             splashViewModel.run {
-                requestUpdateUUID(context = context, appVersion = appVersion)
+                requestUpdateUUID()
                 delay(1000) // riv animation 최초로 끝나는 시간을 기다립니다.
                 requestGetDeviceInfo(appVersion = appVersion)
             }

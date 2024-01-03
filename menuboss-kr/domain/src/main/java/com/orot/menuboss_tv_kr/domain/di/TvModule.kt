@@ -4,7 +4,6 @@ import com.orot.menuboss_tv_kr.domain.repository.TvRepository
 import com.orot.menuboss_tv_kr.domain.usecases.GetDeviceUseCase
 import com.orot.menuboss_tv_kr.domain.usecases.GetPlaylistUseCase
 import com.orot.menuboss_tv_kr.domain.usecases.GetScheduleUseCase
-import com.orot.menuboss_tv_kr.domain.usecases.UpdateUuidUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -31,11 +30,5 @@ object TvModule {
     @Provides
     fun provideGetPlaylistUseCase(tvRepository: TvRepository): GetPlaylistUseCase {
         return GetPlaylistUseCase(tvRepository)
-    }
-
-    @Singleton
-    @Provides
-    fun provideUpdateUuidUseCase(tvRepository: TvRepository): UpdateUuidUseCase {
-        return UpdateUuidUseCase(tvRepository)
     }
 }
