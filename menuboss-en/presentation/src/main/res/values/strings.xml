@@ -16,6 +16,8 @@
     <string name="auth_enter_pin_code_description">Click the link below to register your pin code on the website</string>
     <string name="auth_scan_qr_code">Scan QR Code</string>
 
+    <string name="content_reload_title">Changing MenuBoss TV App settings</string>
+    <string name="content_reload_subtitle">Please don't turn off the screen until the setting is done</string>
     <string name="content_empty_title">No Content to display!</string>
     <string name="content_empty_subtitle">Please apply schedule or playlist content\non "MenuBoss Mobile App" or "MenuBoss Web"!</string>
     <string name="content_expired_title">Subscription has expired!</string>

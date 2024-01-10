@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
@@ -21,10 +22,8 @@ import com.orot.menuboss_tv.ui.compose.modifier.tvSafeArea
 import com.orot.menuboss_tv.ui.source_pack.IconPack
 import com.orot.menuboss_tv.ui.source_pack.iconpack.Logo
 import com.orot.menuboss_tv.ui.theme.AdjustedBoldText
-import com.orot.menuboss_tv.ui.theme.AdjustedMediumText
 import com.orot.menuboss_tv.ui.theme.AdjustedRegularText
 import com.orot.menuboss_tv.ui.theme.colorGray100
-import com.orot.menuboss_tv.ui.theme.colorWhite
 import com.orot.menuboss_tv.utils.adjustedDp
 
 
@@ -87,12 +86,10 @@ private fun createConstraintSet(context: Context) = ConstraintSet {
 @Composable
 private fun LogoImage(modifier: Modifier) {
     Image(
-        modifier = modifier
-            .size(
+        modifier = modifier.size(
                 width = adjustedDp(88.dp),
                 height = adjustedDp(44.dp),
-            ),
-        imageVector = IconPack.Logo, contentDescription = ""
+            ), imageVector = IconPack.Logo, contentDescription = ""
     )
 }
 
@@ -104,11 +101,12 @@ private fun HeaderContent(modifier: Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         AdjustedBoldText(
-            text = "Changing MenuBoss TV App settings", fontSize = adjustedDp(32.dp)
+            text = stringResource(id = R.string.content_reload_title),
+            fontSize = adjustedDp(32.dp)
         )
         AdjustedRegularText(
             modifier = Modifier.padding(top = adjustedDp(8.dp)),
-            text = "Please don't turn off the screen until the setting is done",
+            text = stringResource(id = R.string.content_reload_subtitle),
             fontSize = adjustedDp(16.dp),
             color = colorGray100
         )
