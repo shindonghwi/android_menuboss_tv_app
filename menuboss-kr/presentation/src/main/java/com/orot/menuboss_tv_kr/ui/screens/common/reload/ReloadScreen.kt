@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
@@ -21,10 +22,8 @@ import com.orot.menuboss_tv_kr.ui.compose.modifier.tvSafeArea
 import com.orot.menuboss_tv_kr.ui.source_pack.IconPack
 import com.orot.menuboss_tv_kr.ui.source_pack.iconpack.Logo
 import com.orot.menuboss_tv_kr.ui.theme.AdjustedBoldText
-import com.orot.menuboss_tv_kr.ui.theme.AdjustedMediumText
 import com.orot.menuboss_tv_kr.ui.theme.AdjustedRegularText
 import com.orot.menuboss_tv_kr.ui.theme.colorGray100
-import com.orot.menuboss_tv_kr.ui.theme.colorWhite
 import com.orot.menuboss_tv_kr.utils.adjustedDp
 
 
@@ -104,11 +103,12 @@ private fun HeaderContent(modifier: Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         AdjustedBoldText(
-            text = "Changing MenuBoss TV App settings", fontSize = adjustedDp(32.dp)
+            text = stringResource(id = R.string.content_reload_title),
+            fontSize = adjustedDp(32.dp)
         )
         AdjustedRegularText(
             modifier = Modifier.padding(top = adjustedDp(8.dp)),
-            text = "Please don't turn off the screen until the setting is done",
+            text = stringResource(id = R.string.content_reload_subtitle),
             fontSize = adjustedDp(16.dp),
             color = colorGray100
         )

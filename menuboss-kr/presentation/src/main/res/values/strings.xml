@@ -16,8 +16,10 @@
     <string name="auth_enter_pin_code_description">아래 링크를 클릭하여 웹사이트에 핀 코드를 등록할 수 있습니다</string>
     <string name="auth_scan_qr_code">QR 코드 스캔</string>
 
+    <string name="content_reload_title">메뉴보스 TV 앱 설정 변경</string>
+    <string name="content_reload_subtitle">설정이 완료될 때까지 화면을 끄지 마세요</string>
     <string name="content_empty_title">표시할 내용이 없습니다</string>
-    <string name="content_empty_subtitle">MenuBoss 웹이나 모바일을 통해 일정과 플레이리스트를 등록해주세요</string>
+    <string name="content_empty_subtitle">메뉴보스 웹이나 모바일을 통해 시간표와 재생목록을 등록해주세요</string>
     <string name="content_expired_title">구독이 만료되었습니다</string>
     <string name="content_expired_description1">가입 기간이 만료되어 사용할 수 없습니다</string>
     <string name="content_expired_description2">서비스에  재가입하시면 다시 이용하실 수 있습니다</string>

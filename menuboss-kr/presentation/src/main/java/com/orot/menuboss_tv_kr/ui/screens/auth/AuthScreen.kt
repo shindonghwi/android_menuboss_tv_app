@@ -284,7 +284,6 @@ private fun PinCode(
                     try {
                         val intent = Intent(Intent.ACTION_VIEW).apply {
                             data = Uri.parse(WEB_LOGIN_URL)
-                            setPackage("com.amazon.cloud9") // Package name for Amazon Silk
                         }
                         context.startActivity(intent)
                     } catch (e: ActivityNotFoundException) {
