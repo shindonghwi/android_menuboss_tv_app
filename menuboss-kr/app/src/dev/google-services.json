@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1087980522226",
+    "project_id": "menuboss-screen-dev",
+    "storage_bucket": "menuboss-screen-dev.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1087980522226:android:3e8715ca1c475ebab21e6b",
+        "android_client_info": {
+          "package_name": "com.orot.menuboss_tv.dev"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCJrEECn4FX6FoQE8B2dVlT9E6RK0DUip4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1087980522226:android:64bcfc200958d3f5b21e6b",
+        "android_client_info": {
+          "package_name": "com.orot.menuboss_tv_kr.dev"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCJrEECn4FX6FoQE8B2dVlT9E6RK0DUip4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
