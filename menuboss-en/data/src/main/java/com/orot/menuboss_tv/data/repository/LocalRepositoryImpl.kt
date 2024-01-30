@@ -12,12 +12,13 @@ class LocalRepositoryImpl @Inject constructor(context: Context) : LocalRepositor
         sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
     }
 
-    override suspend fun getUpdatedByUUID(): Boolean {
-        return sharedPreferences.getBoolean(KEY_UPDATED_BY_UUID, false)
+    override suspend fun getUUID(): String {
+        return sharedPreferences.getString(KEY_UPDATED_BY_UUID, "") ?: ""
     }
-    override suspend fun setUpdatedByUUID(isUpdated: Boolean){
+
+    override suspend fun setUUID(uuid: String) {
         val editor = sharedPreferences.edit()
-        editor.putBoolean(KEY_UPDATED_BY_UUID, isUpdated)
+        editor.putString(KEY_UPDATED_BY_UUID, uuid)
         editor.apply()
     }
 

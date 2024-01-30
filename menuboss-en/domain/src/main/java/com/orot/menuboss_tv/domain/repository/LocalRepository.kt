@@ -2,7 +2,7 @@ package com.orot.menuboss_tv.domain.repository
 
 interface LocalRepository {
 
-    suspend fun setUpdatedByUUID(isUpdated: Boolean)
+    suspend fun setUUID(uuid: String)
 
-    suspend fun getUpdatedByUUID(): Boolean
+    suspend fun getUUID(): String
 }

@@ -1,8 +1,8 @@
 package com.orot.menuboss_tv.domain.di
 
 import com.orot.menuboss_tv.domain.repository.LocalRepository
-import com.orot.menuboss_tv.domain.usecases.GetUpdatedByUuidUseCase
-import com.orot.menuboss_tv.domain.usecases.PatchUpdatedByUuidUseCase
+import com.orot.menuboss_tv.domain.usecases.GetUuidUseCase
+import com.orot.menuboss_tv.domain.usecases.PatchUuidUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -15,13 +15,13 @@ object LocalModule {
 
     @Singleton
     @Provides
-    fun provideGetUpdatedByUuidUseCase(localRepository: LocalRepository): GetUpdatedByUuidUseCase {
-        return GetUpdatedByUuidUseCase(localRepository)
+    fun provideGetUpdatedByUuidUseCase(localRepository: LocalRepository): GetUuidUseCase {
+        return GetUuidUseCase(localRepository)
     }
 
     @Singleton
     @Provides
-    fun providePatchUpdatedByUuidUseCase(localRepository: LocalRepository): PatchUpdatedByUuidUseCase {
-        return PatchUpdatedByUuidUseCase(localRepository)
+    fun providePatchUpdatedByUuidUseCase(localRepository: LocalRepository): PatchUuidUseCase {
+        return PatchUuidUseCase(localRepository)
     }
 }
