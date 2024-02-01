@@ -1,24 +1,19 @@
 package com.orot.menuboss_tv
 
 
-import android.app.LauncherActivity
-import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.view.WindowManager
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.core.view.WindowCompat
-import com.orot.menuboss_tv.domain.usecases.UnSubscribeStreamUseCase
+import com.orot.menuboss_tv.domain.usecases.remote.UnSubscribeStreamUseCase
 import com.orot.menuboss_tv.ui.navigations.Navigation
 import com.orot.menuboss_tv.ui.theme.MenuBossTVTheme
 import com.orot.menuboss_tv.utils.DeviceInfoUtil
-import com.orot.menuboss_tv.utils.coroutineScopeOnDefault
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 

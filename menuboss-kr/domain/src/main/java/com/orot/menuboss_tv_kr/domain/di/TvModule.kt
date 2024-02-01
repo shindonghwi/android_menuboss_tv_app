@@ -1,9 +1,9 @@
 package com.orot.menuboss_tv_kr.domain.di
 
 import com.orot.menuboss_tv_kr.domain.repository.TvRepository
-import com.orot.menuboss_tv_kr.domain.usecases.GetDeviceUseCase
-import com.orot.menuboss_tv_kr.domain.usecases.GetPlaylistUseCase
-import com.orot.menuboss_tv_kr.domain.usecases.GetScheduleUseCase
+import com.orot.menuboss_tv_kr.domain.usecases.remote.GetDeviceUseCase
+import com.orot.menuboss_tv_kr.domain.usecases.remote.GetPlaylistUseCase
+import com.orot.menuboss_tv_kr.domain.usecases.remote.GetScheduleUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
