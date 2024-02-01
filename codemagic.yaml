@@ -7,7 +7,7 @@ workflows:
     environment:
       java: 17
       groups:
-        - firebase_credentials
+        - ANDROID_KR_TV_DEV_FIREBASE_CREDENTIAL
       android_signing:
         - KR_TV_DEV
     scripts:
