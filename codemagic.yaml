@@ -24,8 +24,6 @@ workflows:
           export JAVA_HOME=`/usr/libexec/java_home -v 17`
           echo "JAVA_HOME set to $JAVA_HOME"
           java -version
-      - name: Build Android Debug
-        script: |
           ./gradlew assembleDebug --info --stacktrace
     artifacts:
       - build/outputs/apk/dev/debug/app-dev-debug.apk
