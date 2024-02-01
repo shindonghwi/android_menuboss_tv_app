@@ -13,8 +13,9 @@ workflows:
       - name: Make Gradle Wrapper Executable
         script: |
           chmod +x ./gradlew
-      - name: Set Android SDK location
+      - name: Create Android Directory and Set SDK Location
         script: |
+          mkdir -p "$CM_BUILD_DIR/android"
           echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/android/local.properties"
       - name: Build Android Debug
         script: |
