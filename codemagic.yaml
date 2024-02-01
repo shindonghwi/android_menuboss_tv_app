@@ -17,11 +17,16 @@ workflows:
         script: |
           mkdir -p "$CM_BUILD_DIR/android"
           echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/android/local.properties"
+      - name: Set Java 17
+        script: |
+          export JAVA_HOME=`/usr/libexec/java_home -v 17`
+          echo "JAVA_HOME set to $JAVA_HOME"
+          java -version
       - name: Build Android Debug
         script: |
           ./gradlew assembleDebug --info --stacktrace
     artifacts:
-      - build/outputs/**/**/*.apk
+      - build/outputs/apk/dev/debug/app-dev-debug.apk
     publishing:
       firebase:
         firebase_service_account: $FIREBASE_SERVICE_ACCOUNT
