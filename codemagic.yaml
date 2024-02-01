@@ -17,8 +17,10 @@ workflows:
         script: |
           mkdir -p "$CM_BUILD_DIR/android"
           echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/android/local.properties"
-      - name: Set Java 17
+      - name: Install Java 17
         script: |
+          brew install openjdk@17
+          sudo ln -sfn /usr/local/opt/openjdk@17/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk-17.jdk
           export JAVA_HOME=`/usr/libexec/java_home -v 17`
           echo "JAVA_HOME set to $JAVA_HOME"
           java -version
