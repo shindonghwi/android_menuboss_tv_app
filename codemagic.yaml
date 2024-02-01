@@ -3,7 +3,7 @@ workflows:
     name: Codemagic Sample Workflow
     working_directory: menuboss-kr
     max_build_duration: 120
-    instance_type: linux_x2
+    instance_type: mac_mini_m1
     environment:
       groups:
         - firebase_credentials
