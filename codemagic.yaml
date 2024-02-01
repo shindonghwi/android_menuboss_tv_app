@@ -4,14 +4,18 @@ workflows:
     working_directory: menuboss-kr
     max_build_duration: 120
     instance_type: linux_x2
-
     environment:
       groups:
         - firebase_credentials
       android_signing:
         - KR_TV_DEV
     scripts:
-      - ./gradlew assembleDebug
+      - name: Set Android SDK location
+        script: |
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/android/local.properties"
+      - name: Build Android Debug
+        script: |
+          ./gradlew assembleDevDebug
     artifacts:
       - build/outputs/**/**/*.apk
     publishing:
