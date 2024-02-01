@@ -22,29 +22,34 @@ android {
         versionName = AppConfig.versionName
     }
 
-    sourceSets {
-        create("dev") {
-            res.srcDir("src/dev")
-        }
-        create("prod") {
-            res.srcDir("src/prod")
+    val flavorList = listOf("dev", "prod")
+    flavorDimensions += "version"
+    productFlavors {
+        flavorList.forEach {
+            create(it) {
+                if (it == "dev") {
+                    applicationIdSuffix = DebugConfig.suffixName
+                    versionNameSuffix = DebugConfig.versionName
+                    manifestPlaceholders["appLabel"] = "@string/app_label_dev"
+                } else {
+                    applicationIdSuffix = ReleaseConfig.suffixName
+                    versionNameSuffix = ReleaseConfig.versionName
+                    manifestPlaceholders["appLabel"] = "@string/app_label"
+                }
+            }
         }
     }
 
-    flavorDimensions.addAll(listOf("version"))
-
-    productFlavors {
-        create("dev") {
-            dimension = "version"
-            applicationIdSuffix = DebugConfig.suffixName
-            versionNameSuffix = DebugConfig.versionName
-            manifestPlaceholders["appLabel"] = "@string/app_label_dev"
+    flavorList.forEach {
+        val debug = "${it}Debug"
+        sourceSets.create(debug) {
+            kotlin.srcDir("build/generated/ksp/$debug/kotlin")
+            println("kotlin $kotlin")
         }
-        create("prod") {
-            dimension = "version"
-            applicationIdSuffix = ReleaseConfig.suffixName
-            versionNameSuffix = ReleaseConfig.versionName
-            manifestPlaceholders["appLabel"] = "@string/app_label"
+        val release = "${it}Release"
+        sourceSets.create(release) {
+            kotlin.srcDir("build/generated/ksp/$release/kotlin")
+            println("kotlin $kotlin")
         }
     }
 
