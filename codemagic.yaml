@@ -22,7 +22,7 @@ workflows:
         script: |
           ./gradlew assembleDebug --info --stacktrace
     artifacts:
-      - build/outputs/apk/dev/debug/app-dev-debug.apk
+      - app/build/outputs/**/*.apk
     publishing:
       firebase:
         firebase_service_account: $FIREBASE_SERVICE_ACCOUNT
