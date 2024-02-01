@@ -4,8 +4,8 @@ import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.orot.menuboss_tv.domain.entities.DeviceModel
 import com.orot.menuboss_tv.domain.entities.Resource
-import com.orot.menuboss_tv.domain.usecases.GetDeviceUseCase
-import com.orot.menuboss_tv.domain.usecases.SubscribeConnectStreamUseCase
+import com.orot.menuboss_tv.domain.usecases.remote.GetDeviceUseCase
+import com.orot.menuboss_tv.domain.usecases.remote.SubscribeConnectStreamUseCase
 import com.orot.menuboss_tv.ui.base.BaseViewModel
 import com.orot.menuboss_tv.ui.model.UiState
 import com.orotcode.menuboss.grpc.lib.ConnectEventResponse

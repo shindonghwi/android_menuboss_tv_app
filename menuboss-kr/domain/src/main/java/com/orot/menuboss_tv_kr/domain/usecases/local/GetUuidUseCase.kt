@@ -1,4 +1,4 @@
-package com.orot.menuboss_tv_kr.domain.usecases
+package com.orot.menuboss_tv_kr.domain.usecases.local
 
 import com.orot.menuboss_tv_kr.domain.repository.LocalRepository
 import javax.inject.Inject

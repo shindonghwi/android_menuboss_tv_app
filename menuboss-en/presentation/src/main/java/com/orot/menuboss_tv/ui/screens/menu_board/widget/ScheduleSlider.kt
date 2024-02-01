@@ -5,7 +5,6 @@ import android.graphics.Matrix
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -18,11 +17,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.tv.material3.Text
 import coil.compose.AsyncImage
-import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import coil.size.Scale
 import coil.size.Size
@@ -35,21 +32,22 @@ import java.util.Calendar
 import java.util.Locale
 import java.util.TimeZone
 
+
 @Composable
 fun ScheduleSlider(model: DeviceScheduleModel) {
 
     val menuBoardViewModel = LocalMenuBoardViewModel.current
-    val context = LocalContext.current
     var currentTimeline by remember { mutableStateOf(getCurrentTimeline(model.timeline)) }
-    val configuration = LocalConfiguration.current
     val currentContent = currentTimeline?.playlist?.contents
-    val isDirectionHorizontal = currentTimeline?.playlist?.property?.direction?.code == "Horizontal"
-    val contentScale = when (currentTimeline?.playlist?.property?.fill?.code?.lowercase(Locale.getDefault())) {
-        "fit" -> ContentScale.Fit
-        "crop" -> ContentScale.Crop
-        "stretch" -> ContentScale.FillBounds
-        else -> ContentScale.Crop
-    }
+    val isDirectionHorizontal =
+        currentTimeline?.playlist?.property?.direction?.code == "Horizontal"
+    val contentScale =
+        when (currentTimeline?.playlist?.property?.fill?.code?.lowercase(Locale.getDefault())) {
+            "fit" -> ContentScale.Fit
+            "crop" -> ContentScale.Crop
+            "stretch" -> ContentScale.FillBounds
+            else -> ContentScale.Crop
+        }
 
     LaunchedEffect(Unit) {
         while (true) {
@@ -110,7 +108,9 @@ fun ScheduleSlider(model: DeviceScheduleModel) {
 
                                     AsyncImage(
                                         modifier = Modifier.fillMaxSize(),
-                                        model = ImageRequest.Builder(LocalContext.current)
+                                        model = ImageRequest.Builder(
+                                            LocalContext.current
+                                        )
                                             .data(imageUrl)
                                             .scale(Scale.FILL)
                                             .transformations(object :
@@ -157,7 +157,6 @@ fun ScheduleSlider(model: DeviceScheduleModel) {
                                         modifier = Modifier.fillMaxSize(),
                                         videoUrl = content.property?.videoUrl.toString(),
                                         contentScale = contentScale,
-                                        rotationDegrees = if (isDirectionHorizontal) 0f else -90f
                                     )
                                 }
                             }

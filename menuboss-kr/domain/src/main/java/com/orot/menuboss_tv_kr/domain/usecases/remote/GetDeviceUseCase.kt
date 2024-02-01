@@ -1,18 +1,18 @@
-package com.orot.menuboss_tv.domain.usecases
+package com.orot.menuboss_tv_kr.domain.usecases.remote
 
-import com.orot.menuboss_tv.domain.entities.DeviceScheduleModel
-import com.orot.menuboss_tv.domain.entities.Resource
-import com.orot.menuboss_tv.domain.repository.TvRepository
+import com.orot.menuboss_tv_kr.domain.entities.DeviceModel
+import com.orot.menuboss_tv_kr.domain.entities.Resource
+import com.orot.menuboss_tv_kr.domain.repository.TvRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
-class GetScheduleUseCase @Inject constructor(private val tvRepository: TvRepository) {
-    suspend operator fun invoke(uuid: String, accessToken: String): Flow<Resource<DeviceScheduleModel>> =
+class GetDeviceUseCase @Inject constructor(private val tvRepository: TvRepository) {
+    suspend operator fun invoke(uuid: String): Flow<Resource<DeviceModel>> =
         flow {
             emit(Resource.Loading())
             try {
-                val response = tvRepository.getDeviceSchedule(uuid, accessToken)
+                val response = tvRepository.getDeviceInfo(uuid)
                 when (response.status) {
                     in 200..299 -> emit(
                         Resource.Success(

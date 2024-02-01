@@ -1,4 +1,4 @@
-package com.orot.menuboss_tv.domain.usecases
+package com.orot.menuboss_tv.domain.usecases.remote
 
 import com.orot.menuboss_tv.domain.repository.ScreenEventsRepository
 import com.orotcode.menuboss.grpc.lib.PlayingEventRequest

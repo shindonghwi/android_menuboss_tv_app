@@ -31,6 +31,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.Locale
 
+
 @Composable
 fun PlaylistSlider(model: DevicePlaylistModel) {
 
@@ -39,12 +40,13 @@ fun PlaylistSlider(model: DevicePlaylistModel) {
     val contents = model.contents
     val configuration = LocalConfiguration.current
     val isDirectionHorizontal = model.property?.direction?.code == "Horizontal"
-    val contentScale = when (model.property?.fill?.code?.lowercase(Locale.getDefault())) {
-        "fit" -> ContentScale.Fit
-        "crop" -> ContentScale.Crop
-        "stretch" -> ContentScale.FillBounds
-        else -> ContentScale.Crop
-    }
+    val contentScale =
+        when (model.property?.fill?.code?.lowercase(Locale.getDefault())) {
+            "fit" -> ContentScale.Fit
+            "crop" -> ContentScale.Crop
+            "stretch" -> ContentScale.FillBounds
+            else -> ContentScale.Crop
+        }
 
     contents?.let {
         var currentIndex by remember { mutableIntStateOf(0) }
@@ -101,7 +103,8 @@ fun PlaylistSlider(model: DevicePlaylistModel) {
                                                 input: Bitmap,
                                                 size: Size
                                             ): Bitmap {
-                                                val matrix = android.graphics.Matrix()
+                                                val matrix =
+                                                    android.graphics.Matrix()
                                                 matrix.postRotate(if (isDirectionHorizontal) 0f else -90f)
                                                 return Bitmap.createBitmap(
                                                     input,
@@ -137,7 +140,6 @@ fun PlaylistSlider(model: DevicePlaylistModel) {
                                     modifier = Modifier.fillMaxSize(),
                                     videoUrl = content.property?.videoUrl.toString(),
                                     contentScale = contentScale,
-                                    rotationDegrees = if (isDirectionHorizontal) 0f else -90f
                                 )
                             }
                         }

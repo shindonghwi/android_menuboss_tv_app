@@ -1,8 +1,8 @@
 package com.orot.menuboss_tv.domain.di
 
 import com.orot.menuboss_tv.domain.repository.LocalRepository
-import com.orot.menuboss_tv.domain.usecases.GetUuidUseCase
-import com.orot.menuboss_tv.domain.usecases.PatchUuidUseCase
+import com.orot.menuboss_tv.domain.usecases.local.GetUuidUseCase
+import com.orot.menuboss_tv.domain.usecases.local.PatchUuidUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

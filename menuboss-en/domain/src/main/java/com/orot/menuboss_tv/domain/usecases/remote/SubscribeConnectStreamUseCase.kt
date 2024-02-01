@@ -1,6 +1,6 @@
-package com.orot.menuboss_tv_kr.domain.usecases
+package com.orot.menuboss_tv.domain.usecases.remote
 
-import com.orot.menuboss_tv_kr.domain.repository.ScreenEventsRepository
+import com.orot.menuboss_tv.domain.repository.ScreenEventsRepository
 import com.orotcode.menuboss.grpc.lib.ConnectEventResponse
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
