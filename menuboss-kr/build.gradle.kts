@@ -21,3 +21,7 @@ plugins {
     id("com.google.firebase.crashlytics") version Versions.Plugins.crashlytics apply false
     id("com.google.protobuf") version Versions.Plugins.protobuf apply false
 }
+
+tasks.withType<JavaCompile> {
+    options.forkOptions.jvmArgs?.add("-Djava.version=17")
+}
