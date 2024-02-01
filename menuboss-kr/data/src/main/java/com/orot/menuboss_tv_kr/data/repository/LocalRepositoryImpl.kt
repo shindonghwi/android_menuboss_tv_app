@@ -15,7 +15,11 @@ class LocalRepositoryImpl @Inject constructor(context: Context) :
     }
 
     override suspend fun getUUID(): String {
-        return sharedPreferences.getString(KEY_UPDATED_BY_UUID, "") ?: ""
+        return try{
+            sharedPreferences.getString(KEY_UPDATED_BY_UUID, "") ?: ""
+        }catch (e: Exception){
+            ""
+        }
     }
 
     override suspend fun setUUID(uuid: String) {

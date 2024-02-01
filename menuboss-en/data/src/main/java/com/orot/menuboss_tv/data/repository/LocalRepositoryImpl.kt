@@ -13,7 +13,11 @@ class LocalRepositoryImpl @Inject constructor(context: Context) : LocalRepositor
     }
 
     override suspend fun getUUID(): String {
-        return sharedPreferences.getString(KEY_UPDATED_BY_UUID, "") ?: ""
+        return try{
+            sharedPreferences.getString(KEY_UPDATED_BY_UUID, "") ?: ""
+        }catch (e: Exception){
+            ""
+        }
     }
 
     override suspend fun setUUID(uuid: String) {
@@ -25,6 +29,7 @@ class LocalRepositoryImpl @Inject constructor(context: Context) : LocalRepositor
     companion object {
         private const val PREF_NAME = "my_preferences"
         private const val KEY_UPDATED_BY_UUID = "updated_by_uuid"
+        private const val KEY_UUID = "device_uuid"
     }
 
 }
