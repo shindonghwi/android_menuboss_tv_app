@@ -22,34 +22,29 @@ android {
         versionName = AppConfig.versionName
     }
 
-    val flavorList = listOf("dev", "prod")
-    flavorDimensions += "version"
-    productFlavors {
-        flavorList.forEach {
-            create(it) {
-                if (it == "dev") {
-                    applicationIdSuffix = DebugConfig.suffixName
-                    versionNameSuffix = DebugConfig.versionName
-                    manifestPlaceholders["appLabel"] = "@string/app_label_dev"
-                } else {
-                    applicationIdSuffix = ReleaseConfig.suffixName
-                    versionNameSuffix = ReleaseConfig.versionName
-                    manifestPlaceholders["appLabel"] = "@string/app_label"
-                }
-            }
+    sourceSets {
+        create("dev") {
+            res.srcDir("src/dev")
+        }
+        create("prod") {
+            res.srcDir("src/prod")
         }
     }
 
-    flavorList.forEach {
-        val debug = "${it}Debug"
-        sourceSets.create(debug) {
-            kotlin.srcDir("build/generated/ksp/$debug/kotlin")
-            println("kotlin $kotlin")
+    flavorDimensions.addAll(listOf("version"))
+
+    productFlavors {
+        create("dev") {
+            dimension = "version"
+            applicationIdSuffix = DebugConfig.suffixName
+            versionNameSuffix = DebugConfig.versionName
+            manifestPlaceholders["appLabel"] = "@string/app_label_dev"
         }
-        val release = "${it}Release"
-        sourceSets.create(release) {
-            kotlin.srcDir("build/generated/ksp/$release/kotlin")
-            println("kotlin $kotlin")
+        create("prod") {
+            dimension = "version"
+            applicationIdSuffix = ReleaseConfig.suffixName
+            versionNameSuffix = ReleaseConfig.versionName
+            manifestPlaceholders["appLabel"] = "@string/app_label"
         }
     }
 
@@ -61,10 +56,17 @@ android {
 
     signingConfigs {
         getByName("debug") {
-            keyAlias = keystoreProperties["devKeyAlias"] as String
-            keyPassword = keystoreProperties["devKeyPassword"] as String
-            storeFile = file(keystoreProperties["devStoreFile"] as String)
-            storePassword = keystoreProperties["devStorePassword"] as String
+            if (System.getenv()["CI"].toBoolean()) { // CI=true is exported by Codemagic
+                storeFile = file(System.getenv()["CM_KEYSTORE_PATH"] as String)
+                storePassword = System.getenv()["CM_KEYSTORE_PASSWORD"]
+                keyAlias = System.getenv()["CM_KEY_ALIAS"]
+                keyPassword = System.getenv()["CM_KEY_PASSWORD"]
+            } else {
+                keyAlias = keystoreProperties["devKeyAlias"] as String
+                keyPassword = keystoreProperties["devKeyPassword"] as String
+                storeFile = file(keystoreProperties["devStoreFile"] as String)
+                storePassword = keystoreProperties["devStorePassword"] as String
+            }
         }
 
         create("release") {

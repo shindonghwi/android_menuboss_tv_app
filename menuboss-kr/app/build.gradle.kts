@@ -22,34 +22,29 @@ android {
         versionName = AppConfig.versionName
     }
 
-    val flavorList = listOf("dev", "prod")
-    flavorDimensions += "version"
-    productFlavors {
-        flavorList.forEach {
-            create(it) {
-                if (it == "dev") {
-                    applicationIdSuffix = DebugConfig.suffixName
-                    versionNameSuffix = DebugConfig.versionName
-                    manifestPlaceholders["appLabel"] = "@string/app_label_dev"
-                } else {
-                    applicationIdSuffix = ReleaseConfig.suffixName
-                    versionNameSuffix = ReleaseConfig.versionName
-                    manifestPlaceholders["appLabel"] = "@string/app_label"
-                }
-            }
+    sourceSets {
+        create("dev") {
+            res.srcDir("src/dev")
+        }
+        create("prod") {
+            res.srcDir("src/prod")
         }
     }
 
-    flavorList.forEach {
-        val debug = "${it}Debug"
-        sourceSets.create(debug) {
-            kotlin.srcDir("build/generated/ksp/$debug/kotlin")
-            println("kotlin $kotlin")
+    flavorDimensions.addAll(listOf("version"))
+
+    productFlavors {
+        create("dev") {
+            dimension = "version"
+            applicationIdSuffix = DebugConfig.suffixName
+            versionNameSuffix = DebugConfig.versionName
+            manifestPlaceholders["appLabel"] = "@string/app_label_dev"
         }
-        val release = "${it}Release"
-        sourceSets.create(release) {
-            kotlin.srcDir("build/generated/ksp/$release/kotlin")
-            println("kotlin $kotlin")
+        create("prod") {
+            dimension = "version"
+            applicationIdSuffix = ReleaseConfig.suffixName
+            versionNameSuffix = ReleaseConfig.versionName
+            manifestPlaceholders["appLabel"] = "@string/app_label"
         }
     }
 
@@ -83,11 +78,11 @@ android {
     }
 
     buildTypes {
-        debug {
+        getByName("debug") {
             isDebuggable = true
             signingConfig = signingConfigs.getByName("debug")
         }
-        release {
+        getByName("release") {
             isDebuggable = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
