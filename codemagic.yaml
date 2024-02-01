@@ -10,6 +10,9 @@ workflows:
       android_signing:
         - KR_TV_DEV
     scripts:
+      - name: Make Gradle Wrapper Executable
+        script: |
+          chmod +x ./gradlew
       - name: Set Android SDK location
         script: |
           echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/android/local.properties"
