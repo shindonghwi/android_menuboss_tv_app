@@ -11,11 +11,6 @@ workflows:
       android_signing:
         - KR_TV_DEV
     scripts:
-#      - name: Load Firebase configuration
-#        script: |
-#          #!/usr/bin/env sh
-#          set -e # exit on first failed command
-#          echo $ANDROID_FIREBASE_SECRET > $CM_BUILD_DIR/android/app/dev/google-services.json
       - name: Make Gradle Wrapper Executable
         script: |
           chmod +x ./gradlew
@@ -32,7 +27,7 @@ workflows:
       firebase:
         firebase_service_account: $KR_ANDROID_TV_DEV_FIREBASE_SERVICE_ACCOUNT
         android:
-          app_id: 1:1087980522226:android:3e8715ca1c475ebab21e6b
+          app_id: 1:1087980522226:android:64bcfc200958d3f5b21e6b
           groups:
             - orotcode-team
           artifact_type: 'apk'
