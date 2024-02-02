@@ -11,34 +11,19 @@ workflows:
         - slack_webhook
       android_signing:
         - KR_TV_DEV
-    #    scripts:
-    #      - name: Make Gradle Wrapper Executable
-    #        script: |
-    #          chmod +x ./gradlew
-    #      - name: Create Android Directory and Set SDK Location
-    #        script: |
-    #          mkdir -p "$CM_BUILD_DIR/android"
-    #          echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/android/local.properties"
-    #      - name: Build Android Debug
-    #        script: |
-    #          ./gradlew assembleDebug --info --stacktrace
-    #    artifacts:
-    #      - app/build/outputs/**/*.apk
-    #    publishing:
-    #      slack:
-    #        channel: '#C06HB5ASUBS'
-    #        notify_on_build_start: true
-    #        notify:
-    #          success: false
-    #          failure: false
-    #      firebase:
-    #        firebase_service_account: $KR_ANDROID_TV_DEV_FIREBASE_SERVICE_ACCOUNT
-    #        android:
-    #          app_id: 1:1087980522226:android:64bcfc200958d3f5b21e6b
-    #          groups:
-    #            - orotcode-team
-    #          artifact_type: 'apk'
-
+    scripts:
+      - name: Make Gradle Wrapper Executable
+        script: |
+          chmod +x ./gradlew
+      - name: Create Android Directory and Set SDK Location
+        script: |
+          mkdir -p "$CM_BUILD_DIR/android"
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/android/local.properties"
+      - name: Build Android Debug
+        script: |
+          ./gradlew assembleDebug --info --stacktrace
+    artifacts:
+      - app/build/outputs/**/*.apk
     publishing:
       scripts:
         - name: Publish to Slack
@@ -50,20 +35,19 @@ workflows:
             else
               echo "SLACK_WEBHOOK_URL is set. Continuing..."
             fi
-
-            BUILD_STATUS_MESSAGE="*빌드 상태*: "
+    
+            BUILD_STATUS="*빌드 상태*: "
             if [ "$CM_BUILD_STATUS" = "success" ]; then
-              BUILD_STATUS_MESSAGE+="성공 :white_check_mark:"
+              BUILD_STATUS_MESSAGE="${BUILD_STATUS}성공 :white_check_mark:"
             else
-            BUILD_STATUS_MESSAGE+="실패 :x:"
+              BUILD_STATUS_MESSAGE="${BUILD_STATUS}실패 :x:"
             fi
     
             ARTIFACT_URL=$(echo $CM_ARTIFACT_LINKS | jq -r '.[] | select(.name | endswith(".apk")) | .url')
-#            ARTIFACT_URL=$(echo $CM_ARTIFACT_LINKS | jq -r '.[] | select(.name | endswith(".ipa")) | .url')
     
-            curl -X POST $SLACK_WEBHOOK_URL \
-            -H 'Content-type: application/json' \
-            --data-raw '{
+            # Bash 스크립트 내에서 여러 줄 문자열(JSON_PAYLOAD) 정의
+            JSON_PAYLOAD=$(cat <<'EOF'
+            {
               "attachments": [
                 {
                   "blocks": [
@@ -81,7 +65,7 @@ workflows:
                       "type": "section",
                       "text": {
                         "type": "mrkdwn",
-                        "text": "빌드 상세:[$CM_BUILD_ID](<https://codemagic.io/app/'"$CM_PROJECT_ID"'/build/'"$CM_BUILD_ID"'>)"
+                        "text": "빌드 상세:[$CM_BUILD_ID](<https://codemagic.io/app/$CM_PROJECT_ID/build/$CM_BUILD_ID>)"
                       }
                     },
                     {
@@ -102,10 +86,97 @@ workflows:
                       "type": "section",
                       "text": {
                         "type": "mrkdwn",
-                        "text": "*Android Artifact Link* <'"$ARTIFACT_URL"'|Download>"
+                        "text": "*Android Artifact Link*: <$ARTIFACT_URL|Download>"
                       }
-                    },
+                    }
                   ]
                 }
-            ]
-            }'
+              ]
+            }
+            EOF
+            )
+      
+            curl -X POST "$SLACK_WEBHOOK_URL" -H 'Content-type: application/json' --data "$JSON_PAYLOAD"
+       
+
+#      publishing:
+#        firebase:
+#          firebase_service_account: $KR_ANDROID_TV_DEV_FIREBASE_SERVICE_ACCOUNT
+#          android:
+#            app_id: 1:1087980522226:android:64bcfc200958d3f5b21e6b
+#            groups:
+#              - orotcode-team
+#            artifact_type: 'apk'
+#        scripts:
+#          - name: Publish to Slack
+#            script: |
+#              echo "Verifying SLACK_WEBHOOK_URL presence..."
+#              if [ -z "$SLACK_WEBHOOK_URL" ]; then
+#                echo "SLACK_WEBHOOK_URL is not set. Exiting..."
+#                exit 1
+#              else
+#                echo "SLACK_WEBHOOK_URL is set. Continuing..."
+#              fi
+#
+#              BUILD_STATUS="*빌드 상태*: "
+#              if [ "$CM_BUILD_STATUS" = "success" ]; then
+#                BUILD_STATUS_MESSAGE="${BUILD_STATUS}성공 :white_check_mark:"
+#              else
+#                BUILD_STATUS_MESSAGE="${BUILD_STATUS}실패 :x:"
+#              fi
+#
+#              ARTIFACT_URL=$(echo $CM_ARTIFACT_LINKS | jq -r '.[] | select(.name | endswith(".apk")) | .url')
+#
+#              JSON_PAYLOAD=$(cat <<EOF
+#              {
+#                "attachments": [
+#                  {
+#                    "blocks": [
+#                      {
+#                        "type": "section",
+#                        "text": {
+#                          "type": "mrkdwn",
+#                          "text": "${BUILD_STATUS_MESSAGE}"
+#                        }
+#                      },
+#                      {
+#                        "type": "divider"
+#                      },
+#                      {
+#                        "type": "section",
+#                        "text": {
+#                          "type": "mrkdwn",
+#                          "text": "빌드 상세:[$CM_BUILD_ID](<https://codemagic.io/app/$CM_PROJECT_ID/build/$CM_BUILD_ID>)"
+#                        }
+#                      },
+#                      {
+#                        "type": "divider"
+#                      },
+#                      {
+#                        "type": "section",
+#                        "block_id": "section567",
+#                        "text": {
+#                          "type": "mrkdwn",
+#                          "text": "Branch: [$CM_BRANCH]"
+#                        }
+#                      },
+#                      {
+#                        "type": "divider"
+#                      },
+#                      {
+#                        "type": "section",
+#                        "text": {
+#                          "type": "mrkdwn",
+#                          "text": "*Android Artifact Link*: <$ARTIFACT_URL|Download>"
+#                        }
+#                      }
+#                    ]
+#                  }
+#                ]
+#              }
+#              EOF
+#              )
+#
+#              curl -X POST "$SLACK_WEBHOOK_URL" \
+#            -H 'Content-type: application/json' \
+#              --data "$JSON_PAYLOAD"
