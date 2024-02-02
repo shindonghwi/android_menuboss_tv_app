@@ -42,9 +42,17 @@ workflows:
       scripts:
         - name: Publish to Slack
           script: |
-            ARTIFACT_URL=$(echo $CM_ARTIFACT_LINKS | jq -r '.[] | select(.name | endswith("'".ipa"'")) | .url')
-            
-            curl -0 -v -X POST $SLACK_WEBHOOK_URL \
+            echo "Verifying SLACK_WEBHOOK_URL presence..."
+            if [ -z "$SLACK_WEBHOOK_URL" ]; then
+              echo "SLACK_WEBHOOK_URL is not set. Exiting..."
+              exit 1
+            else
+              echo "SLACK_WEBHOOK_URL is set. Continuing..."
+            fi
+    
+            ARTIFACT_URL=$(echo $CM_ARTIFACT_LINKS | jq -r '.[] | select(.name | endswith(".ipa")) | .url')
+    
+            curl -X POST $SLACK_WEBHOOK_URL \
             -H 'Content-type: application/json' \
             --data-raw '{
               "attachments": [
