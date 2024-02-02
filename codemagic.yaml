@@ -30,10 +30,10 @@ workflows:
         notify:
           success: false
           failure: false
-      firebase:
-        firebase_service_account: $KR_ANDROID_TV_DEV_FIREBASE_SERVICE_ACCOUNT
-        android:
-          app_id: 1:1087980522226:android:64bcfc200958d3f5b21e6b
-          groups:
-            - orotcode-team
-          artifact_type: 'apk'
+#      firebase:
+#        firebase_service_account: $KR_ANDROID_TV_DEV_FIREBASE_SERVICE_ACCOUNT
+#        android:
+#          app_id: 1:1087980522226:android:64bcfc200958d3f5b21e6b
+#          groups:
+#            - orotcode-team
+#          artifact_type: 'apk'
