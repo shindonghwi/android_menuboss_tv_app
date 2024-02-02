@@ -49,6 +49,7 @@ workflows:
             -H 'Content-type: application/json' \
             --data-raw '
             {
+              "text": "안녕하세요! 빌드가 완료되었습니다.",
               "attachments": [
                 {
                   "blocks": [
