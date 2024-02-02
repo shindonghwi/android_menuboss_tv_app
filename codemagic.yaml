@@ -56,7 +56,7 @@ workflows:
                       "type": "section",
                       "text": {
                         "type": "mrkdwn",
-                        "text": "'"$BUILD_STATUS_MESSAGE"': ['"$CM_BUILD_ID"']<https://codemagic.io/app/'"$CM_PROJECT_ID"'/build/'"$CM_BUILD_ID"'>"
+                        "text": "'"$BUILD_STATUS_MESSAGE"': ['"$CM_BUILD_ID"'](https://codemagic.io/app/'"$CM_PROJECT_ID"'/build/'"$CM_BUILD_ID"')"
                       }
                     },
                     {
@@ -71,7 +71,7 @@ workflows:
                       "type": "section",
                       "text": {
                         "type": "mrkdwn",
-                        "text": "*Android Artifact Link:* [APK 다운로드 링크]<'"$ARTIFACT_URL"'|Download>"
+                        "text": "*Android Artifact Link:* [APK 다운로드 링크]('"$ARTIFACT_URL"'|Download)"
                       }
                     },
                   ]
