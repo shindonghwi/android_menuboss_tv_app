@@ -11,45 +11,89 @@ workflows:
         - slack_webhook
       android_signing:
         - KR_TV_DEV
-#    scripts:
-#      - name: Make Gradle Wrapper Executable
-#        script: |
-#          chmod +x ./gradlew
-#      - name: Create Android Directory and Set SDK Location
-#        script: |
-#          mkdir -p "$CM_BUILD_DIR/android"
-#          echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/android/local.properties"
-#      - name: Build Android Debug
-#        script: |
-#          ./gradlew assembleDebug --info --stacktrace
-#    artifacts:
-#      - app/build/outputs/**/*.apk
+    triggering:
+      events:
+        - pull_request
+      branch_patterns:
+        - pattern: 'develop'
+          include: true
+          source: true
+    scripts:
+      - name: Build Start Notification to Slack
+        script: |
+          curl -0 -v -X POST $SLACK_WEBHOOK_URL \
+          -H 'Content-type: application/json' \
+          --data-raw '
+          {
+            "text": "Mobile App Build Start",
+            "attachments": [
+              {
+                "blocks": [
+                  {
+                    "type": "section",
+                    "text": {
+                      "type": "mrkdwn",
+                      "text": "Mobile App Build Start :rocket:"
+                    }
+                  },
+                  {
+                    "type": "section",
+                    "block_id": "section567",
+                    "text": {
+                      "type": "mrkdwn",
+                      "text": "Branch: '"$CM_BRANCH"'"
+                    }
+                  }
+                ]
+              }
+            ]
+          }'
+      - name: Make Gradle Wrapper Executable
+        script: |
+          chmod +x ./gradlew
+      - name: Create Android Directory and Set SDK Location
+        script: |
+          mkdir -p "$CM_BUILD_DIR/android"
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/android/local.properties"
+      - name: Build Android Debug
+        script: |
+          ./gradlew assembleDebug --info --stacktrace
+    artifacts:
+      - app/build/outputs/**/*.apk
     publishing:
+      firebase:
+        firebase_service_account: $KR_ANDROID_TV_DEV_FIREBASE_SERVICE_ACCOUNT
+        android:
+          app_id: 1:1087980522226:android:64bcfc200958d3f5b21e6b
+          groups:
+            - orotcode-team
+          artifact_type: 'apk'
       scripts:
         - name: Publish to Slack
           script: |
-            echo "Verifying SLACK_WEBHOOK_URL presence..."
-            if [ -z "$SLACK_WEBHOOK_URL" ]; then
-              echo "SLACK_WEBHOOK_URL is not set. Exiting..."
-            exit 1
-            else
-              echo "SLACK_WEBHOOK_URL is set. Continuing..."
-            fi
-    
-            BUILD_STATUS="*Build Status*: "
-            if [ "$CM_BUILD_STATUS" = "success" ]; then
-              BUILD_STATUS_MESSAGE="${BUILD_STATUS} Success :white_check_mark"
-            else
-              BUILD_STATUS_MESSAGE="${BUILD_STATUS} Fail :x"
-            fi
-    
-            ARTIFACT_URL=$(echo $CM_ARTIFACT_LINKS | jq -r '.[] | select(.name | endswith(".apk")) | .url')
+            BUILD_STATUS="*Status*: "
+            BUILD_DETAIL="*Detail*: "
+            BUILD_BRANCH="*Branch*: "
+            BUILD_ARTIFACT="*Artifact*: "
             
+            if [ "$CM_BUILD_STATUS" = "success" ]; then
+              BUILD_STATUS_MESSAGE="${BUILD_STATUS} Success :white_check_mark:"
+              BUILD_DETAIL_MESSAGE="${BUILD_DETAIL} : <https://codemagic.io/app/$CM_PROJECT_ID/build/$CM_BUILD_ID|View Build>"
+              BUILD_BRANCH_MESSAGE="${BUILD_BRANCH} '"$CM_BRANCH"'"
+              ARTIFACT_URL=$(echo $CM_ARTIFACT_LINKS | jq -r '.[] | select(.name | endswith(".apk")) | .url')
+              BUILD_ARTIFACT_MESSAGE="${BUILD_DETAIL} : <$ARTIFACT_URL|Download">"
+            else
+              BUILD_STATUS_MESSAGE="${BUILD_STATUS} Fail :x:"
+              BUILD_DETAIL_MESSAGE="${BUILD_DETAIL} : <https://codemagic.io/app/$CM_PROJECT_ID/build/$CM_BUILD_ID|View Build>"
+              BUILD_BRANCH_MESSAGE="${BUILD_BRANCH} '"$CM_BRANCH"'"
+              BUILD_ARTIFACT_MESSAGE="${BUILD_DETAIL} : 사용 가능한 Artifact 파일이 없습니다."
+            fi
+    
             curl -0 -v -X POST $SLACK_WEBHOOK_URL \
             -H 'Content-type: application/json' \
             --data-raw '
             {
-              "text": "안녕하세요! 빌드가 완료되었습니다.",
+              "text": "Mobile App Build Status",
               "attachments": [
                 {
                   "blocks": [
@@ -64,7 +108,7 @@ workflows:
                       "type": "section",
                       "text": {
                         "type": "mrkdwn",
-                        "text": "Build details: <https://codemagic.io/app/$CM_PROJECT_ID/build/$CM_BUILD_ID|View Build>"
+                        "text": "'"BUILD_DETAIL_MESSAGE"'"
                       }
                     },
                     {
@@ -72,19 +116,17 @@ workflows:
                       "block_id": "section567",
                       "text": {
                         "type": "mrkdwn",
-                        "text": "*Branch:* '"$CM_BRANCH"'"
+                        "text": "'"BUILD_BRANCH_MESSAGE"'"
                       }
                     },
                     {
                       "type": "section",
                       "text": {
                         "type": "mrkdwn",
-                        "text": "*Android Artifact Link:* [APK 다운로드 링크]('"$ARTIFACT_URL"'|Download)"
+                        "text": "'"BUILD_ARTIFACT_MESSAGE"'"
                       }
                     },
                   ]
                 }
             ]
             }'
-
-#                        "text": "'"$BUILD_STATUS_MESSAGE"': ['"$CM_BUILD_ID"'](https://codemagic.io/app/'"$CM_PROJECT_ID"'/build/'"$CM_BUILD_ID"')"
