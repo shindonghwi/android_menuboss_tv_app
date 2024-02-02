@@ -8,6 +8,7 @@ workflows:
       java: 17
       groups:
         - firebase_credentials
+        - slack_webhook
       android_signing:
         - KR_TV_DEV
     #    scripts:
