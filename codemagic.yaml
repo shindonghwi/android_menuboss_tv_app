@@ -36,11 +36,11 @@ workflows:
               echo "SLACK_WEBHOOK_URL is set. Continuing..."
             fi
     
-            BUILD_STATUS="*빌드 상태*: "
+            BUILD_STATUS="*Build Status*: "
             if [ "$CM_BUILD_STATUS" = "success" ]; then
-              BUILD_STATUS_MESSAGE="${BUILD_STATUS}성공 :white_check_mark"
+              BUILD_STATUS_MESSAGE="${BUILD_STATUS} Success :white_check_mark"
             else
-              BUILD_STATUS_MESSAGE="${BUILD_STATUS}실패 :x"
+              BUILD_STATUS_MESSAGE="${BUILD_STATUS} Fail :x"
             fi
     
             ARTIFACT_URL=$(echo $CM_ARTIFACT_LINKS | jq -r '.[] | select(.name | endswith(".apk")) | .url')
@@ -57,7 +57,14 @@ workflows:
                       "type": "section",
                       "text": {
                         "type": "mrkdwn",
-                        "text": "'"$BUILD_STATUS_MESSAGE"': ['"$CM_BUILD_ID"'](https://codemagic.io/app/'"$CM_PROJECT_ID"'/build/'"$CM_BUILD_ID"')"
+                        "text": "'"$BUILD_STATUS_MESSAGE"'"
+                      }
+                    },
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": "Build details: <$CM_BUILD_ID|https://codemagic.io/app/$CM_PROJECT_ID/build/$CM_BUILD_ID>"
                       }
                     },
                     {
@@ -79,3 +86,5 @@ workflows:
                 }
             ]
             }'
+
+#                        "text": "'"$BUILD_STATUS_MESSAGE"': ['"$CM_BUILD_ID"'](https://codemagic.io/app/'"$CM_PROJECT_ID"'/build/'"$CM_BUILD_ID"')"
