@@ -64,7 +64,7 @@ workflows:
                       "type": "section",
                       "text": {
                         "type": "mrkdwn",
-                        "text": "Build details: <$CM_BUILD_ID|https://codemagic.io/app/$CM_PROJECT_ID/build/$CM_BUILD_ID>"
+                        "text": "Build details: <https://codemagic.io/app/$CM_PROJECT_ID/build/$CM_BUILD_ID|View Build>"
                       }
                     },
                     {
