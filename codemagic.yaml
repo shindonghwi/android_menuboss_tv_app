@@ -56,7 +56,17 @@ workflows:
                       "type": "section",
                       "text": {
                         "type": "mrkdwn",
-                        "text": "Build with build id <https://codemagic.io/app/'"$CM_PROJECT_ID"'/build/'"$CM_BUILD_ID"'>"
+                        "text": "${BUILD_STATUS_MESSAGE}"
+                      }
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": "빌드 상세:[$CM_BUILD_ID](<https://codemagic.io/app/$CM_PROJECT_ID/build/$CM_BUILD_ID>)"
                       }
                     },
                     {
@@ -67,7 +77,7 @@ workflows:
                       "block_id": "section567",
                       "text": {
                         "type": "mrkdwn",
-                        "text": "<https://github.com/'"$CM_REPO_SLUG"'> Merge pull request"
+                        "text": "Branch: [$CM_BRANCH]"
                       }
                     },
                     {
