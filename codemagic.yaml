@@ -25,7 +25,7 @@ workflows:
           -H 'Content-type: application/json' \
           --data-raw '
           {
-            "text": "Mobile App Build Start",
+            "text": "Mobile App Build Status",
             "attachments": [
               {
                 "blocks": [
@@ -90,7 +90,7 @@ workflows:
             fi
     
             curl -0 -v -X POST $SLACK_WEBHOOK_URL \
-            -H 'Content-type: application/json' \
+            -H 'Content-type: application/json' \ 
             --data-raw '
             {
               "text": "Mobile App Build Status",
@@ -101,14 +101,14 @@ workflows:
                       "type": "section",
                       "text": {
                         "type": "mrkdwn",
-                        "text": "'"$BUILD_STATUS_MESSAGE"'"
+                        "text": "{$BUILD_STATUS_MESSAGE}"
                       }
                     },
                     {
                       "type": "section",
                       "text": {
                         "type": "mrkdwn",
-                        "text": "'"BUILD_DETAIL_MESSAGE"'"
+                        "text": "${BUILD_DETAIL_MESSAGE}"
                       }
                     },
                     {
@@ -116,14 +116,14 @@ workflows:
                       "block_id": "section567",
                       "text": {
                         "type": "mrkdwn",
-                        "text": "'"BUILD_BRANCH_MESSAGE"'"
+                        "text": "${BUILD_BRANCH_MESSAGE}"
                       }
                     },
                     {
                       "type": "section",
                       "text": {
                         "type": "mrkdwn",
-                        "text": "'"BUILD_ARTIFACT_MESSAGE"'"
+                        "text": "${BUILD_ARTIFACT_MESSAGE}"
                       }
                     },
                   ]
