@@ -35,18 +35,19 @@ workflows:
             else
               echo "SLACK_WEBHOOK_URL is set. Continuing..."
             fi
-    
+
             BUILD_STATUS="*빌드 상태*: "
             if [ "$CM_BUILD_STATUS" = "success" ]; then
               BUILD_STATUS_MESSAGE="${BUILD_STATUS}성공 :white_check_mark:"
             else
               BUILD_STATUS_MESSAGE="${BUILD_STATUS}실패 :x:"
             fi
-    
+
             ARTIFACT_URL=$(echo $CM_ARTIFACT_LINKS | jq -r '.[] | select(.name | endswith(".apk")) | .url')
-    
-            # Bash 스크립트 내에서 여러 줄 문자열(JSON_PAYLOAD) 정의
-            JSON_PAYLOAD=$(cat <<'EOF'
+
+            curl -0 -v -X POST $SLACK_WEBHOOK_URL \
+            -H 'Content-type: application/json' \
+            --data-raw '
             {
               "attachments": [
                 {
@@ -55,17 +56,7 @@ workflows:
                       "type": "section",
                       "text": {
                         "type": "mrkdwn",
-                        "text": "'"$BUILD_STATUS_MESSAGE"'"
-                      }
-                    },
-                    {
-                      "type": "divider"
-                    },
-                    {
-                      "type": "section",
-                      "text": {
-                        "type": "mrkdwn",
-                        "text": "빌드 상세:[$CM_BUILD_ID](<https://codemagic.io/app/$CM_PROJECT_ID/build/$CM_BUILD_ID>)"
+                        "text": "Build with build id <https://codemagic.io/app/'"$CM_PROJECT_ID"'/build/'"$CM_BUILD_ID"'>"
                       }
                     },
                     {
@@ -76,7 +67,7 @@ workflows:
                       "block_id": "section567",
                       "text": {
                         "type": "mrkdwn",
-                        "text": "Branch: [$CM_BRANCH]"
+                        "text": "<https://github.com/'"$CM_REPO_SLUG"'> Merge pull request"
                       }
                     },
                     {
@@ -86,18 +77,13 @@ workflows:
                       "type": "section",
                       "text": {
                         "type": "mrkdwn",
-                        "text": "*Android Artifact Link*: <$ARTIFACT_URL|Download>"
+                        "text": "*Android Artifact Link* <'"$ARTIFACT_URL"'|Download>"
                       }
-                    }
+                    },
                   ]
                 }
               ]
-            }
-            EOF
-            )
-      
-            curl -X POST "$SLACK_WEBHOOK_URL" -H 'Content-type: application/json' --data "$JSON_PAYLOAD"
-       
+            }'
 
 #      publishing:
 #        firebase:
@@ -110,23 +96,7 @@ workflows:
 #        scripts:
 #          - name: Publish to Slack
 #            script: |
-#              echo "Verifying SLACK_WEBHOOK_URL presence..."
-#              if [ -z "$SLACK_WEBHOOK_URL" ]; then
-#                echo "SLACK_WEBHOOK_URL is not set. Exiting..."
-#                exit 1
-#              else
-#                echo "SLACK_WEBHOOK_URL is set. Continuing..."
-#              fi
-#
-#              BUILD_STATUS="*빌드 상태*: "
-#              if [ "$CM_BUILD_STATUS" = "success" ]; then
-#                BUILD_STATUS_MESSAGE="${BUILD_STATUS}성공 :white_check_mark:"
-#              else
-#                BUILD_STATUS_MESSAGE="${BUILD_STATUS}실패 :x:"
-#              fi
-#
-#              ARTIFACT_URL=$(echo $CM_ARTIFACT_LINKS | jq -r '.[] | select(.name | endswith(".apk")) | .url')
-#
+
 #              JSON_PAYLOAD=$(cat <<EOF
 #              {
 #                "attachments": [
