@@ -10,33 +10,33 @@ workflows:
         - firebase_credentials
       android_signing:
         - KR_TV_DEV
-#    scripts:
-#      - name: Make Gradle Wrapper Executable
-#        script: |
-#          chmod +x ./gradlew
-#      - name: Create Android Directory and Set SDK Location
-#        script: |
-#          mkdir -p "$CM_BUILD_DIR/android"
-#          echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/android/local.properties"
-#      - name: Build Android Debug
-#        script: |
-#          ./gradlew assembleDebug --info --stacktrace
-#    artifacts:
-#      - app/build/outputs/**/*.apk
-#    publishing:
-#      slack:
-#        channel: '#C06HB5ASUBS'
-#        notify_on_build_start: true
-#        notify:
-#          success: false
-#          failure: false
-#      firebase:
-#        firebase_service_account: $KR_ANDROID_TV_DEV_FIREBASE_SERVICE_ACCOUNT
-#        android:
-#          app_id: 1:1087980522226:android:64bcfc200958d3f5b21e6b
-#          groups:
-#            - orotcode-team
-#          artifact_type: 'apk'
+    #    scripts:
+    #      - name: Make Gradle Wrapper Executable
+    #        script: |
+    #          chmod +x ./gradlew
+    #      - name: Create Android Directory and Set SDK Location
+    #        script: |
+    #          mkdir -p "$CM_BUILD_DIR/android"
+    #          echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/android/local.properties"
+    #      - name: Build Android Debug
+    #        script: |
+    #          ./gradlew assembleDebug --info --stacktrace
+    #    artifacts:
+    #      - app/build/outputs/**/*.apk
+    #    publishing:
+    #      slack:
+    #        channel: '#C06HB5ASUBS'
+    #        notify_on_build_start: true
+    #        notify:
+    #          success: false
+    #          failure: false
+    #      firebase:
+    #        firebase_service_account: $KR_ANDROID_TV_DEV_FIREBASE_SERVICE_ACCOUNT
+    #        android:
+    #          app_id: 1:1087980522226:android:64bcfc200958d3f5b21e6b
+    #          groups:
+    #            - orotcode-team
+    #          artifact_type: 'apk'
 
     publishing:
       scripts:
@@ -46,8 +46,7 @@ workflows:
             
             curl -0 -v -X POST $SLACK_WEBHOOK_URL \
             -H 'Content-type: application/json' \
-            --data-raw '
-            {
+            --data-raw '{
               "attachments": [
                 {
                   "blocks": [
@@ -82,4 +81,4 @@ workflows:
                   ]
                 }
             ]
-        }'
+            }'
