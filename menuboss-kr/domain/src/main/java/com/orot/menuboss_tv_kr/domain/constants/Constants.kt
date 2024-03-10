@@ -4,13 +4,13 @@ import com.orot.menuboss_tv_kr.domain.BuildConfig
 
 
 val BASE_URL = if (BuildConfig.DEBUG) {
-    "https://dev-app-api-kr.menuboss.live"
+    "https://dev-app-api-us.menuboss.live"
 } else {
     "https://app-api.menuboss.kr"
 }
 
 val GRPC_BASE_URL = if (BuildConfig.DEBUG) {
-    "dev-screen-grpc-kr.menuboss.live"
+    "dev-screen-grpc-us.menuboss.live"
 } else {
     "screen-grpc.menuboss.kr"
 }
