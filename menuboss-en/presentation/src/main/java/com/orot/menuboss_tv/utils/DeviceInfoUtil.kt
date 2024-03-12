@@ -18,9 +18,7 @@ enum class Brand(val domain: String) {
     GOOGLE("ggl-"),
 }
 
-class DeviceInfoUtil @Inject constructor(
-    private val firebaseAnalyticsUtil: FirebaseAnalyticsUtil
-) {
+class DeviceInfoUtil @Inject constructor() {
     fun isAmazonDevice(): Boolean {
         return Build.MANUFACTURER.equals("Amazon", ignoreCase = true)
     }
@@ -29,62 +27,6 @@ class DeviceInfoUtil @Inject constructor(
     @SuppressLint("HardwareIds")
     fun getAndroidUniqueId(context: Context): String {
         return Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
-    }
-
-    /** wlan0을 검색 대상으로 잡고 MAC Address 조회. */
-    fun getMacAddress(): String {
-        var macAddress = ""
-        try {
-            val all: List<NetworkInterface> =
-                Collections.list(NetworkInterface.getNetworkInterfaces())
-            for (nif in all) {
-                if (!nif.name.equals("wlan0", ignoreCase = true)) continue
-                val macBytes = nif.hardwareAddress ?: return ""
-                val res1 = StringBuilder()
-                for (b in macBytes) {
-                    res1.append(String.format("%02X:", b))
-                }
-                if (res1.isNotEmpty()) {
-                    res1.deleteCharAt(res1.length - 1)
-                }
-                macAddress = res1.toString()
-            }
-        } catch (ex: Exception) {
-            firebaseAnalyticsUtil.recordEvent(
-                FirebaseAnalyticsUtil.Event.ERROR, hashMapOf(
-                    "message" to ex.message.toString(), "cause" to ex.cause.toString()
-                )
-            )
-        }
-
-        macAddress.ifEmpty {
-            macAddress = getReSearchMacAddress()
-        }
-
-        return macAddress
-    }
-
-    /** wlan을 검색 대상으로 잡고 MAC Address 조회. 일반적인 경우에는 여기로 오지 않음. */
-    private fun getReSearchMacAddress(): String {
-        try {
-            val all: List<NetworkInterface> =
-                Collections.list(NetworkInterface.getNetworkInterfaces())
-            for (nif in all) {
-                if (!nif.name.startsWith("wlan", ignoreCase = true)) continue
-                val macBytes = nif.hardwareAddress ?: return ""
-                val res1 = StringBuilder()
-                for (b in macBytes) {
-                    res1.append(String.format("%02X:", b))
-                }
-                if (res1.isNotEmpty()) {
-                    res1.deleteCharAt(res1.length - 1)
-                }
-                return res1.toString()
-            }
-        } catch (ex: Exception) {
-            return ""
-        }
-        return ""
     }
 
     /**
