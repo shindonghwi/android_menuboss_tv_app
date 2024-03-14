@@ -4,8 +4,8 @@ object AppConfig {
     const val compileSdk = 34
     const val minSdk = 26
     const val targetSdk = 34
-    const val versionCode = 2
-    const val versionName = "1.0.1"
+    const val versionCode = 3
+    const val versionName = "1.0.2"
     val javaVersion = JavaVersion.VERSION_11
     val jvmTarget = "11"
 }

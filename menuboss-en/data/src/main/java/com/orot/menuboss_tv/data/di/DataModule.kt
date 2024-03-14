@@ -76,15 +76,13 @@ object DataModule {
             build()
         }
 
-    fun provideDeviceInfoUtil() = DeviceInfoUtil()
-
     @Provides
     fun provideTvApi(retrofit: Retrofit): TvApi =
         retrofit.create(TvApi::class.java)
 
     @Provides
     @Singleton
-    fun provideGrpcScreenEventClient() = GrpcScreenEventClient()
+    fun provideGrpcScreenEventClient(deviceInfoUtil: DeviceInfoUtil) = GrpcScreenEventClient(deviceInfoUtil)
 
     @Provides
     fun provideScreenEventsRepository(grpcClient: GrpcScreenEventClient): ScreenEventsRepository =

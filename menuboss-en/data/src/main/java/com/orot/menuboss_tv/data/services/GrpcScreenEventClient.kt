@@ -4,6 +4,7 @@ import android.util.Log
 import com.google.protobuf.Empty
 import com.orot.menuboss_tv.data.utils.SafeGrpcRequest
 import com.orot.menuboss_tv.domain.constants.GRPC_BASE_URL
+import com.orot.menuboss_tv.utils.DeviceInfoUtil
 import com.orotcode.menuboss.grpc.lib.ConnectEventResponse
 import com.orotcode.menuboss.grpc.lib.ContentEventResponse
 import com.orotcode.menuboss.grpc.lib.PlayingEventRequest
@@ -17,9 +18,12 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import javax.inject.Inject
 
 
-class GrpcScreenEventClient : SafeGrpcRequest() {
+class GrpcScreenEventClient @Inject constructor(
+    private val deviceInfoUtil: DeviceInfoUtil
+): SafeGrpcRequest() {
 
     // status -> 0: 초기상태, 1: 연결 성공, 2: 연결 실패, 3: 이벤트 수신
 
@@ -58,6 +62,8 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
                 .useTransportSecurity()
                 .intercept(MetadataUtils.newAttachHeadersInterceptor(
                     Metadata().apply {
+                        val isAmazonDevice = deviceInfoUtil.isAmazonDevice()
+                        put(Metadata.Key.of("x-client-id", Metadata.ASCII_STRING_MARSHALLER), getXClientId(isAmazonDevice))
                         put(Metadata.Key.of("x-unique-id", Metadata.ASCII_STRING_MARSHALLER), uuid)
                     }
                 )).build()
@@ -78,6 +84,8 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
                 .useTransportSecurity()
                 .intercept(MetadataUtils.newAttachHeadersInterceptor(
                     Metadata().apply {
+                        val isAmazonDevice = deviceInfoUtil.isAmazonDevice()
+                        put(Metadata.Key.of("x-client-id", Metadata.ASCII_STRING_MARSHALLER), getXClientId(isAmazonDevice))
                         put(Metadata.Key.of("Authorization", Metadata.ASCII_STRING_MARSHALLER), accessToken)
                     }
                 )).build()
@@ -97,6 +105,8 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
                 .useTransportSecurity()
                 .intercept(MetadataUtils.newAttachHeadersInterceptor(
                     Metadata().apply {
+                        val isAmazonDevice = deviceInfoUtil.isAmazonDevice()
+                        put(Metadata.Key.of("x-client-id", Metadata.ASCII_STRING_MARSHALLER), getXClientId(isAmazonDevice))
                         put(Metadata.Key.of("Authorization", Metadata.ASCII_STRING_MARSHALLER), accessToken)
                     }
                 )).build()
@@ -198,6 +208,13 @@ class GrpcScreenEventClient : SafeGrpcRequest() {
         playingStreamObserver?.onNext(playingEvent)
     }
 
+    fun getXClientId(isAmazonDevice: Boolean): String {
+        return if (isAmazonDevice) {
+            "MSGZ" // 미국 Screen App Amazon
+        } else {
+            "MSGA" // 미국 Screen App Android
+        }
+    }
 
     fun closeConnectChannel() {
         Log.w(TAG, "closeConnectChannel: ")
