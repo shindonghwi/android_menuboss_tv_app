@@ -49,6 +49,7 @@ object DataModule {
             val newRequest = request().newBuilder()
                 .addHeader("Accept-Language", "${currentLocale.language}-${currentLocale.country}")
                 .addHeader("Application-Time-Zone", currentTimeZone)
+                .addHeader("x-client-id", "MSKA")
                 .build()
             proceed(newRequest)
         }

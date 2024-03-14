@@ -2,6 +2,8 @@
 # Compiled class file
 *.class
 
+*.DS_Store
+
 # Log file
 *.log
 
@@ -12,7 +14,6 @@
 .mtj.tmp/
 
 # Package Files #
-*.jar
 *.war
 *.nar
 *.ear

@@ -56,10 +56,17 @@ android {
 
     signingConfigs {
         getByName("debug") {
-            keyAlias = keystoreProperties["devKeyAlias"] as String
-            keyPassword = keystoreProperties["devKeyPassword"] as String
-            storeFile = file(keystoreProperties["devStoreFile"] as String)
-            storePassword = keystoreProperties["devStorePassword"] as String
+            if (System.getenv()["CI"].toBoolean()) { // CI=true is exported by Codemagic
+                storeFile = file(System.getenv()["CM_KEYSTORE_PATH"] as String)
+                storePassword = System.getenv()["CM_KEYSTORE_PASSWORD"]
+                keyAlias = System.getenv()["CM_KEY_ALIAS"]
+                keyPassword = System.getenv()["CM_KEY_PASSWORD"]
+            } else {
+                keyAlias = keystoreProperties["devKeyAlias"] as String
+                keyPassword = keystoreProperties["devKeyPassword"] as String
+                storeFile = file(keystoreProperties["devStoreFile"] as String)
+                storePassword = keystoreProperties["devStorePassword"] as String
+            }
         }
 
         create("release") {
