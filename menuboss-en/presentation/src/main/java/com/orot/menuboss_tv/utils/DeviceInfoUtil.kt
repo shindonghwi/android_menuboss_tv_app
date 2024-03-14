@@ -4,23 +4,45 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Build
 import android.provider.Settings
-import android.util.Log
-import com.orot.menuboss_tv.logging.firebase.FirebaseAnalyticsUtil
-import java.net.NetworkInterface
 import java.nio.ByteBuffer
 import java.security.MessageDigest
-import java.util.Collections
 import java.util.UUID
 import javax.inject.Inject
+
 
 enum class Brand(val domain: String) {
     AMAZON("fire-"),
     GOOGLE("ggl-"),
 }
 
-class DeviceInfoUtil @Inject constructor(
-    private val firebaseAnalyticsUtil: FirebaseAnalyticsUtil
-) {
+class DeviceInfoUtil @Inject constructor() {
+
+    fun getDeviceTotalInformation(context: Context): String {
+
+        val os = getVersion()
+        val metric = getDisplayMetrics(context)
+        val memory = getAvailableMemory()
+
+        val deviceInfo = StringBuilder()
+        .append("\n")
+        deviceInfo.append("Device: ").append(Build.DEVICE).append("\n")
+        deviceInfo.append("Model: ").append(Build.MODEL).append("\n")
+        deviceInfo.append("Product: ").append(Build.PRODUCT).append("\n")
+        deviceInfo.append("Brand: ").append(Build.BRAND).append("\n")
+        deviceInfo.append("Manufacturer: ").append(Build.MANUFACTURER).append("\n")
+        deviceInfo.append("Board: ").append(Build.BOARD).append("\n")
+        deviceInfo.append("Hardware: ").append(Build.HARDWARE).append("\n")
+        deviceInfo.append("Fingerprint: ").append(Build.FINGERPRINT).append("\n")
+        deviceInfo.append("CPU_ABI: ").append(Build.CPU_ABI).append("\n")
+        deviceInfo.append("CPU_ABI2: ").append(Build.CPU_ABI2).append("\n")
+        deviceInfo.append("OS Version: ").append(os).append("\n")
+        deviceInfo.append("Display Metrics: ").append(metric).append("\n")
+        deviceInfo.append("Available Memory: ").append(memory).append("\n")
+        .append("\n")
+
+        return deviceInfo.toString()
+    }
+
     fun isAmazonDevice(): Boolean {
         return Build.MANUFACTURER.equals("Amazon", ignoreCase = true)
     }
@@ -29,62 +51,6 @@ class DeviceInfoUtil @Inject constructor(
     @SuppressLint("HardwareIds")
     fun getAndroidUniqueId(context: Context): String {
         return Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
-    }
-
-    /** wlan0을 검색 대상으로 잡고 MAC Address 조회. */
-    fun getMacAddress(): String {
-        var macAddress = ""
-        try {
-            val all: List<NetworkInterface> =
-                Collections.list(NetworkInterface.getNetworkInterfaces())
-            for (nif in all) {
-                if (!nif.name.equals("wlan0", ignoreCase = true)) continue
-                val macBytes = nif.hardwareAddress ?: return ""
-                val res1 = StringBuilder()
-                for (b in macBytes) {
-                    res1.append(String.format("%02X:", b))
-                }
-                if (res1.isNotEmpty()) {
-                    res1.deleteCharAt(res1.length - 1)
-                }
-                macAddress = res1.toString()
-            }
-        } catch (ex: Exception) {
-            firebaseAnalyticsUtil.recordEvent(
-                FirebaseAnalyticsUtil.Event.ERROR, hashMapOf(
-                    "message" to ex.message.toString(), "cause" to ex.cause.toString()
-                )
-            )
-        }
-
-        macAddress.ifEmpty {
-            macAddress = getReSearchMacAddress()
-        }
-
-        return macAddress
-    }
-
-    /** wlan을 검색 대상으로 잡고 MAC Address 조회. 일반적인 경우에는 여기로 오지 않음. */
-    private fun getReSearchMacAddress(): String {
-        try {
-            val all: List<NetworkInterface> =
-                Collections.list(NetworkInterface.getNetworkInterfaces())
-            for (nif in all) {
-                if (!nif.name.startsWith("wlan", ignoreCase = true)) continue
-                val macBytes = nif.hardwareAddress ?: return ""
-                val res1 = StringBuilder()
-                for (b in macBytes) {
-                    res1.append(String.format("%02X:", b))
-                }
-                if (res1.isNotEmpty()) {
-                    res1.deleteCharAt(res1.length - 1)
-                }
-                return res1.toString()
-            }
-        } catch (ex: Exception) {
-            return ""
-        }
-        return ""
     }
 
     /**
@@ -100,5 +66,36 @@ class DeviceInfoUtil @Inject constructor(
         val high = buffer.long
         val low = buffer.long
         return UUID(high, low)
+    }
+
+    private fun getVersion(): String {
+        val release = java.lang.Double.parseDouble(java.lang.String(Build.VERSION.RELEASE).replaceAll("(\\d+[.]\\d+)(.*)", "$1"))
+        val codeName: String = if (release >= 4.1 && release < 4.4) "3 Jelly Bean"
+        else if (release < 5) "4 Kit Kat"
+        else if (release < 6) "5 Lollipop"
+        else if (release < 7) "6 Marshmallow"
+        else if (release < 8) "7 Nougat"
+        else if (release < 9) "8 Oreo"
+        else if (release < 10) "9 Pie"
+        else if (release < 11) "10 Q"
+        else if (release < 12) "11 R"
+        else if (release < 13) "12 S"
+        else "13 Upper"
+
+        return codeName + " v" + release + ", API Level: " + Build.VERSION.SDK_INT
+    }
+
+    fun getDisplayMetrics(context: Context): String {
+        val metrics = context.resources.displayMetrics
+        return "Width: " + metrics.widthPixels + " Height: " + metrics.heightPixels + " Density: " + metrics.densityDpi + "dpi"
+    }
+
+    private fun getAvailableMemory(): String {
+        val runtime = Runtime.getRuntime()
+        val usedMemInMB =
+            (runtime.totalMemory() - runtime.freeMemory()) / 1048576L
+        val maxHeapSizeInMB = runtime.maxMemory() / 1048576L
+        val availHeapSizeInMB = maxHeapSizeInMB - usedMemInMB
+        return "Used Memory: " + usedMemInMB + "MB Max Heap Size: " + maxHeapSizeInMB + "MB Available Heap Size: " + availHeapSizeInMB + "MB"
     }
 }

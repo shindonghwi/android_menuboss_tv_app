@@ -1,4 +1,3 @@
-
 buildscript {
     repositories {
         google()
@@ -20,4 +19,15 @@ plugins {
     id("com.google.dagger.hilt.android") version Versions.Plugins.hilt apply false
     id("com.google.firebase.crashlytics") version Versions.Plugins.crashlytics apply false
     id("com.google.protobuf") version Versions.Plugins.protobuf apply false
+}
+
+gradle.taskGraph.whenReady {
+    allTasks.forEach { task ->
+        if (
+            task.name.contains("DevRelease", ignoreCase = true) ||
+            task.name.contains("ProdDebug", ignoreCase = true)
+        ) {
+            task.enabled = false
+        }
+    }
 }
